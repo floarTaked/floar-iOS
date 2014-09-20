@@ -1,0 +1,2 @@
+platform :ios, '7.0'
+pod 'RQShineLabel', '~> 0.1.1'
