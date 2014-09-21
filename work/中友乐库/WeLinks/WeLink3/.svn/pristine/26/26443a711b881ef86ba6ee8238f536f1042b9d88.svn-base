@@ -1,0 +1,451 @@
+//
+//  JobDetailViewViewController.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 2/28/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "JobDetailViewViewController.h"
+#import "CustomCellView.h"
+#import <EGOImageView.h>
+#import "UserHeadTableCell.h"
+#import "LogicManager.h"
+#import "NetworkEngine.h"
+#import "UINavigationBar+Loading.h"
+#import "SelectFriendViewController.h"
+#import "UIPlaceHolderTextView.h"
+#import <MessageUI/MessageUI.h>
+#import <MBProgressHUD.h>
+#import "PublishJobViewController.h"
+
+
+@interface JobDetailViewViewController ()<UserHeadTableCellDelegate,MFMailComposeViewControllerDelegate>
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UILabel *jobTitle;
+@property (weak, nonatomic) IBOutlet EGOImageView *iconImage;
+@property (weak, nonatomic) IBOutlet UILabel *content;
+@property (strong, nonatomic) IBOutlet UIView *friendJob;
+@property (strong, nonatomic) IBOutlet UIView *companyJob;
+@property (strong, nonatomic) IBOutlet UIView *myJob;
+@property (weak, nonatomic) IBOutlet UILabel *posterName;
+@property (weak, nonatomic) IBOutlet UIButton *connectButton;
+@property (weak, nonatomic) IBOutlet UIButton *EmailButton;
+@property (strong, nonatomic) NSMutableArray *friendList;
+@property (nonatomic, strong) NSString *posterID;
+@property (nonatomic, strong) NSString *posterMail;
+
+- (IBAction)recommed:(id)sender;
+- (IBAction)sendEmail:(id)sender;
+- (IBAction)connect:(id)sender;
+- (IBAction)deleteJob:(id)sender;
+- (IBAction)editJob:(id)sender;
+
+@end
+
+@implementation JobDetailViewViewController
+@synthesize isFriendJob;
+- (void)dealloc
+{
+    self.posterID = nil;
+    self.friendList = nil;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    if (isFriendJob) {
+        self.tableView.tableFooterView = self.friendJob;
+    }else{
+        self.tableView.tableFooterView = self.companyJob;
+    }
+    
+    self.friendList = [NSMutableArray array];
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack title:nil target:self selector:@selector(backAction)];
+//    [self.navigationController.navigationBar showLoadingIndicator];
+    [MBProgressHUD showHUDAddedTo:self.tableView animated:YES];
+    [[NetworkEngine sharedInstance] getJobDetailWithJobID:self.jobIdentity Block:^(int event, id object)
+    {
+//        [self.navigationController.navigationBar hideLoadingIndicator];
+        [MBProgressHUD hideAllHUDsForView:self.tableView animated:YES];
+        if(event == 0)
+        {
+        }
+        else if (event == 1)
+        {
+            jobInfo = [[JobInfo alloc]init];
+            [jobInfo setValuesForKeysWithDictionary:object];
+            
+            JobObject *job = [[LogicManager sharedInstance] getPublicObject:jobInfo.jobCode type:Job];
+            [self.navigationItem setTitle:job.name];
+            
+            self.iconImage.imageURL =[NSURL URLWithString: [object objectForKey:@"posterAvatar"] ];
+            self.posterName.text = [object objectForKey:@"poster"];
+            self.posterID = [object objectForKey:@"posterId"];
+            self.posterMail = [object objectForKey:@"posterMail"];
+            if ([self.posterID isEqualToString:[UserInfo myselfInstance].userId]) {
+                self.tableView.tableFooterView = self.myJob;
+            }
+            if ([[LogicManager sharedInstance] isMyFriend:self.posterID]) {
+                self.connectButton.hidden = YES;
+                self.EmailButton.center = CGPointMake(self.view.center.x, self.EmailButton.center.y);
+            }
+            
+            JobObject *posterjob = [[LogicManager sharedInstance] getPublicObject:[object objectForKey:@"posterJobCode"] type:Job];
+            if (self.isFriendJob)
+            {
+                self.jobTitle.text = [NSString stringWithFormat:@"职位发布人\n%@ %@",[object objectForKey:@"posterCompany"],[posterjob.name length] ? posterjob.name : @""];
+            }
+            else
+            {
+                self.jobTitle.text = [NSString stringWithFormat:@"%@ %@",[object objectForKey:@"posterCompany"],[posterjob.name length] ? posterjob.name : @""];
+            }
+            for (NSDictionary *dic in [object objectForKey:@"friendAvatars"])
+            {
+                [self.friendList addObject:dic];
+            }
+        }
+        [self.tableView reloadData];
+    }];
+    self.tableView.contentInset = UIEdgeInsetsMake(0, 0, 10, 0);
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+- (void)backAction
+{
+    if (_needShowShareView) {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+    }else{
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+    
+}
+#pragma mark - Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    // Return the number of sections.
+    if (self.friendList.count > 0) {
+        return 4;
+    }
+    return 3;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    switch (section) {
+        case 0:
+            return 5;
+            break;
+        case 1:
+            return 4;
+            break;
+        case 2:
+            return 2;
+            break;
+        case 3:
+            return 2;
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if((indexPath.section == 0 || indexPath.section == 1 || indexPath.section == 2 || indexPath.section == 3) && indexPath.row == 0)
+    {
+        static NSString* Identifier = @"SectionHeader";
+        CustomCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[CustomCellView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:Identifier];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            cell.backgroundColor = [UIColor clearColor];
+            cell.contentView.backgroundColor = [UIColor clearColor];
+        }
+        if(indexPath.section == 0)
+        {
+            cell.textLabel.text = @"职位信息";
+        }
+        else if(indexPath.section == 1)
+        {
+            cell.textLabel.text = @"职位信息";
+        }else if(indexPath.section == 2)
+        {
+            cell.textLabel.text = @"职位描述";
+        }else if (indexPath.section == 3)
+        {
+            if (isFriendJob) {
+                cell.textLabel.text = @"共同好友";
+            }else{
+                cell.textLabel.text = @"该公司的人脉朋友";
+            }
+            
+        }
+        cell.textLabel.font = [UIFont systemFontOfSize:12];
+        return cell;
+    }else if (indexPath.section < 2){
+        static NSString* Identifier = @"Cell";
+        CustomMarginCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[CustomMarginCellView alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+            
+            
+            UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+            cellBackgroundView.backgroundColor = [UIColor whiteColor];
+            cell.backgroundView = cellBackgroundView;
+            
+            
+            cell.backgroundColor = [UIColor whiteColor];
+            cell.textLabel.font = getFontWith(YES, 13);
+            cell.textLabel.textColor = [UIColor blackColor];
+            cell.detailTextLabel.font = getFontWith(NO, 12);
+            cell.detailTextLabel.textColor = colorWithHex(0x3287E6);
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        }
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.textLabel.text = @"";
+        cell.imageView.image = nil;
+        cell.detailTextLabel.text = @"";
+        if(indexPath.section == 0)
+        {
+            if(indexPath.row == 1)
+            {
+                cell.textLabel.text = @"职位";
+                JobObject *job = [[LogicManager sharedInstance] getPublicObject:jobInfo.jobCode type:Job];
+                cell.detailTextLabel.text = job.name;
+                [self customLine:cell];
+            }
+            else if(indexPath.row == 2)
+            {
+                cell.textLabel.text = @"公司";
+                cell.detailTextLabel.text = jobInfo.company;
+                [self customLine:cell];
+            }
+            else if(indexPath.row == 3)
+            {
+                cell.textLabel.text = @"工作地点";
+                CityObject *city = [[LogicManager sharedInstance] getPublicObject:jobInfo.locationCode type:City];
+                cell.detailTextLabel.text = city.fullName;
+                [self customLine:cell];
+            }
+            else if(indexPath.row == 4)
+            {
+                cell.textLabel.text = @"薪酬范围";
+                if (0 == jobInfo.salaryLevel) {
+                    cell.detailTextLabel.text = @"面议";
+                }else{
+                    cell.detailTextLabel.text = [[LogicManager sharedInstance] getSalary:jobInfo.salaryLevel];
+                }
+                
+            }
+        }
+        else if (indexPath.section == 1)
+        {
+            if(indexPath.row == 1)
+            {
+                cell.textLabel.text = @"级别";
+                [self customLine:cell];
+                cell.detailTextLabel.text = [[LogicManager sharedInstance] getJobLevel:jobInfo.jobLevel];
+            }
+            else if(indexPath.row == 2)
+            {
+                cell.textLabel.text = @"工作年限";
+                [self customLine:cell];
+                cell.detailTextLabel.text = [[LogicManager sharedInstance] getJobYear:jobInfo.howLong];
+            }
+            else if(indexPath.row == 3)
+            {
+                cell.textLabel.text = @"学历";
+                [self customLine:cell];
+                cell.detailTextLabel.text = [[LogicManager sharedInstance] getEducation:jobInfo.education];
+            }
+            
+        }
+        return cell;
+    }
+    else if (indexPath.section == 2)
+    {
+        static NSString* Identifier = @"TextCell";
+        CustomMarginCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[CustomMarginCellView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:Identifier];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            cell.accessoryType = UITableViewCellAccessoryNone;
+            cell.backgroundColor = [UIColor clearColor];
+            cell.contentView.backgroundColor = [UIColor clearColor];
+        }
+        jobDescription = (UIPlaceHolderTextView*)[cell.contentView viewWithTag:100];
+        if(jobDescription == nil)
+        {
+            jobDescription = [[UIPlaceHolderTextView alloc]initWithFrame:CGRectMake(0, 0, cell.width, 100)];
+            [cell.contentView addSubview:jobDescription];
+            jobDescription.font = getFontWith(NO, 13);
+            jobDescription.tag = 100;
+            jobDescription.editable = NO;
+        }
+        [jobDescription setText:jobInfo.describes];
+        return cell;
+    }
+    else
+    {
+        static NSString* Identifier = @"IconCell";
+        UserHeadTableCell* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[UserHeadTableCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        }
+        cell.delegate = self;
+        return cell;
+    }
+    return nil;
+    
+
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section == 1 || indexPath.section == 0)
+    {
+        if(indexPath.row == 0)
+        {
+            return 30;
+        }
+        return 55;
+    }
+    else if (indexPath.section == 2)
+    {
+        if (indexPath.row == 0)
+        {
+            return 30;
+        }
+        else
+        {
+//            CGSize size = CGSizeZero;
+//            //    评论内容
+//            if (isSystemVersionIOS7())
+//            {
+//                size = [jobInfo.describes boundingRectWithSize:CGSizeMake(280 , CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:[NSDictionary dictionaryWithObjectsAndKeys:getFontWith(NO, 13),NSFontAttributeName, nil] context:nil].size;
+//            }
+//            else{
+//                size = [jobInfo.describes sizeWithFont:getFontWith(NO, YES) constrainedToSize:CGSizeMake(280, CGFLOAT_MAX) lineBreakMode:NSLineBreakByWordWrapping];
+//            }
+//            return MAX(100, size.height);
+            return 100;
+        }
+    }else if (indexPath.section == 3){
+        if (indexPath.row == 0) {
+            return 30;
+        }else{
+            return 55;
+        }
+    }
+    return 0;
+}
+#pragma mark - Table view delegate
+
+// In a xib-based application, navigation from a table can be handled in -tableView:didSelectRowAtIndexPath:
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    // Navigation logic may go here, for example:
+    // Create the next view controller.
+}
+ 
+
+-(void)customLine:(UITableViewCell*)cell
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        return;
+    }
+    UIView* line = [cell.contentView viewWithTag:2];
+    if(line == nil)
+    {
+        line = [[UIView alloc]initWithFrame:CGRectMake(0, 54.5, cell.frame.size.width, 0.5)];
+        line.backgroundColor = colorWithHex(0xCCCCCC);
+        line.tag = 2;
+        [cell.contentView addSubview:line];
+    }
+}
+
+- (void)userHeadTableCell:(UserHeadTableCell *)cell DidSelectUserAtIndex:(int)index
+{
+    
+}
+- (IBAction)recommed:(id)sender
+{
+    [MobClick event:JOB6];
+    SelectFriendViewController *selectFriend = [[SelectFriendViewController alloc] init];
+    RecommendInfo *recommendInfo = [[RecommendInfo alloc] init];
+    recommendInfo.company1 = jobInfo.company;
+    selectFriend.recommendInfo = recommendInfo;
+    selectFriend.jobInfo = jobInfo;
+    selectFriend.type = SelectFriendViewTypeInternalRecommend;
+    [self.navigationController pushViewController:selectFriend animated:YES];
+}
+
+- (IBAction)sendEmail:(id)sender {
+    [MobClick event:JOB5];
+    MFMailComposeViewController * mailViewController =[[MFMailComposeViewController alloc]init];
+    mailViewController.mailComposeDelegate =self;
+    JobObject *job = [[LogicManager sharedInstance] getPublicObject:jobInfo.jobCode type:Job];
+
+    [mailViewController setSubject:[NSString stringWithFormat:@"你好，我对%@这个职位感兴趣，想了解一下",job.name]];
+    [mailViewController setToRecipients:[NSArray arrayWithObject:self.posterMail]];
+    
+    if ([MFMailComposeViewController canSendMail]) {
+        [self presentViewController:mailViewController animated:YES completion:nil] ;
+    }
+}
+
+- (IBAction)connect:(id)sender {
+    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    [MobClick event:JOB4];
+    [[NetworkEngine sharedInstance] addFriend:self.posterID block:^(int event, id object) {
+        if (1 == event) {
+            [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
+            self.connectButton.enabled = NO;
+        }
+    }];
+}
+
+- (IBAction)deleteJob:(id)sender {
+    [[NetworkEngine sharedInstance] deleteJobWithJobInfo:jobInfo Block:^(int event, id object) {
+        if (1 == event) {
+            [self.navigationController popViewControllerAnimated:YES];
+        }else{
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:nil message:@"设置失败" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+            [alertView show];
+        }
+    }];
+}
+
+- (IBAction)editJob:(id)sender
+{
+    PublishJobViewController *publishJob = [[PublishJobViewController alloc] init];
+    publishJob.jobInfo = jobInfo;
+    publishJob.isUpdateJob = YES;
+    [self.navigationController pushViewController:publishJob animated:YES];
+}
+
+- (void)mailComposeController:(MFMailComposeViewController *)controller
+          didFinishWithResult:(MFMailComposeResult)result
+                        error:(NSError *)error {
+    [self dismissViewControllerAnimated:YES completion:^{
+        
+    }];
+}
+@end

@@ -1,0 +1,100 @@
+//
+//  UserInfo.m
+//  UnNamed
+//
+//  Created by jonas on 8/1/13.
+//  Copyright (c) 2013 jonas. All rights reserved.
+//
+
+
+
+#import "UserInfo.h"
+#import "DataBaseManager.h"
+#import "LogicManager.h"
+@implementation UserInfo
+@synthesize DBUid,userId,avatar,company,city,email,industryId,infoStep,job,jobCode,jobLevel,jobSalary,jobYear,name,phone,
+token,weiboId,weiboName,weiboToken,createTime,education,sex,friendType,salaryStatus,phoneStatus,tags,descriptions,blog;
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        NSString* uid = [[LogicManager sharedInstance] getPersistenceStringWithKey:USERID];
+        self.DBUid = uid;
+    }
+    return self;
+}
++(NSString*)primaryKey
+{
+    return @"userId";
+}
+-(NSString*)job
+{
+    if(jobCode == nil || [jobCode length]<=0)
+    {
+        return job;
+    }
+    return @"";
+}
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    NSLog(@"====undefined key %@",key);
+}
+-(void)setValue:(id)value forKey:(NSString *)key
+{
+    if(value == nil)
+    {
+        
+    }
+    if(key != nil && [key isEqualToString:@"createTime"])
+    {
+        if(value != nil)
+        {
+            [super setValue:value forKey:key];
+        }
+    }
+    else
+    {
+        [super setValue:value forKey:key];
+    }
+}
+-(BOOL)synchronize:(NSString*)tableName
+{
+    if(self == [UserInfo myselfInstance])
+    {
+        [UserInfo myselfInstance].DBUid = @"";
+        [[LogicManager sharedInstance] setPersistenceData:self.userId == nil?@"":self.userId withKey:USERID];
+    }
+    return [super synchronize:tableName];
+}
++(UserInfo*)myselfInstance
+{
+    static UserInfo* m_instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString* uid = [[LogicManager sharedInstance] getPersistenceStringWithKey:USERID];
+        if(uid == nil || [uid length]<=0)
+        {
+            m_instance = [[UserInfo alloc]init];
+        }
+        else
+        {
+            NSString* conditionString = nil;
+            if(uid != nil && [uid length] > 0)
+            {
+                conditionString = [NSString stringWithFormat:@" where userId = '%@' ",uid];
+            }
+            NSArray* arr = [[UserDataBaseManager sharedInstance] queryWithClass:[UserInfo class] tableName:nil condition:conditionString];
+            if(arr != nil && [arr count]>0)
+            {
+                m_instance = [arr objectAtIndex:0];
+            }
+            else
+            {
+                m_instance = [[UserInfo alloc]init];
+            }
+        }
+    });
+    return m_instance;
+}
+@end

@@ -1,0 +1,11 @@
+删除问题的评论
+
+请求URL: /question/comment/remove
+
+请求方式: POST
+
+请求参数: 
+id=评论id
+
+返回结果
+{"msg":"","retcode":"0","data":""}

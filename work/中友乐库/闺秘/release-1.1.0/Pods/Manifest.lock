@@ -1,0 +1,91 @@
+PODS:
+  - AFNetworking (2.3.1):
+    - AFNetworking/NSURLConnection
+    - AFNetworking/NSURLSession
+    - AFNetworking/Reachability
+    - AFNetworking/Security
+    - AFNetworking/Serialization
+    - AFNetworking/UIKit
+  - AFNetworking/NSURLConnection (2.3.1):
+    - AFNetworking/Reachability
+    - AFNetworking/Security
+    - AFNetworking/Serialization
+  - AFNetworking/NSURLSession (2.3.1):
+    - AFNetworking/Reachability
+    - AFNetworking/Security
+    - AFNetworking/Serialization
+  - AFNetworking/Reachability (2.3.1)
+  - AFNetworking/Security (2.3.1)
+  - AFNetworking/Serialization (2.3.1)
+  - AFNetworking/UIKit (2.3.1):
+    - AFNetworking/NSURLConnection
+    - AFNetworking/NSURLSession
+  - CocoaAsyncSocket (7.3.5)
+  - DACircularProgress (2.2.0)
+  - EGOCache (2.1)
+  - EGOImageLoading (0.0.1):
+    - EGOCache
+  - FMDB (2.3):
+    - FMDB/standard
+  - FMDB/common (2.3)
+  - FMDB/standard (2.3):
+    - FMDB/common
+  - iCarousel (1.7.6)
+  - MBProgressHUD (0.8)
+  - MWPhotoBrowser (1.4.0):
+    - DACircularProgress
+    - MBProgressHUD (~> 0.8)
+    - PSTCollectionView (~> 1.2)
+    - SDWebImage (~> 3.5.4)
+  - NSDate+Calendar (0.0.4)
+  - PathCover (0.1.2)
+  - pop (1.0.6)
+  - PSTCollectionView (1.2.1)
+  - RQShineLabel (0.1.1)
+  - SDWebImage (3.5.4):
+    - SDWebImage/Core
+  - SDWebImage/Core (3.5.4)
+  - SlimeRefresh (0.0.1)
+  - SVPullToRefresh (0.4.1)
+  - UIImage-Helpers (0.0.2)
+  - Weibo (2.4.2)
+
+DEPENDENCIES:
+  - AFNetworking (~> 2.0)
+  - CocoaAsyncSocket (~> 7.3.5)
+  - EGOImageLoading (~> 0.0.1)
+  - FMDB (~> 2.1)
+  - iCarousel (~> 1.7.6)
+  - MBProgressHUD (~> 0.8)
+  - MWPhotoBrowser (~> 1.4.0)
+  - NSDate+Calendar (~> 0.0.2)
+  - PathCover (~> 0.1.2)
+  - pop (~> 1.0.6)
+  - RQShineLabel (~> 0.1.1)
+  - SlimeRefresh (~> 0.0.1)
+  - SVPullToRefresh (~> 0.4.1)
+  - UIImage-Helpers (~> 0.0.2)
+  - Weibo (~> 2.4.2)
+
+SPEC CHECKSUMS:
+  AFNetworking: 6d7b76aa5d04c8c37daad3eef4b7e3f2a7620da3
+  CocoaAsyncSocket: 45bdbbc1c0a5ed0640ff4c42af325ba43a2f099a
+  DACircularProgress: 3b41941891a56dc6aa17971f5322a9a38a6f446e
+  EGOCache: bf414333c425fe47f5182351d1dd47ebf72d8352
+  EGOImageLoading: 8d33c6c4b5bc5651236bbcbc46e8a31a6715cd61
+  FMDB: 31ec26773c7f7b7890a6038235a1f2bbd933a7cb
+  iCarousel: c35a4e26b3c657847e523012b593e70ddbd84992
+  MBProgressHUD: c356980b0cd097f19acec959b49dca5eb8ec31be
+  MWPhotoBrowser: 4efcdb9da34751f97992128a5356f3929d1af537
+  NSDate+Calendar: d1e6f7298a9f95f3e0bb999acc445aee282e6769
+  PathCover: f0d1eb366331b67ded8d3e0c625790055e9db733
+  pop: e518794da38942c05255eb64b36d894e70cb4f00
+  PSTCollectionView: a63299550ad566b579479d07cb5e2bf61148686b
+  RQShineLabel: aa840ab0daec4a327d43c069dc7aaf545763e7be
+  SDWebImage: 571295c8acbb699505a0f68e54506147c3de9ea7
+  SlimeRefresh: efc9103a415f438c2aca8f72c0d4b007407714b6
+  SVPullToRefresh: d5161ebc833a38b465364412e5e307ca80bbb190
+  UIImage-Helpers: f42c86ad5ed925f22b56a81c89f2f15ebeadfd3d
+  Weibo: 8ac9c24884290718ca62da62301165d209f7336c
+
+COCOAPODS: 0.33.1

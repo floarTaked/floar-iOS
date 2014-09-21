@@ -1,0 +1,901 @@
+//
+//  NetworkEngine.m
+//  UnNamed
+//
+//  Created by jonas on 8/1/13.
+//  Copyright (c) 2013 jonas. All rights reserved.
+//
+
+#import "NetworkEngine.h"
+#import "DataBaseManager.h"
+#import "MessageData.h"
+#import "UserInfo.h"
+#import "Card.h"
+@implementation NetworkEngine
++(NetworkEngine*)sharedInstance
+{
+    static NetworkEngine* m_instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        m_instance = [[[self class] alloc]init];
+    });
+    return m_instance;
+}
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        server = [[AFHTTPRequestOperationManager alloc]initWithBaseURL:[NSURL URLWithString:SERVERROOTURL]];
+        NSSet* set = server.responseSerializer.acceptableContentTypes;
+        set = [set setByAddingObject:@"text/plain"];
+        set = [set setByAddingObject:@"text/html"];
+        server.responseSerializer.acceptableContentTypes = set;
+        
+        
+        weiboServer = [[AFHTTPRequestOperationManager alloc]initWithBaseURL:[NSURL URLWithString:WEIBOAPIROOT]];
+        set = server.responseSerializer.acceptableContentTypes;
+        set = [set setByAddingObject:@"text/plain"];
+        set = [set setByAddingObject:@"text/html"];
+        weiboServer.responseSerializer.acceptableContentTypes = set;
+        
+    }
+    return self;
+}
+-(NSMutableDictionary*)getCommonParamas
+{
+    NSMutableDictionary* dic = [NSMutableDictionary dictionary];
+    [dic setObject:[UserInfo myselfInstance].userId==nil?@"":[UserInfo myselfInstance].userId forKey:@"userId"];
+    [dic setObject:[UserInfo myselfInstance].token==nil?@"":[UserInfo myselfInstance].token forKey:@"token"];
+    [dic setObject:@"ios" forKey:@"os"];
+    return dic;
+}
+-(void)resolveSimpleResponse:(id)responseObject block:(ResponseCallBack)block
+{
+    int retcode = -1;
+    NSNumber* data = nil;
+    NSString* retCodeStr = [responseObject valueForKey:@"retcode"];
+    NSString* dataStr = [responseObject valueForKey:@"data"];
+    if(retCodeStr != nil)
+    {
+        retcode = [retCodeStr intValue];
+    }
+    if(dataStr != nil)
+    {
+        data = [NSNumber numberWithInt:[dataStr intValue]];
+    }
+    NSString* msg = [responseObject objectForKey:@"msg"];
+    if(block)
+    {
+        block(retcode,data,msg);
+    }
+}
+-(void)resolveResponse:(id)responseObject block:(ResponseCallBack)block
+{
+    int retcode = -1;
+    NSString* retCodeStr = [responseObject valueForKey:@"retcode"];
+    if(retCodeStr != nil)
+    {
+        retcode = [retCodeStr intValue];
+    }
+    id data = [responseObject valueForKey:@"data"];
+    NSString* msg = [responseObject objectForKey:@"msg"];
+    if(block)
+    {
+        block(retcode,data,msg);
+    }
+}
+-(void)resolveJsonResponse:(id)responseObject block:(ResponseCallBack)block
+{
+    int retcode = -1;
+    NSString* retCodeStr = [responseObject valueForKey:@"retcode"];
+    if(retCodeStr != nil)
+    {
+        retcode = [retCodeStr intValue];
+    }
+    id data = nil;
+    NSString *postsFromResponse = [responseObject valueForKey:@"data"];
+    NSError* error = nil;
+    data =[NSJSONSerialization JSONObjectWithData:[postsFromResponse dataUsingEncoding:NSUTF8StringEncoding]
+                                          options:NSJSONReadingMutableLeaves error:&error];
+    if(error != nil)
+    {
+        data = nil;
+    }
+    NSString* msg = [responseObject objectForKey:@"msg"];
+    if(block)
+    {
+        block(retcode,data,msg);
+    }
+}
+#pragma --mark 上传图片功能
+//带二进制传输
+-(void)postWithData:(NSString *)path
+               data:(NSData*)data
+            dataKey:(NSString*)dataKey
+         parameters:(NSDictionary *)parameters
+            success:(void (^)(AFHTTPRequestOperation *operation, id responseObject))success
+            failure:(void (^)(AFHTTPRequestOperation *operation, NSError *error))failure
+{
+    if(parameters == nil)
+    {
+        parameters = [NSDictionary dictionary];
+    }
+    NSMutableDictionary* dic = [NSMutableDictionary dictionary];
+    for(NSString* key in parameters.allKeys)
+    {
+        [dic setObject:[parameters objectForKey:key] forKey:key];
+    }
+    
+    
+    NSMutableURLRequest *request = [server.requestSerializer multipartFormRequestWithMethod:@"POST"
+                                                                                  URLString:path
+                                                                                 parameters:dic
+                                                                  constructingBodyWithBlock:^(id<AFMultipartFormData> formData)
+    {
+        [formData appendPartWithFileData:data name:dataKey fileName:@"image.png" mimeType:@"image/jpeg"];
+    } error:nil];
+//    NSMutableURLRequest *request = [server.requestSerializer multipartFormRequestWithMethod:@"POST"
+//                                                                                   URLString:path
+//                                                                                  parameters:dic
+//                                                                   constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
+//                                                                       [formData appendPartWithFileData:data name:dataKey fileName:@"image.png" mimeType:@"image/jpeg"];
+//                                                                   }];
+	AFHTTPRequestOperation *operation = [server HTTPRequestOperationWithRequest:request success:success failure:failure];
+    [server.operationQueue addOperation:operation];
+    [operation resume];
+}
+-(void)checkVersion:(EventCallBack)block
+{
+    //{
+    //    "data":{
+    //        "version":"1.1",
+    //        "versionDesc":"修复已知bug",
+    //        "url":"http://imageapp.leku.com/staticprj/mobilenew/down/welink.apk",
+    //        "must":0,
+    //        "platform":"android",
+    //        "createTime":1390801613000,
+    //        "versionId":2
+    //    },
+    //    "msg":"",
+    //    "retcode":"0"
+    //}
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server POST:@"/comm/check-version" parameters:dic success:^(AFHTTPRequestOperation *task, id responseObject)
+     {
+         [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+          {
+              if(retcode == 0)
+              {
+                  block(1,data);
+              }
+              else
+              {
+                  block(0,msg);
+              }
+          }];
+     } failure:^(AFHTTPRequestOperation *task, NSError *error) {
+         block(0,nil);
+     }];
+}
+-(void)isUpdate:(EventCallBack)block
+{
+//    {
+//        "data"
+//		{
+//        newfriend:新的联系人数量
+//        msg:消息数量
+//        feeds:职脉圈数量
+//		},
+//        "msg":"",
+//        "retcode":"0"
+//    }
+    
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server POST:@"/comm/is-update" parameters:dic success:^(AFHTTPRequestOperation *task, id responseObject)
+     {
+         [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+          {
+              if(retcode == 0)
+              {
+                  block(1,data);
+              }
+              else
+              {
+                  block(0,msg);
+              }
+          }];
+     } failure:^(AFHTTPRequestOperation *task, NSError *error) {
+         block(0,nil);
+     }];
+}
+-(void)saveToken:(EventCallBack)block
+{
+    //pushId 推送的token
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server POST:@"/comm/save-token" parameters:dic success:^(AFHTTPRequestOperation *task, id responseObject)
+     {
+         [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+          {
+              if(retcode == 0)
+              {
+                  block(1,data);
+              }
+              else
+              {
+                  block(0,msg);
+              }
+          }];
+     } failure:^(AFHTTPRequestOperation *task, NSError *error) {
+         block(0,nil);
+     }];
+}
+//绑定手机
+-(void)bindPhone:(NSString*)phone verifiCode:(NSString*)verifiCode block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:phone==nil?@"":phone forKey:@"phone"];
+    [dic setObject:verifiCode==nil?@"":verifiCode forKey:@"verifiCode"];
+    
+    [server POST:@"/register/bind-phone" parameters:dic success:^(AFHTTPRequestOperation *task, id responseObject)
+     {
+         [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+          {
+              if(retcode == 0)
+              {
+                  block(1,data);
+              }
+              else
+              {
+                  block(0,msg);
+              }
+          }];
+     } failure:^(AFHTTPRequestOperation *task, NSError *error) {
+         block(0,nil);
+     }];
+}
+//上传手机通讯录
+-(void)savePhoneFriends:(NSString*)json block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:json==nil?@"":json forKey:@"json"];
+    [server POST:@"/register/save-phone-friends" parameters:dic success:^(AFHTTPRequestOperation *task, id responseObject)
+     {
+         [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+          {
+              if(retcode == 0)
+              {
+                  block(1,data);
+              }
+              else
+              {
+                  block(0,msg);
+              }
+          }];
+     } failure:^(AFHTTPRequestOperation *task, NSError *error) {
+         block(0,nil);
+     }];
+}
+-(void)saveInfo1:(id)imageOrPath name:(NSString*)name company:(NSString*)company job:(NSString*)job block:(EventCallBack)block
+{
+    //image:用户头像(文件流)
+    //headerUrl:头像url
+    //name：姓名
+    //company：公司
+    //job：职位
+    //image或headerUrl为二选1.
+    
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:name==nil?@"":name forKey:@"name"];
+    [dic setObject:company==nil?@"":company forKey:@"company"];
+    [dic setObject:job==nil?@"":job forKey:@"job"];
+    
+    if([imageOrPath isKindOfClass:[NSString class]])
+    {
+        [dic setObject:imageOrPath forKey:@"headerUrl"];
+        [server POST:@"/register/save-info-1" parameters:dic success:^(AFHTTPRequestOperation *task, id responseObject)
+         {
+             [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+              {
+                  if(retcode == 0)
+                  {
+                      block(1,data);
+                  }
+                  else
+                  {
+                      block(0,msg);
+                  }
+              }];
+         } failure:^(AFHTTPRequestOperation *task, NSError *error) {
+             block(0,nil);
+         }];
+    }
+    else if ([imageOrPath isKindOfClass:[NSData class]])
+    {
+        [self postWithData:[[NSURL URLWithString:@"/register/save-info-1" relativeToURL:[NSURL URLWithString:SERVERROOTURL]] absoluteString]
+                      data:imageOrPath
+                   dataKey:@"image"
+                parameters:dic
+                   success:^(AFHTTPRequestOperation *operation, id responseObject)
+         {
+             [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+              {
+                  if(retcode == 0)
+                  {
+                      //[[UserInfo myselfInstance] setValuesForKeysWithDictionary:data];
+                      //[[UserInfo myselfInstance] synchronize:nil];
+                      block(1,[UserInfo myselfInstance]);
+                  }
+                  else
+                  {
+                      block(0,msg);
+                  }
+              }];
+         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+             block(0,error);
+         }];
+    }
+}
+//获取验证码
+-(void)getVerifiCode:(NSString*)phone block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:phone==nil?@"":phone forKey:@"phone"];
+    [server GET:@"/register/verifi-code" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取好友列表
+-(void)getFriends:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server GET:@"/friend/get-friends" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 NSMutableArray *arr = [[NSMutableArray alloc] init];
+                 for (NSDictionary *dict  in data)
+                 {
+                     UserInfo *contactor = [[UserInfo alloc] init];
+                     [contactor setValuesForKeysWithDictionary:dict];
+                     [contactor synchronize:MyFriendsTable];
+                     [arr addObject:contactor];
+                 }
+                 block(1,arr);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取好友申请列表
+-(void)getFriendRequest:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server GET:@"/friend/get-friend-requests" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//确认加为好友
+-(void)confirmFriend:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server GET:@"/friend/confirm-friend" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//删除消息
+-(void)deleteMessage:(NSString*)ideneity block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:ideneity==nil?@"":ideneity forKey:@"id"];
+    [server GET:@"/msg/del-msg" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取消息状态
+-(void)getMessageStatus:(NSString*)ideneity block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:ideneity==nil?@"":ideneity forKey:@"id"];
+    [server GET:@"/msg/get-msg-status" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取消息  isAll:0   是所有未读信息  1   是最近20天的全部消息
+-(void)getMessages:(NSString*)isAll block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:isAll==nil?@"":isAll forKey:@"isAll"];
+    [server GET:@"/msg/get-msgs" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//消息发送  msgType：1=普通文本 3=阅后即焚消息
+-(void)sendMessage:(NSString*)receiverId content:(NSString*)content msgType:(NSString*)msgType block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:receiverId==nil?@"":receiverId forKey:@"receiverId"];
+    [dic setObject:content==nil?@"":content forKey:@"content"];
+    [dic setObject:msgType==nil?@"":msgType forKey:@"msgType"];
+    [server GET:@"/msg/send-msg" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取我的发布
+-(void)getMyPulish:(NSString*)page limit:(NSString*)limit block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:page==nil?@"":page forKey:@"page"];
+    [dic setObject:limit==nil?@"":limit forKey:@"limit"];
+    [server GET:@"/user/getPulishByUserId" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//Linked in 资料 保存
+-(void)saveLinkedIn:(NSString*)name stoken:(NSString*)stoken block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:name==nil?@"":name forKey:@"name"];
+    [dic setObject:stoken==nil?@"":stoken forKey:@"stoken"];
+    [server GET:@"/user/save-linked-in" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//修改头像
+-(void)updateImage:(NSData*)image block:(EventCallBack)block
+{
+    if(image == nil)
+    {
+         block(0,@"图片为空");
+        return;
+    }
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [self postWithData:[[NSURL URLWithString:@"/user/update-image" relativeToURL:[NSURL URLWithString:SERVERROOTURL]] absoluteString]
+                  data:image
+               dataKey:@"image"
+            parameters:dic
+               success:^(AFHTTPRequestOperation *operation, id responseObject)
+     {
+         [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+          {
+              if(retcode == 0)
+              {
+                  //[[UserInfo myselfInstance] setValuesForKeysWithDictionary:data];
+                  //[[UserInfo myselfInstance] synchronize:nil];
+                  block(1,[UserInfo myselfInstance]);
+              }
+              else
+              {
+                  block(0,msg);
+              }
+          }];
+     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+         block(0,error);
+     }];
+}
+//修改用户信息
+-(void)updateUserInfo:(NSDictionary*)userDic block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setValuesForKeysWithDictionary:userDic];
+    [server GET:@"/user/update-user-info" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取用户个人基本信息
+-(void)getUserInfo:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [server GET:@"/user/user-info" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取用户主页信息
+-(void)getUserProfile:(NSString*)otherUserId block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:otherUserId==nil?@"":otherUserId forKey:@"otherUserId"];
+    [server GET:@"/user/user-profile" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 block(1,data);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取谁看过我
+-(void)getVisitorInfo:(NSString*)page limit:(NSString*)limit block:(EventCallBack)block
+{
+    NSMutableDictionary* dic = [self getCommonParamas];
+    [dic setObject:page==nil?@"":page forKey:@"page"];
+    [dic setObject:limit==nil?@"":limit forKey:@"limit"];
+    
+    [server GET:@"/user/vistor-info" parameters:dic success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg)
+         {
+             if(retcode == 0)
+             {
+                 NSMutableArray *array = [[NSMutableArray alloc] init];
+                 for (NSDictionary *dict in data)
+                 {
+                     UserInfo *user = [[UserInfo alloc] init];
+                     [user setValuesForKeysWithDictionary:dict];
+                     [user synchronize:VisitorFriends];
+                     [array addObject:user];
+                 }
+                 block(1,array);
+             }
+             else
+             {
+                 block(0,msg);
+             }
+         }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+
+#pragma mark - 名片夹
+//获取用户保存的名片
+-(void)getUserSaveCards:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [server GET:@"/card/card-people-info" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                NSMutableArray *arr = [[NSMutableArray alloc] init];
+                for (NSDictionary *dict  in data)
+                {
+                    Card *card = [[Card alloc] init];
+                    [card setValuesForKeysWithDictionary:dict];
+                    [card synchronize:nil];
+                    [arr addObject:card];
+                }
+                block(1,arr);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//删除名片
+-(void)deleteCardWithCardId:(NSString *)cardId block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(cardId==nil?@"":cardId) forKey:@"id"];
+    [server GET:@"/card/delete-card" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject)
+    {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                block(1,data);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+
+#pragma mark - 职脉圈
+//动态赞一个（取消赞）
+-(void)SupportActionWithPublisher:(NSString *)publisherId feedId:(NSString *)feedId targetId:(NSString *)targetId feedType:(NSString *)feedType type:(NSString *)type block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(publisherId == nil?@"":publisherId) forKey:@"otherUserId"];
+    [dict setObject:(feedId == nil?@"":feedId) forKey:@"feedId"];
+    [dict setObject:(targetId == nil)?@"":targetId forKey:@"targetId"];
+    [dict setObject:(feedType == nil)?@"":feedType forKey:@"feedType"];
+    [dict setObject:(type == nil)?@"":type forKey:@"type"];
+    [server GET:@"/article/zan-feed" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                block(1,data);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//获取动态流
+-(void)getFeedsWithLastedTime:(NSString *)time block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(time == nil?@"":time) forKey:@"time"];
+    [server GET:@"/article/get-feeds" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                block(1,data);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//动态中评论
+-(void)commentActionWithPublisher:(NSString *)publishId comment:(NSString *)comment feedId:(NSString *)feedId targetId:(NSString *)targetId block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(publishId == nil?@"":publishId) forKey:@"otherUserId"];
+    [dict setObject:(comment == nil?@"":comment) forKey:@"comment"];
+    [dict setObject:(feedId == nil)?@"":feedId forKey:@"feedId"];
+    [dict setObject:(targetId == nil)?@"":targetId forKey:@"targetId"];
+    [server GET:@"/article/comment-feed" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                block(1,data);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//发动态
+-(void)sendContent:(NSString *)content image:(UIImage *)image block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(content == nil)?@"":content forKey:@"content"];
+    id imageData = [NSNull null];
+    if (image)
+    {
+        NSData *data = UIImageJPEGRepresentation(image, 1.0);
+        float radio = 200000.0/data.length;
+        imageData = UIImageJPEGRepresentation(image, radio);
+        
+        [self postWithData:[[NSURL URLWithString:@"/article/send-feed" relativeToURL:[NSURL URLWithString:SERVERROOTURL]] absoluteString]
+                      data:imageData
+                   dataKey:@"image"
+                parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+                    [self resolveResponse:dict block:^(int retcode, id data, NSString *msg) {
+                        if (0 == retcode)
+                        {
+                            block(1,data);
+                        }
+                        else
+                        {
+                            block(0,msg);
+                        }
+                    }];
+                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+                    block(0,nil);
+                }];
+    }
+    else
+    {
+        [server GET:@"/article/send-feed" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+                if (0 == retcode)
+                {
+                    block(1,data);
+                }
+                else
+                {
+                    block(0,msg);
+                }
+            }];
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            block(0,nil);
+        }];
+    }
+}
+//获取feed评论
+-(void)getFeedComment:(NSString *)targetId block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(targetId == nil?@"":targetId) forKey:@"targetId"];
+    [server GET:@"/article/get-feed-comments" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                block(1,data);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+}
+//发布职位
+-(void)publishJob:(NSString *)company education:(NSString *)educationLevel howLong:(NSString *)howLong industryId:(NSString *)industryId jobCode:(NSString *)jobCode jobLevel:(NSString *)jobLevel locationCode:(NSString *)loactionCode poster:(NSString *)poster posterId:(NSString *)posterId salaryLevel:(NSString *)salaryLevel describes:(NSString *)describe block:(EventCallBack)block
+{
+    NSMutableDictionary *dict = [self getCommonParamas];
+    [dict setObject:(company == nil?@"":company) forKey:@"company"];
+    [dict setObject:(educationLevel == nil?@"":educationLevel) forKey:@"education"];
+    [dict setObject:(howLong == nil?@"":howLong) forKey:@"howLong"];
+    [dict setObject:(industryId == nil?@"":industryId) forKey:@"industryId"];
+    [dict setObject:(jobCode == nil?@"":jobCode) forKey:@"jobCode"];
+    [dict setObject:(jobLevel == nil?@"":jobLevel) forKey:@"jobLevel"];
+    [dict setObject:(loactionCode == nil?@"":loactionCode) forKey:@"locationCode"];
+    [dict setObject:(poster == nil?@"":poster) forKey:@"poster"];
+    [dict setObject:(posterId == nil?@"":posterId) forKey:@"posterId"];
+    [dict setObject:(salaryLevel == nil?@"":salaryLevel) forKey:@"salaryLevel"];
+    [dict setObject:(describe == nil?@"":describe) forKey:@"describes"];
+    [server GET:@"/article/publishJob" parameters:dict success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self resolveResponse:responseObject block:^(int retcode, id data, NSString *msg) {
+            if (0 == retcode)
+            {
+                block(1,data);
+            }
+            else
+            {
+                block(0,msg);
+            }
+        }];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        block(0,nil);
+    }];
+    
+}
+@end

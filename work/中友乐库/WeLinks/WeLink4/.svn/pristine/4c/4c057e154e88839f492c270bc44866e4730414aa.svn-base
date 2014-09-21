@@ -1,0 +1,284 @@
+//
+//  PublishViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-26.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "PublishViewController.h"
+#import "ShareViewController.h"
+#import "DoubleQuestionViewController.h"
+#import "MultipleQuestionViewController.h"
+#import "RateQuetionViewController.h"
+
+#import "LogicManager.h"
+
+@interface PublishViewController ()<UITableViewDataSource,UITableViewDelegate>
+{
+    int count;
+}
+
+@property (weak, nonatomic) IBOutlet UITableView *publishTableView;
+
+
+@end
+
+@implementation PublishViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self.navigationItem setTitleString:@"发布"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -20, 0, 0) target:self selector:@selector(gotoBack)];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 4;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 1;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    CustomMarginCellView *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[CustomMarginCellView alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+    }
+//    if (indexPath.section != 1)
+//    {
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.layer.borderWidth = 1;
+        cell.layer.borderColor = colorWithHex(0xAAAAAA).CGColor;
+        [self customNormalCell:cell indexPath:indexPath];
+//    }
+//    else
+//    {
+//        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+//        cell.accessoryType = UITableViewCellAccessoryNone;
+//        cell.contentView.backgroundColor = [UIColor clearColor];
+//        UIImageView *image = [[UIImageView alloc] initWithFrame:CGRectMake(0, 10, cell.contentView.width, 30)];
+//        image.backgroundColor = [UIColor redColor];
+//        [cell.contentView addSubview:image];
+//    }
+    
+    return cell;
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if (section == 1)
+    {
+        UIView *view = [[UIView alloc] initWithFrame:CGRectZero];
+        
+        UIImageView *image = [[UIImageView alloc] initWithFrame:CGRectMake(10, 18, 300, 18)];
+        image.image = [UIImage imageNamed:@"img_ask"];
+        [view addSubview:image];
+        
+        return view;
+    }
+    else
+    {
+        return nil;
+    }
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (indexPath.section == 0)
+    {
+        ShareViewController *shareViewCtl = [[ShareViewController alloc] initWithNibName:NSStringFromClass([ShareViewController class]) bundle:nil];
+        shareViewCtl.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:shareViewCtl animated:YES];
+    }
+    if (indexPath.section == 1)
+    {
+        DoubleQuestionViewController *doubleViewCtl = [[DoubleQuestionViewController alloc] initWithNibName:NSStringFromClass([DoubleQuestionViewController class]) bundle:nil];
+        doubleViewCtl.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:doubleViewCtl animated:YES];
+    }
+    if (indexPath.section == 2)
+    {
+//        if (count < 5)
+//        {
+//            [[LogicManager sharedInstance] showAlertWithTitle:@"提示" message:@"扫名片3次以上会自动开通此功能,想要玩转职脉圈,快去扫描好友名片吧!" actionText:@"我知道了"];
+//        }
+//        else
+//        {
+            MultipleQuestionViewController *multipleViewCtl = [[MultipleQuestionViewController alloc] initWithNibName:NSStringFromClass([MultipleQuestionViewController class]) bundle:nil];
+            multipleViewCtl.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:multipleViewCtl animated:YES];
+//        }
+    }
+    if (indexPath.section == 3)
+    {
+//        if (count < 5)
+//        {
+//            [[LogicManager sharedInstance] showAlertWithTitle:@"提示" message:@"扫名片5次以上会自动开通此功能,想要玩转职脉圈,快去扫描好友名片吧!" actionText:@"我知道了"];
+//        }
+//        else
+//        {
+            RateQuetionViewController *rateViewCtl = [[RateQuetionViewController alloc] initWithNibName:NSStringFromClass([RateQuetionViewController class]) bundle:nil];
+            rateViewCtl.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:rateViewCtl animated:YES];
+//        }
+    }
+    
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 70;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (section == 1)
+    {
+        return 54;
+    }
+    else
+    {
+        return 10;
+    }
+}
+
+
+-(void)customNormalCell:(UITableViewCell *)cell
+                  indexPath:(NSIndexPath *)index
+{
+    UIImageView *leftImage = (UIImageView *)[cell.contentView viewWithTag:10];
+    if (leftImage == nil)
+    {
+        leftImage = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, 50, 50)];
+        leftImage.tag = 10;
+        leftImage.backgroundColor = [UIColor orangeColor];
+        [cell.contentView addSubview:leftImage];
+    }
+    
+    UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:20];
+    if (titleLabel == nil)
+    {
+        titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(leftImage.frame)+10, CGRectGetMinY(leftImage.frame), 100, 30)];
+        titleLabel.tag = 20;
+        titleLabel.textAlignment = NSTextAlignmentLeft;
+        titleLabel.font = [UIFont boldSystemFontOfSize:18];
+        [cell.contentView addSubview:titleLabel];
+    }
+    
+    UILabel *subTitleLabel = (UILabel *)[cell.contentView viewWithTag:30];
+    if (subTitleLabel == nil)
+    {
+        subTitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(leftImage.frame)+10, CGRectGetMaxY(titleLabel.frame), 200, 20)];
+        subTitleLabel.tag = 30;
+        subTitleLabel.textAlignment = NSTextAlignmentLeft;
+        subTitleLabel.font = getFontWith(NO, 11);
+        subTitleLabel.textColor = colorWithHex(0xAAAAAA);
+        [cell.contentView addSubview:subTitleLabel];
+    }
+    
+    UIImageView *rightImage = (UIImageView *)[cell.contentView viewWithTag:40];
+    if (rightImage == nil)
+    {
+        rightImage = [[UIImageView alloc] initWithFrame:CGRectMake(cell.contentView.width-80, 20, 30, 30)];
+        rightImage.tag = 40;
+        [cell.contentView addSubview:rightImage];
+    }
+    
+    if (index.section == 0)
+    {
+        leftImage.image = [UIImage imageNamed:@"img_share"];
+        titleLabel.text = @"分享";
+        titleLabel.textColor = colorWithHex(0x279FEB);
+        subTitleLabel.text = @"分享行业资讯或观点";
+    }
+    if (index.section == 1)
+    {
+        leftImage.image = [UIImage imageNamed:@"img_double_selections"];
+        titleLabel.text = @"双向选择";
+        titleLabel.textColor = colorWithHex(0x79AC2C);
+        subTitleLabel.text = @"对提问设置两个答案";
+    }
+    if (index.section == 2)
+    {
+        leftImage.image = [UIImage imageNamed:@"img_multple_selections"];
+        titleLabel.text = @"多选";
+        titleLabel.textColor = colorWithHex(0x79AC2C);
+        subTitleLabel.text = @"对提问设置多个答案";
+//        if (count < 5)
+//        {
+            rightImage.image = [UIImage imageNamed:@"3"];
+//        }
+//        else
+//        {
+//            rightImage.image = nil;
+//        }
+        titleLabel.textColor = colorWithHex(0x79AC2C);
+    }
+    if (index.section == 3)
+    {
+        leftImage.image = [UIImage imageNamed:@"img_rate_homepage"];
+        titleLabel.text = @"评级";
+        titleLabel.textColor = colorWithHex(0x79AC2C);
+        subTitleLabel.text = @"对提问设置5个星级,供朋友打分";
+//        if (count < 5)
+//        {
+            rightImage.image = [UIImage imageNamed:@"3"];
+//        }
+//        else
+//        {
+//            rightImage.image = nil;
+//        }
+    }
+}
+
+
+
+#pragma mark - UINavigationBarBtnAction
+-(void)gotoBack
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)customLine:(UITableViewCell*)cell height:(float)height
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        return;
+    }
+    UIView* line = [cell.contentView viewWithTag:4];
+    if(line == nil)
+    {
+        line = [[UIView alloc]initWithFrame:CGRectMake(0, height-0.5, cell.frame.size.width, 0.5)];
+        line.backgroundColor = colorWithHex(0xCCCCCC);
+        line.tag = 4;
+        [cell.contentView addSubview:line];
+    }
+}
+
+@end

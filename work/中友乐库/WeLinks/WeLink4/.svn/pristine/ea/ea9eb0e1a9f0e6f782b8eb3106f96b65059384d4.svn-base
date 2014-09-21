@@ -1,0 +1,38 @@
+//
+//  ChatViewController.h
+//  Welinked2
+//
+//  Created by jonas on 12/17/13.
+//
+//
+#import "RCLabel.h"
+#import "MessageView.h"
+#import "NetworkEngine.h"
+@interface ChatViewController : UIViewController<UITextFieldDelegate>
+{
+    IBOutlet UIView* popView;
+    IBOutlet UIButton* secureButton;
+    IBOutlet UIView* timeView;
+    CGRect popFrame;
+    BOOL popShowed;
+    
+    IBOutlet MessageView *list;
+    IBOutlet UIView *textInputView;
+    IBOutlet UITextField *textField;
+    IBOutlet UIImageView* inputBack;
+    IBOutlet UIImageView* inputBackground;
+    IBOutlet UIButton* sendButton;
+    NSTimer* timer;
+    int scrollToBottomState;//2 强制滑动 3强制不滑动
+    
+    NSTimeInterval topTime;
+    NSTimeInterval buttomTime;
+    
+    
+    int msgType;//1=普通文本 3=阅后即焚消息 4=定时删除消息
+    int storeSecond;
+}
+@property(nonatomic,strong)NSString* otherName;
+@property(nonatomic,strong)NSString* otherAvatar;
+@property(nonatomic,assign)int otherUserId;
+@end

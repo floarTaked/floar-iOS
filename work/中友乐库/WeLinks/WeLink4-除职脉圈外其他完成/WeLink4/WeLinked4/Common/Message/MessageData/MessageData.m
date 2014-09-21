@@ -1,0 +1,111 @@
+//
+//  MessageData.m
+//  Welinked2
+//
+//  Created by jonas on 12/17/13.
+//
+//
+#import "MessageData.h"
+#import "TextMessageItem.h"
+#import "TipMessageItem.h"
+#import "SnapMessageItem.h"
+#import "ImageMessageItem.h"
+#import "DeleteMessageItem.h"
+#import "TimerDeleteMessageItem.h"
+@implementation MessageData
+@synthesize DBUid,identity,createTime,isSender,status,text,otherAvatar,userId,otherUserId,otherName,msgType,contentString,job,company,storeSecond,receiveTime;
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        self.DBUid = [UserInfo myselfInstance].userId;
+    }
+    return self;
+}
++(NSString*)primaryKey
+{
+    return @"identity";
+}
+-(void)setCallBack:(EventCallBack)callback
+{
+    if(adapter != nil && [adapter respondsToSelector:@selector(setCallBack:)])
+    {
+        [adapter setCallBack:callback];
+    }
+}
+-(id<MessageAdapterProtocol>)getAdapter
+{
+    if(adapter == nil)
+    {
+        switch (self.msgType)
+        {
+            case SnapMessage:
+            {
+                adapter = [[SnapMessageItem alloc]init];
+            }
+                break;
+            case TextMesage:
+            {
+                adapter = [[TextMessageItem alloc]init];
+            }
+                break;
+            case TipMessage:
+            {
+                adapter = [[TipMessageItem alloc]init];
+            }
+                break;
+            case ImageMessage:
+            {
+                adapter = [[ImageMessageItem alloc]init];
+            }
+                break;
+            case DeleteMessage:
+            {
+                adapter = [[DeleteMessageItem alloc]init];
+            }
+                break;
+            case TimerDeleteMessage:
+            {
+                adapter = [[TimerDeleteMessageItem alloc]init];
+            }
+                break;
+            default:
+                break;
+        }
+    }
+    adapter.data = self;
+    return adapter;
+}
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    if([key isEqualToString:@"id"])
+    {
+        [self setValue:value forKey:@"identity"];
+    }
+    else if([key isEqualToString:@"content"])
+    {
+        NSString* content = (NSString*)value;
+        contentString = content;
+        [self extractionContent];
+    }
+}
+-(void)setValue:(id)value forKey:(NSString *)key
+{
+    if(value == nil)
+    {
+        return;
+    }
+    [super setValue:value forKey:key];
+}
+-(void)extractionContent
+{
+    self.extraData = [[LogicManager sharedInstance] jsonStringTOObject:contentString];
+    self.text =  [self.extraData objectForKey:@"text"];
+}
+-(void)setContentString:(NSString *)content
+{
+    contentString = content;
+    [self extractionContent];
+}
+@end

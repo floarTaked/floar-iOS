@@ -1,0 +1,66 @@
+{\rtf1\ansi\ansicpg936\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fnil\fcharset134 STKaiti-SC-Regular;\f1\fnil\fcharset0 Menlo-Regular;\f2\fnil\fcharset134 STHeitiSC-Light;
+}
+{\colortbl;\red255\green255\blue255;\red46\green111\blue253;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs34 \cf0 1\'a3\'acblock---\'d7\'aa\'bb\'af\'b3\'c9\'b4\'fa\'c0\'ed\'bb\'f2\'d0\'ed\'b8\'fc\'ba\'c3\'c0\'ed\'bd\'e2\
+	---\'ba\'af\'ca\'fd\'d6\'b8\'d5\'eb\'a3\'a8\'b4\'ab\'c8\'eb\'ca\'b5\'cf\'d6\'cc\'d8\'b6\'a8\'b9\'a6\'c4\'dc\'b5\'c4\'ba\'af\'ca\'fd\'a3\'a9\'c0\'e0\'cb\'c6C\'d3\'ef\'d1\'d4\'d6\'d0\'b5\'c4\'b8\'df\'bc\'b6\'ba\'af\'ca\'fd\'c5\'c5\'d0\'f2\'ba\'af\'ca\'fd\
+   	---\'b4\'fa\'c0\'ed\'b9\'a6\'c4\'dc\'a3\'a8\'cd\'ea\'b3\'c9\'c1\'cb\'be\'df\'cc\'e5\'b9\'a6\'c4\'dc\'a3\'a9				---\'b4\'fa\'c0\'ed\'b5\'c4\'c7\'f8\'b1\'f0\'a3\'ba\'b2\'bb\'d3\'c3\'b5\'c8\'b4\'fd\'a3\'ac\'b2\'bb\'d3\'c3\'c5\'dc\'b9\'fd\'c8\'a5\'c5\'dc\'b9\'fd\'c0\'b4\
+	---\'b4\'fa\'cc\'e6\'bb\'d8\'b5\'f7\'a3\'ac\'d7\'f7\'ce\'aa\'b4\'fa\'c0\'ed\'c0\'b4\'b3\'a2\'ca\'d4\'c0\'ed\'bd\'e2\
+	\cf2 ---block\'d7\'f7\'ce\'aa\'b2\'ce\'ca\'fd\'b4\'ab\'b5\'dd\cf0 \
+\
+http://10.10.151.248:8081\
+1\'a3\'ac/collection/get-subscribe-collections  \'b2\'bb\'d0\'e8\'d2\'aa\'b4\'ab\'b2\'ce\
+2\'a3\'ac/collection/get-industrys	\'b2\'bb\'d0\'e8\'d2\'aa\'b4\'ab\'b2\'ce\
+3\'a3\'ac/collection/get-collections-with-sub	\'b4\'ab\'c8\'ebparentId\
+4\'a3\'ac/article/get-articles-by-colllection	\'b4\'ab\'c8\'eb\'ce\'c4\'d5\'c2\'d4\'b4id\'a1\'a2articleId\
+5\'a3\'ac/collection/subscribe\
+6\'a3\'ac/collection/del-subscribe			\
+\
+\
+\
+\pard\tx722\pardeftab722\pardirnatural
+
+\f1\fs30 \cf0 \CocoaLigature0 typedef void (^EventCallBack)(int event,id object);
+\f0\fs34 \
+\'d4\'dacommon\'ce\'c4\'bc\'fe\'c0\'ef\'c3\'e6\
+\
+
+\fs30 typedef void (^ResponseCallBack)(int retcode,id data,NSString*msg);\
+\'d4\'daNetworkEngine.h\'c0\'ef\'c3\'e6\
+\
+
+\f1 AFHTTPRequestOperationManager* server = [[AFHTTPRequestOperationManager alloc]initWithBaseURL:[NSURL URLWithString:SERVERROOTURL]];\
+        NSSet* set = server.responseSerializer.acceptableContentTypes;\
+        set = [set setByAddingObject:@"text/plain"];\
+        set = [set setByAddingObject:@"text/html"];\
+        server.responseSerializer.acceptableContentTypes = set;\
+\
+\
+//
+\f2 \'bb\'f1\'c8\'a1\'b7\'d6\'c0\'e0\'c1\'d0\'b1\'ed
+\f1 \
+-(void)getCategoryList:(EventCallBack)block;\
+//
+\f2 \'bb\'f1\'c8\'a1\'ce\'c4\'d5\'c2\'d4\'b4\'c1\'d0\'b1\'ed\'b2\'a2\'b4\'f8\'c9\'cf\'ca\'c7\'b7\'f1\'b6\'a9\'d4\'c4\'b5\'c4\'cf\'fb\'cf\'a2
+\f1 \
+-(void)getArticleSourceList:(NSString*)parentId block:(EventCallBack)block;\
+//
+\f2 \'b6\'a9\'d4\'c4
+\f1 \
+-(void)subscribe:(NSString*)identity block:(EventCallBack)block;\
+//
+\f2 \'c8\'a1\'cf\'fb\'b6\'a9\'d4\'c4
+\f1 \
+-(void)unSubscribe:(NSString*)identity block:(EventCallBack)block;\
+//
+\f2 \'bb\'f1\'c8\'a1\'ce\'c4\'d5\'c2\'c1\'d0\'b1\'ed
+\f1 \
+-(void)getArticleList:(NSString*)colId block:(EventCallBack)block;\
+//
+\f2 \'bb\'f1\'c8\'a1\'ce\'c4\'d5\'c2\'cf\'ea\'cf\'b8\'d0\'c5\'cf\'a2
+\f1 \
+-(void)getArticleInfo:(NSString*)articleId block:(EventCallBack)block;\
+}

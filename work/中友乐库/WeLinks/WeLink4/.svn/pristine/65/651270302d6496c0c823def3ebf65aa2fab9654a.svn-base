@@ -1,0 +1,565 @@
+//
+//  ChatViewController.m
+//  Welinked2
+//
+//  Created by jonas on 12/17/13.
+//
+//
+
+#import "ChatViewController.h"
+#import "TextMessageItem.h"
+#import "SnapMessageData.h"
+#import "ImageViewController.h"
+@interface ChatViewController ()
+
+@end
+
+@implementation ChatViewController
+@synthesize otherUserId,otherAvatar,otherName;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    NSLog(@"检测到截屏  ios6");
+}
+- (void)userDidTakeScreenshot:(NSNotification *)notification
+{
+    if(notification)
+    {
+        UIApplication* app = [notification object];
+        if(app == [UIApplication sharedApplication])
+        {
+            NSLog(@"检测到截屏  ios7 application:%@",app);
+        }
+    }
+}
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    if(isSystemVersionIOS7())
+    {
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(userDidTakeScreenshot:)
+                                                     name:UIApplicationUserDidTakeScreenshotNotification
+                                                   object:nil];
+    }
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"]
+                                imageSelected:[UIImage imageNamed:@"backSelected"]
+                                        title:nil
+                                        inset:UIEdgeInsetsMake(0, -10, 0, 0)
+                                       target:self
+                                     selector:@selector(back:)];
+    topTime = 0;
+    buttomTime = 0;
+    scrollToBottomState = 4;
+    messageSecureType = 1;
+    
+    [self.navigationItem setTitleString:self.otherName];
+    
+    self.view.backgroundColor = [UIColor blackColor];
+    self.view.userInteractionEnabled = YES;
+    UITapGestureRecognizer* guesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(hideKeyboard:)];
+    [self.view addGestureRecognizer:guesture];
+    
+    guesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(hideKeyboard:)];
+    [list addGestureRecognizer:guesture];
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillBeHidden:) name:UIKeyboardWillHideNotification object:nil];
+    inputBack.image = [[UIImage imageNamed:@"chatInputFrame"] stretchableImageWithLeftCapWidth:5 topCapHeight:3];
+    inputBackground.image = [[UIImage imageNamed:@"chatInputBack"] stretchableImageWithLeftCapWidth:2 topCapHeight:2];
+    __weak ChatViewController* slf = self;
+    [list setCallBack:^(int event, id object)
+    {
+        [slf fireEvent:event object:object];
+    }];
+}
+-(void)fireEvent:(int)event object:(id)object
+{
+    UITableView* tbl = (UITableView*)object;
+    if(event == EVENT_SCROLL)
+    {
+        //scroll
+        if(tbl.contentOffset.y > tbl.contentSize.height - tbl.frame.size.height)
+        {
+            //滑到底部 强制滑动
+            scrollToBottomState = 2;
+        }
+    }
+    else if (event == EVENT_LOADMORE)
+    {
+        //loadmore
+//        [nav startActivity];
+        double delayInSeconds = 1;
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            [self loadMore];
+        });
+    }
+    else if (event == EVENT_TOUCH)
+    {
+        if(tbl.contentOffset.y > tbl.contentSize.height - tbl.frame.size.height)
+        {
+            //滑到底部 强制滑动
+            scrollToBottomState = 2;
+        }
+        else
+        {
+            //强制不滑动
+            scrollToBottomState = 3;
+        }
+    }
+    else if (event == EVENT_RESEND)
+    {
+        MessageData* data = (MessageData*)object;
+        [self resendMessage:data];
+    }
+    else if (event == EVENT_PRIFILE)
+    {
+        MessageData*data = (MessageData*)object;
+        if(data != nil)
+        {
+            //0发送 1 接收 2发送中 3 发送失败
+            if(data.isSender == 1)
+            {
+                [[LogicManager sharedInstance] gotoProfile:self userId:data.otherUserId];
+            }
+            else
+            {
+                [[LogicManager sharedInstance] gotoProfile:self userId:data.userId showBackButton:YES];
+            }
+        }
+    }
+    else if (event == EVENT_TAPCONTENT)
+    {
+        MessageData*data = (MessageData*)object;
+        if(data != nil)
+        {
+            if(data.msgType == ImageMessage)
+            {
+                NSArray* arr = [[UserDataBaseManager sharedInstance] queryWithClass:[MessageData class]
+                                                                          tableName:nil
+                                                                          condition:[NSString stringWithFormat:@" where DBUid=%d and otherUserId = %d and msgType=%d",[UserInfo myselfInstance].userId,data.otherUserId,ImageMessage]];
+                
+                if(arr != nil && [arr count]>0)
+                {
+                    NSMutableArray* array = [[NSMutableArray alloc]init];
+                    [array addObject:@"http://ww3.sinaimg.cn/bmiddle/005tNQILjw1egkpfmzmpgj30c80dggnp.jpg"];
+                    [array addObject:@"http://ww2.sinaimg.cn/bmiddle/005tNQILjw1egkpfmwlz1j30c80dsgn7.jpg"];
+                    [array addObject:@"http://ww1.sinaimg.cn/bmiddle/005tNQILjw1egkpfn6ezmj30c80d5ac1.jpg"];
+                    [array addObject:@"http://ww3.sinaimg.cn/bmiddle/005tNQILjw1egkpfn8a7sj30c80dk75y.jpg"];
+                    [array addObject:@"http://ww1.sinaimg.cn/bmiddle/005tNQILjw1egkpfne7yqj30c80d90u3.jpg"];
+                    [array addObject:@"http://ww1.sinaimg.cn/bmiddle/005tNQILjw1egkpfnv4s9j30c80dddh2.jpg"];
+                    [array addObject:@"http://ww3.sinaimg.cn/bmiddle/005tNQILjw1egkpfo551hj30c80dbjt4.jpg"];
+                    [array addObject:@"http://ww1.sinaimg.cn/bmiddle/005tNQILjw1egkpfo4rhsj30c80dbac8.jpg"];
+                    [array addObject:@"http://ww2.sinaimg.cn/bmiddle/005tNQILjw1egkpfohfc3j30c80e3q44.jpg"];
+                }
+            }
+        }
+    }
+}
+-(void)scrollToBottom:(BOOL)animated
+{
+    if(scrollToBottomState == 3)
+    {
+        //不滑动
+        return;
+    }
+    CGPoint offset;
+    if(list.contentSize.height > list.frame.size.height)
+    {
+        offset = CGPointMake(0, list.contentSize.height-list.frame.size.height);
+    }
+    else
+    {
+        offset = CGPointMake(0, 0);
+    }
+    if(scrollToBottomState == 4)
+    {
+        scrollToBottomState = 2;
+        [list setContentOffset:offset animated:NO];
+    }
+    else
+    {
+        [list setContentOffset:offset animated:animated];
+    }
+}
+-(void)resendMessage:(MessageData*)message
+{
+    message.isSender = 2;
+    [list reloadData];
+//    [[NetworkEngine sharedInstance] sendMessage:message.otherUserId content:message.text block:^(int event, id object)
+//     {
+//         if(event == 0)
+//         {
+//             //sendStatus;//0发送 1 接收 2发送中 3 发送失败
+//             message.isSender = 3;
+//             [message synchronize:nil];
+//             [list reloadData];
+//         }
+//         else if (event == 1)
+//         {
+//             [MessageData deleteWith:nil condition:[NSString stringWithFormat:@" where userId = '%@' and otherUserId = '%@' and identity = %d ",[UserInfo myselfInstance].userId,self.otherUserId,message.identity]];
+//             //发送成功
+//             [self reloadFromDatabase];
+//         }
+//     }];
+}
+-(void)showSecure:(UIButton*)clickButton
+{
+    
+    if(clickButton == nil)
+    {
+        return;
+    }
+    CGPoint point = [clickButton convertPoint:clickButton.frame.origin toView:self.view];
+    point.y -= clickButton.frame.size.height;
+    CGRect frame = CGRectMake(popFrame.origin.x, point.y - popFrame.size.height, popFrame.size.width, popFrame.size.height);
+    [UIView animateWithDuration:0.3
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         popView.frame = frame;
+                     } completion:^(BOOL finished) {
+                         popShowed = YES;
+                     }];
+}
+-(void)hideSecure:(UIButton*)clickButton
+{
+    if(clickButton == nil)
+    {
+        return;
+    }
+    CGPoint point = [self.view convertPoint:clickButton.frame.origin fromView:clickButton];
+    point.y -= clickButton.frame.size.height;
+    CGRect frame = CGRectMake(popFrame.origin.x, point.y, 0, 0);
+    [UIView animateWithDuration:0.3
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         popView.frame = frame;
+                     } completion:^(BOOL finished) {
+                         popShowed = NO;
+                     }];
+}
+-(IBAction)switchSecure:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    messageSecureType = (int)btn.tag;
+    [self hideSecure:secureButton];
+    [secureButton setImage:[UIImage imageNamed:[NSString stringWithFormat:@"lock%d",messageSecureType]]
+                  forState:UIControlStateNormal];
+}
+- (IBAction)lockPressed:(id)sender
+{
+    UIButton* secure = (UIButton*)sender;
+    if(!popShowed)
+    {
+        [self showSecure:secure];
+    }
+    else
+    {
+        [self hideSecure:secure];
+    }
+}
+- (IBAction)sayPressed:(id)sender
+{
+    NSString* s = textField.text;
+    if(s == nil || [s length]<=0)
+    {
+        return;
+    }
+    else
+    {
+        NSCharacterSet *whitespace = [NSCharacterSet  whitespaceAndNewlineCharacterSet];
+        s = [s  stringByTrimmingCharactersInSet:whitespace];
+        if(s == nil || [s length]<=0)
+        {
+            [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"不能发送空白消息" actionText:@"确定"];
+            return;
+        }
+    }
+    __block MessageData* msg = [[MessageData alloc]init];
+    msg.userId = [UserInfo myselfInstance].userId;
+    msg.isSender = 2;//发送中    //0发送 1 接收 2发送中 3 发送失败
+    msg.text = textField.text;
+    msg.contentString = [NSString stringWithFormat:@"{\"text\":\"%@\"}",msg.text];
+    msg.otherUserId = self.otherUserId;
+    msg.otherAvatar = self.otherAvatar;
+    msg.otherName = self.otherName;
+    msg.msgType = TextMesage;
+    msg.createTime = [[NSDate date] timeIntervalSince1970]*1000;
+    [self setSendMessage:msg];
+    [msg synchronize:nil];
+    
+    [list.source addObject:msg];
+    [list reloadData];
+    [self scrollToBottom:YES];
+//    [[NetworkEngine sharedInstance] sendMessage:self.otherUserId content:msg.text block:^(int event, id object)
+//    {
+//        if(event == 0)
+//        {
+//            //sendStatus;//0发送 1 接收 2发送中 3 发送失败
+//            msg.isSender = 3;
+//            [msg synchronize:nil];
+//            [list reloadData];
+//        }
+//        else if (event == 1)
+//        {
+//            //0发送 1 接收 2发送中 3 发送失败
+//            [MessageData deleteWith:nil condition:[NSString stringWithFormat:@" where userId = '%@' and otherUserId = '%@' and identity = %d ",[UserInfo myselfInstance].userId,self.otherUserId,msg.identity]];
+//            //发送成功
+//            [self reloadFromDatabase];
+//        }
+//    }];
+    textField.text = @"";
+}
+-(void)setSendMessage:(MessageData*)msg
+{
+    NSString* conditionString = [NSString stringWithFormat:@" order by identity limit 1 offset 0 "];
+    NSMutableArray * result = [[UserDataBaseManager sharedInstance] queryWithClass:[MessageData class]
+                                                                         tableName:nil
+                                                                         condition:conditionString];
+    int idenity = 0;
+    
+    if(result != nil && [result count]>0)
+    {
+        MessageData* obj = [result objectAtIndex:0];
+        if(obj.identity < 0)
+        {
+            idenity = obj.identity-1;
+        }
+        else
+        {
+            idenity = idenity -1;
+        }
+    }
+    else
+    {
+        idenity = idenity -1;
+    }
+    msg.identity = idenity;
+}
+-(void)resetTime
+{
+    NSString* conditionString = [NSString stringWithFormat:@" where userId = %d and otherUserId = %d order by createTime desc limit 1 offset 0",[UserInfo myselfInstance].userId,self.otherUserId];
+    NSMutableArray * result = [[UserDataBaseManager sharedInstance] queryWithClass:[MessageData class] tableName:nil condition:conditionString];
+    if(result != nil && [result count]>0)
+    {
+        MessageData* msg = [result objectAtIndex:0];
+        buttomTime = msg.createTime;
+        topTime = buttomTime+1;
+    }
+}
+-(void)reloadFromDatabase
+{
+    [list.source removeAllObjects];
+    [self resetTime];
+    NSString* conditionString = [NSString stringWithFormat:@" where userId = %d and otherUserId = %d and createTime < %f  order by createTime desc limit 10 offset 0",[UserInfo myselfInstance].userId,self.otherUserId,topTime];
+    NSMutableArray * result = [[UserDataBaseManager sharedInstance] queryWithClass:[MessageData class] tableName:nil condition:conditionString];
+    if(result != nil && [result count]>0)
+    {
+        MessageData* msg = [result lastObject];
+        topTime = msg.createTime;
+        BOOL maskEnable = NO;
+        if(self.otherUserId == 10000)
+        {
+            maskEnable = NO;
+        }
+        else
+        {
+            if(![[LogicManager sharedInstance] isMyFriend:self.otherUserId])
+            {
+                maskEnable = YES;
+            }
+            else
+            {
+                maskEnable = NO;
+            }
+        }
+        for (MessageData* data in result)
+        {
+//            if(!maskEnable)
+            {
+                if(data.status == 0)
+                {
+                    data.status = 1;
+                    [data synchronize:nil];
+                }
+                if(data.isSender == 2)
+                {
+                    [self resendMessage:data];
+                }
+            }
+            [list.source addObject:data];
+        }
+        [list reloadData];
+    }
+    [self scrollToBottom:YES];
+}
+-(void)loadLatest
+{
+    NSString* conditionString = [NSString stringWithFormat:@" where userId = %d and otherUserId = %d and createTime > %f  order by createTime",[UserInfo myselfInstance].userId,self.otherUserId,buttomTime];
+    NSMutableArray * result = [[UserDataBaseManager sharedInstance] queryWithClass:[MessageData class] tableName:nil condition:conditionString];
+    if(result != nil && [result count]>0)
+    {
+        MessageData* msg = [result objectAtIndex:0];
+        if(msg != nil)
+        {
+            buttomTime = msg.createTime;
+        }
+        
+        for (MessageData* data in result)
+        {
+            if(data.status == 0)
+            {
+                data.status = 1;
+                [data synchronize:nil];
+            }
+            [list.source addObject:data];
+        }
+        [list reloadData];
+    }
+    [self scrollToBottom:YES];
+}
+-(void)loadMore
+{
+    NSString* conditionString = [NSString stringWithFormat:@" where userId = %d and otherUserId = %d and createTime < %f  order by createTime desc limit 10 offset 0",[UserInfo myselfInstance].userId,self.otherUserId,topTime];
+    NSMutableArray * result = [[UserDataBaseManager sharedInstance] queryWithClass:[MessageData class] tableName:nil condition:conditionString];
+    if(result != nil && [result count]>0)
+    {
+        MessageData* msg = [result lastObject];
+        topTime = msg.createTime;
+        
+        for (MessageData* data in result)
+        {
+            if(data.status == 0)
+            {
+                data.status = 1;
+                [data synchronize:nil];
+            }
+            [list.source addObject:data];
+        }
+        CGPoint offset = [list contentOffset];
+        CGSize oldSize = list.contentSize;
+        [list reloadData];
+        CGSize newSize = list.contentSize;
+        offset.y = newSize.height-oldSize.height;
+        if (offset.y > [list contentSize].height)
+        {
+            offset.y = 0;
+        }
+        [list setContentOffset:offset animated:NO];
+    }
+//    [nav stopActivity];
+}
+-(void)loadFromNetwork
+{
+    [[NetworkEngine sharedInstance] getMessages:@"0" block:^(int event, id object)
+     {
+         if(event == 1)
+         {
+             [self loadLatest];
+         }
+     }];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self.navigationItem setTitleString:self.otherName];
+    [self reloadFromDatabase];
+    popFrame = popView.frame;
+    CGRect frame = CGRectMake(20, popView.frame.origin.y + popView.frame.size.height,0, 0);
+    popView.frame = frame;
+}
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    if(timer != nil)
+    {
+        [timer invalidate];
+        timer = nil;
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)hideKeyboard:(UITapGestureRecognizer*)guesture
+{
+    [[UIApplication sharedApplication] sendAction:@selector(resignFirstResponder) to:nil from:nil forEvent:nil];
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [self sayPressed:nil];
+    return YES;
+}
+
+#pragma mark - Keyboard events
+
+- (void)keyboardWasShown:(NSNotification*)aNotification
+{
+    scrollToBottomState = 2;
+    NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    NSNumber *duration = [info objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [info objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    [UIView animateWithDuration:duration.doubleValue animations:^{
+        [UIView setAnimationBeginsFromCurrentState:YES];
+        [UIView setAnimationCurve:[curve intValue]];
+        CGRect frame = textInputView.frame;
+        frame.origin.y = self.view.frame.size.height - kbSize.height - frame.size.height;
+        textInputView.frame = frame;
+        
+        frame = list.frame;
+        frame.size.height = self.view.frame.size.height- kbSize.height-textInputView.frame.size.height;
+        list.frame = frame;
+        
+        
+        frame = popView.frame;
+        frame.origin.y = frame.origin.y - kbSize.height;
+        popView.frame = frame;
+        
+        [self scrollToBottom:NO];
+    } completion:^(BOOL finished) {
+    }];
+}
+
+- (void)keyboardWillBeHidden:(NSNotification*)aNotification
+{
+    scrollToBottomState = 2;
+    NSDictionary* info = [aNotification userInfo];
+    NSNumber *duration = [info objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [info objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    [UIView animateWithDuration:duration.doubleValue animations:^{
+        [UIView setAnimationBeginsFromCurrentState:YES];
+        [UIView setAnimationCurve:[curve intValue]];
+        CGRect frame = textInputView.frame;
+        frame.origin.y = self.view.frame.size.height - frame.size.height;
+        textInputView.frame = frame;
+        [self scrollToBottom:NO];
+        frame = list.frame;
+        frame.size.height = self.view.frame.size.height-textInputView.frame.size.height;
+        list.frame = frame;
+        
+        frame = popView.frame;
+        frame.origin.y = frame.origin.y + kbSize.height;
+        popView.frame = frame;
+    } completion:^(BOOL finished) {
+    }];
+}
+@end

@@ -1,0 +1,65 @@
+获取好友申请列表
+
+请求URL: /friend/get-friend-requests
+
+请求方式: GET
+
+请求参数：
+默认
+
+返回结果：
+请求列表
+{
+	 "data":[
+		 {
+			  "userId":用户id,Integer
+			  "friendId":朋友id,Integer
+			  "friendName":朋友姓名,
+			  "friendAvatar":朋友头像,
+			  "friendCompany":朋友公司,
+			  "friendJob":朋友职位,
+			  "createTime":创建时间,
+			  "status":0
+		 },
+		 {
+			  "userId":用户id,Integer
+			  "friendId":朋友id,Integer
+			  "friendName":朋友姓名,
+			  "friendAvatar":朋友头像,
+			  "friendCompany":朋友公司,
+			  "friendJob":朋友职位,
+			  "createTime":创建时间,
+			  "status":0
+		 }
+	 ],
+	 "msg":"",
+	 "retcode":"0"
+}
+
+
+返回示例：
+
+{
+	"data":[
+		{
+			"createTime":1399426802000,
+			"friendAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201403-480ed096_b172_4ea2_838f_fda586504db6.jpg",
+			"friendCompany":"珍爱网",
+			"friendId":21805,
+			"friendName":"洋仔",
+			"status":0,
+			"userId":658455
+		},
+		{
+			"createTime":1399426802000,
+			"friendAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-897b4beb_785e_4396_b1cb_b80559ba2d01.jpg",
+			"friendCompany":"珍爱网",
+			"friendId":21806,
+			"friendName":"test",
+			"status":0,
+			"userId":658455
+		}
+	],
+	"msg":"",
+	"retcode":"0"
+}

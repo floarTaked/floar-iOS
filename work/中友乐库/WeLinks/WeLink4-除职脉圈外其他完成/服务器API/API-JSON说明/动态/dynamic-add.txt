@@ -1,0 +1,65 @@
+发布动态
+
+请求URL: /dynamic/add
+
+请求方式: POST
+
+请求参数:
+共三个 httpUrl、image、json
+(httpUrl和image是二选一关系)
+	httpUrl:链接地址
+	image：图片
+	json：
+	结构体如下
+	{
+	  "tags": "动态标签用逗号分隔，每个标签不超过5个字",
+	  "tagIds": "动态标签id用逗号分隔",
+	  "content": "动态内容（最多1000个字符）",
+	  "allowedFriend": 好友可见,(1,2,3)
+	}
+	参考如下
+	{
+	  "tags": "Facebook,Google,zhenai",
+	  "tagIds":
+	  "content": "this is dynamic's content",
+	  "allowedFriend": 3
+	}
+
+返回结果, 包含动态本身，发表用户信息，如下
+{
+  "msg": "",
+  "retcode": "0",
+  "data": {
+    "id": 6,
+    "userId": 658455,
+    "content": "this is question's content",
+    "httpUrl":"http:\/\/baidu.com\",
+    "allowedFriend": 3,
+    "createDate": 1400489339000,
+    "deleted": 0,
+    "hidden": 0,
+    "tagIds": "497130182,-1240244679,-703046977",
+    "tags": [
+      {
+        "id": -1240244679,
+        "title": "Google"
+      },
+      {
+        "id": 497130182,
+        "title": "Facebook"
+      },
+      {
+        "id": -703046977,
+        "title": "zhenai"
+      }
+    ],
+    "user": {
+      "userId": 658455,
+      "name": "\u6d4b\u8bd51222&",
+      "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+      "company": "乐酷",
+      "job": "工程师",
+      "sex": 0
+    }
+  }
+}

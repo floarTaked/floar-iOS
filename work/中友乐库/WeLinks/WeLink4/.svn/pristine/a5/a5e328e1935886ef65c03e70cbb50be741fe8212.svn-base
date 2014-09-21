@@ -1,0 +1,77 @@
+//
+//  Feed.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-13.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "Feed.h"
+#import "UserInfo.h"
+#import "LogicManager.h"
+#import "Comment.h"
+
+@implementation Feed
+@synthesize DBUid,commentUserNum,commentList,content,createTime,feedType,friendType,feedId,image,targetId,targetContent,userAvatar,userCompany,userContent,userId,userJob,userName;
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        self.DBUid = [UserInfo myselfInstance].userId;
+    }
+    return self;
+}
+
++(NSString *)primaryKey
+{
+    return @"feedId";
+}
+
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    if ([key isEqualToString:@"id"])
+    {
+        self.feedId = value;
+    }
+    else if ([key isEqualToString:@"comments"])
+    {
+        NSArray *array = (NSArray *)value;
+        commentString = [[LogicManager sharedInstance] objectToJsonString:array];
+        for (NSDictionary *dict  in array)
+        {
+            Comment *comment = [[Comment alloc] init];
+            [comment setValuesForKeysWithDictionary:dict];
+            [comment synchronize:nil];
+            [self.commentList addObject:comment];
+        }
+    }
+    else if ([key isEqualToString:@"feedType"])
+    {
+        self.feedType = [value intValue];
+    }
+    else if ([key isEqualToString:@"friendType"])
+    {
+        self.friendType = [value intValue];
+    }
+}
+
+-(NSMutableArray *)commentList
+{
+    if (commentList == nil && commentString != nil && commentString.length>0)
+    {
+        self.commentList = [[NSMutableArray alloc] init];
+        id jsonObject = [[LogicManager sharedInstance] jsonStringTOObject:commentString];
+        for (NSDictionary *dict in jsonObject)
+        {
+            Comment *comment = [[Comment alloc] init];
+            [comment setValuesForKeysWithDictionary:dict];
+            [self.commentList addObject:comment];
+        }
+    }
+    return commentList;
+}
+
+@end
+

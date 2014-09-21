@@ -1,0 +1,21 @@
+//
+//  SaveCardViewController.h
+//  WeLinked4
+//
+//  Created by jonas on 5/16/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "Common.h"
+@interface SaveCardViewController : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    IBOutlet UIView* cardImageView;
+    IBOutlet UIImageView* cardImage;
+    IBOutlet UITableView* table;
+    EventCallBack callback;
+}
+@property(nonatomic,strong)UIImage* card;
+@property(nonatomic,strong)NSString* value;
+-(void)setEventCallBack:(EventCallBack)call;
+@end

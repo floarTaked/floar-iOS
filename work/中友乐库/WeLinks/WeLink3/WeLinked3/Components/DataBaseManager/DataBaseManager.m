@@ -1,0 +1,362 @@
+//
+//  DataBaseEngine.m
+//  UnNamed
+//
+//  Created by jonas on 8/1/13.
+//  Copyright (c) 2013 jonas. All rights reserved.
+//
+
+#import "DataBaseManager.h"
+#define VAToArray(firstarg) ({\
+NSMutableArray* valistArray = [NSMutableArray array];\
+id obj = nil;\
+va_list arguments;\
+va_start(arguments, sql);\
+while ((obj = va_arg(arguments, id))) {\
+[valistArray addObject:obj];\
+}\
+va_end(arguments);\
+valistArray;\
+})
+@implementation DataBase
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+    }
+    return self;
+}
+-(BOOL)registerTable:(NSString*)sql
+{
+    if(sql == nil)
+    {
+        return NO;
+    }
+    BOOL result = NO;
+    if(database)
+    {
+        result = [database executeUpdate:sql];
+    }
+    return result;
+}
+//-(BOOL)registerTable:(Class)cls
+//{
+//    NSString* sql = nil;
+//    if(cls != nil)
+//    {
+//        sql = [cls databaseCreateSql];
+//    }
+//    if(sql == nil)
+//    {
+//        return NO;
+//    }
+//    BOOL result = NO;
+//    if(database)
+//    {
+//        result = [database executeUpdate:sql];
+//    }
+//    return result;
+//}
+//-(NSString*)sqlFromClass:(Class)cls
+//{
+//    NSMutableString* sql = [NSMutableString stringWithFormat:@"create table %@ (",[NSStringFromClass(cls) uppercaseString]];
+//    unsigned int ivarsCnt = 0;
+//    //　获取类成员变量列表,ivarsCnt为类成员数量
+//    Ivar *ivars = class_copyIvarList(cls, &ivarsCnt);
+//    //　遍历成员变量列表,其中每个变量都是Ivar类型的结构体
+//    for (const Ivar *p = ivars; p < ivars + ivarsCnt; ++p)
+//    {
+//        Ivar const ivar = *p;
+//        //　获取变量名
+//        NSString *key = [NSString stringWithUTF8String:ivar_getName(ivar)];
+//        const char *type = ivar_getTypeEncoding(ivar);
+//        NSString* varType = [NSString stringWithFormat:@"%s",type];
+//        if([varType isEqualToString:@"@\"NSString\""])
+//        {
+//            [sql appendFormat:@"%@ text,",key];
+//        }
+//        else if([varType isEqualToString:@"i"])
+//        {
+//            [sql appendFormat:@"%@ integer,",key];
+//        }
+//        else if([varType isEqualToString:@"f"])
+//        {
+//            [sql appendFormat:@"%@ double,",key];
+//        }
+//    }
+//    NSString* sqlString = [NSString stringWithFormat:@"%@)",[sql substringToIndex:[sql length] -1]];
+////    NSString* s = [NSString stringWithFormat:@"create table %@ (nikeName text,uid integer PRIMARY KEY, school text, company text, specialty text)",
+////                   [NSStringFromClass([self class]) uppercaseString]];
+//    return sqlString;
+//}
+-(void)dealloc
+{
+    if(database != nil)
+    {
+        [database close];
+    }
+}
+-(void)close
+{
+    if(database != nil)
+    {
+        [database close];
+    }
+}
+-(void)open
+{
+    
+}
+- (BOOL)executeUpdate:(NSString*)sql, ...
+{
+    BOOL result = NO;
+    if(database)
+    {
+        va_list args;
+        va_start(args, sql);
+        result = [database executeUpdate:sql orVAList:args];
+        va_end(args);
+    }
+    return result;
+}
+- (BOOL)executeUpdateWithFormat:(NSString *)sql, ... NS_FORMAT_FUNCTION(1,2)
+{
+    if(database)
+    {
+        return [database executeUpdateWithFormat:sql,VAToArray(sql)];
+    }
+    else
+    {
+        return NO;
+    }
+}
+- (BOOL)executeUpdate:(NSString*)sql withArgumentsInArray:(NSArray *)arguments
+{
+    if(database)
+    {
+        return [database executeUpdate:sql withArgumentsInArray:arguments];
+    }
+    else
+    {
+        return NO;
+    }
+}
+- (FMResultSet *)executeQuery:(NSString*)sql, ...
+{
+    if(database)
+    {
+        va_list args;
+        va_start(args, sql);
+        id result = [database executeQuery:sql orVAList:args];
+        va_end(args);
+        return result;
+    }
+    else
+    {
+        return nil;
+    }
+}
+//- (FMResultSet *)executeQueryWithFormat:(NSString*)sql, ... NS_FORMAT_FUNCTION(1,2)
+//{
+//    if(database)
+//    {
+//        return [database executeQueryWithFormat:sql,VAToArray(sql)];
+//    }
+//    else
+//    {
+//        return nil;
+//    }
+//}
+-(NSMutableArray*)queryWithClass:(Class)cls tableName:(NSString*)tableName select:(NSString*)select condition:(NSString*)condition
+{
+    NSMutableArray* arr = [[NSMutableArray alloc]init];
+    NSString* sql = [cls queryWithSelect:select condition:condition tableName:tableName];
+    FMResultSet* rs = nil;
+    if(database)
+    {
+        rs = [database executeQuery:sql];
+    }
+    while ([rs next])
+    {
+        id obj = [cls asynchronize:rs];
+        [arr addObject:obj];
+    }
+    if(rs)
+    {
+        [rs close];
+    }
+    return arr;
+}
+-(NSMutableArray*)queryWithClass:(Class)cls tableName:(NSString*)tableName condition:(NSString*)condition
+{
+    NSMutableArray* arr = [[NSMutableArray alloc]init];
+    NSString* sql = [cls queryWithSelect:nil condition:condition tableName:tableName];
+    FMResultSet* rs = nil;
+    if(database)
+    {
+        rs = [database executeQuery:sql];
+    }
+    while ([rs next])
+    {
+        id obj = [cls asynchronize:rs];
+        [arr addObject:obj];
+    }
+    if(rs)
+    {
+        [rs close];
+    }
+    return arr;
+}
+//check if table exist in database (patch from OZLB)
+- (BOOL)tableExists:(NSString*)tableName
+{    
+    BOOL returnBool;
+    //lower case table name
+    tableName = [tableName uppercaseString];
+    //search in sqlite_master table if table exists
+    FMResultSet *rs = [self executeQuery:@"select [sql] from sqlite_master where [type] = 'table' and name = ?", tableName];
+    //if at least one next exists, table exists
+    returnBool = [rs next];
+    //close and free object
+    [rs close];
+    return returnBool;
+}
+//get table with list of tables: result colums: type[STRING], name[STRING],tbl_name[STRING],rootpage[INTEGER],sql[STRING]
+//check if table exist in database  (patch from OZLB)
+- (FMResultSet*)getSchema
+{
+    //result colums: type[STRING], name[STRING],tbl_name[STRING],rootpage[INTEGER],sql[STRING]
+    FMResultSet *rs = [self executeQuery:@"SELECT type, name, tbl_name, rootpage, sql FROM (SELECT * FROM sqlite_master UNION ALL SELECT * FROM sqlite_temp_master) WHERE type != 'meta' AND name NOT LIKE 'sqlite_%' ORDER BY tbl_name, type DESC, name"];
+    
+    return rs;
+}
+
+//get table schema: result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER], dflt_value[],pk[INTEGER]
+- (FMResultSet*)getTableSchema:(NSString*)tableName
+{    
+    //result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER], dflt_value[],pk[INTEGER]
+    FMResultSet *rs = [self executeQuery:[NSString stringWithFormat: @"PRAGMA table_info(%@)", tableName]];
+    return rs;
+}
+//check if column exist in table
+- (BOOL)columnExists:(NSString*)tableName columnName:(NSString*)columnName
+{    
+    BOOL returnBool = NO;
+    FMResultSet *rs = [self getTableSchema: tableName];
+    while ([rs next])
+    {
+        if ([[rs stringForColumn:@"name"] isEqualToString: columnName])
+        {
+            returnBool = YES;
+            break;
+        }
+    }
+    //close and free object
+    [rs close];
+    return returnBool;
+}
+@end
+
+@implementation PublicDataBaseManager
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        NSString* documentPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/PublicDatabase.db"];
+        NSString* resourcePath =  [[NSBundle mainBundle] pathForResource:@"PublicDatabase" ofType:@"db"];
+        //database = [[FMDatabase databaseWithPath:[NSHomeDirectory() stringByAppendingPathComponent:@"Documents/PublicDatabase.db"]] retain];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSError *error;
+        BOOL success = [fileManager fileExistsAtPath:documentPath];
+        if(!success)
+        {
+            success = [fileManager copyItemAtPath:resourcePath toPath:documentPath error:&error];
+//            NSLog(@"Database file copied from bundle to %@", documentPath);
+            if (!success)
+            {
+                NSAssert1(0, @"Failed to create writable database file with message '%@'.", [error localizedDescription]);
+            }
+        }
+        else
+        {
+//            NSLog(@"Database file found at path %@", documentPath);
+        }
+        
+        //database = [[FMDatabase databaseWithPath:[NSHomeDirectory() stringByAppendingPathComponent:@"Documents/PublicDatabase.db"]] retain];
+        database = [FMDatabase databaseWithPath:documentPath];
+        if (![database open])
+        {
+            NSLog(@"Could not open db.");
+        }
+        NSDateFormatter *fmt = [FMDatabase storeableDateFormat:@"yyyy-MM-dd HH:mm:ss:SSS"];
+        [database setDateFormat:fmt];
+        database.logsErrors = YES;
+    }
+    return self;
+}
++(PublicDataBaseManager*)sharedInstance
+{
+    static PublicDataBaseManager* m_instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        m_instance = [[PublicDataBaseManager alloc]init];
+    });
+    return m_instance;
+}
+@end
+
+@implementation UserDataBaseManager
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        [self open];
+    }
+    return self;
+}
+-(void)open
+{
+    database = [FMDatabase databaseWithPath:[NSHomeDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Documents/database%@.db",@""]]];
+    if (![database open])
+    {
+        NSLog(@"Could not open db.");
+    }
+    NSDateFormatter *fmt = [FMDatabase storeableDateFormat:@"yyyy-MM-dd HH:mm:ss:SSS"];
+    [database setDateFormat:fmt];
+    database.logsErrors = YES;
+}
++(UserDataBaseManager*)sharedInstance
+{
+    static UserDataBaseManager* m_instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        m_instance = [[UserDataBaseManager alloc]init];
+    });
+    return m_instance;
+}
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,18 @@
+读取问题模块统计信息
+
+请求URL: /question/summary
+
+请求方式: GET
+
+请求参数: 无
+
+返回结果
+{
+  "msg": "",
+  "retcode": "0",
+  "data": {
+    "answer": 0, 我回答的问题数
+    "publish": 4, 我发布的问题数
+    "comment": 0 我评论的问题数
+  }
+}

@@ -1,0 +1,206 @@
+//
+//  TagViewController.m
+//  WeLinked3
+//
+//  Created by jonas on 4/8/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "TagViewController.h"
+#import "UserInfo.h"
+#import "Common.h"
+@implementation StateButton
+@synthesize selectedState;
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        selectedStateView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"selectedState"]];
+    }
+    return self;
+}
+-(id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if(self)
+    {
+        selectedStateView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"selectedState"]];
+    }
+    return self;
+}
+-(void)setSelectedState:(BOOL)selected
+{
+    selectedState = selected;
+    if(selectedState)
+    {
+        CGRect frame = selectedStateView.frame;
+        frame.origin.x = self.frame.size.width - frame.size.width;
+        frame.origin.y = 0;
+        selectedStateView.frame = frame;
+        [self addSubview:selectedStateView];
+    }
+    else
+    {
+        [selectedStateView removeFromSuperview];
+    }
+}
+@end
+
+@interface TagViewController ()
+
+@end
+
+@implementation TagViewController
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack
+                                                                 title:nil
+                                                                target:self
+                                                              selector:@selector(back:)];
+    [self.navigationItem setTitleViewWithText:@"职脉标签"];
+    
+    dataSource = [NSMutableArray arrayWithObjects:@"标签1",@"标签2",@"标签3",@"标签4",@"标签5标签5标",@"标签6",@"标签7",@"标签8标签8",@"标签1标签1",@"标签2",@"标签3标签3",@"标签4",@"标签5标签5",@"标签6",@"标签7",@"标签8标签8",nil];
+    [dataSource addObject:@"NIL"];
+    [self updateListView];
+}
+-(void)updateListView
+{
+    if(listView != nil)
+    {
+        [listView removeFromSuperview];
+    }
+    listView = [self getTagList:nil];
+    listView.frame = CGRectMake(10, 40, 300, listView.frame.size.height);
+    [self.view addSubview:listView];
+}
+-(IBAction)save:(id)sender
+{
+    
+}
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+    if (textField.text.length  + string.length> 5)
+    {
+        return NO;
+    }
+    return YES;
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if(buttonIndex == 1)
+    {
+        UITextField* txt = [alertView textFieldAtIndex:0];
+        if(txt != nil && [txt.text length]>0 && [txt.text length]<6)
+        {
+            [dataSource insertObject:txt.text atIndex:[dataSource count]-1];
+            [self updateListView];
+        }
+    }
+}
+-(void)clickedButton:(id)sender
+{
+    StateButton* btn = (StateButton*)sender;
+    if(btn.tag != 1000)
+    {
+        btn.selectedState = !btn.selectedState;
+    }
+    else
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"请填写标签名称 最长5个字"
+                                                        message:nil
+                                                       delegate:self
+                                              cancelButtonTitle:@"取消"
+                                              otherButtonTitles:@"确定",nil];
+        
+        alert.alertViewStyle = UIAlertViewStylePlainTextInput;
+        
+        UITextField* txt = [alert textFieldAtIndex:0];
+        if(txt != nil)
+        {
+            txt.delegate = self;
+        }
+        [alert show];
+    }
+}
+-(UIView*)getTagList:(UserInfo*)userInfo
+{
+    float HEIGHT = 23;
+    UIView* v = [[UIView alloc]initWithFrame:CGRectMake(10, 0, 300, HEIGHT)];
+    v.backgroundColor = [UIColor whiteColor];
+    v.userInteractionEnabled = YES;
+    float width = 10;
+    float height = 16;
+    CGRect frame = v.frame;
+    for(NSString* s in dataSource)
+    {
+        StateButton* button = [[StateButton alloc]initWithFrame:CGRectMake(0, 0, 0, HEIGHT)];
+        [button addTarget:self action:@selector(clickedButton:) forControlEvents:UIControlEventTouchUpInside];
+        CGRect buttonFrame = button.frame;
+        if([s isEqualToString:@"NIL"])
+        {
+            button.tag = 1000;
+            button.backgroundColor = [UIColor clearColor];
+            button.titleLabel.text = @"";
+            [button setBackgroundImage:[UIImage imageNamed:@"addTag"] forState:UIControlStateNormal];
+            [button setBackgroundImage:[UIImage imageNamed:@"addTagSelected"] forState:UIControlStateHighlighted];
+            buttonFrame.size.width = 66;
+            buttonFrame.size.height = 24;
+            button.frame = buttonFrame;
+        }
+        else
+        {
+            [button setTitle:s forState:UIControlStateNormal];
+            button.titleLabel.textAlignment = NSTextAlignmentCenter;
+            button.titleLabel.font = getFontWith(NO, 11);
+            button.backgroundColor = colorWithHex(0x2485ED);
+            button.titleLabel.textColor = [UIColor whiteColor];
+
+            float labelWidth = [UILabel calculateWidthWith:s
+                                                      font:button.titleLabel.font
+                                                    height:HEIGHT
+                                            lineBreakeMode:NSLineBreakByWordWrapping];
+            buttonFrame.size.width += labelWidth + 10;
+            buttonFrame.size.height = HEIGHT;
+            button.frame = buttonFrame;
+        }
+        
+        if(width + buttonFrame.size.width > frame.size.width-10)
+        {
+            frame.size.height += HEIGHT+5;
+            width = 10 + buttonFrame.size.width/2;
+            height += HEIGHT+5;
+            button.center = CGPointMake(width, height);
+            width += buttonFrame.size.width/2+10;
+        }
+        else
+        {
+            width += buttonFrame.size.width/2;
+            button.center = CGPointMake(width, height);
+            width += buttonFrame.size.width/2 + 10;
+        }
+        [v addSubview:button];
+    }
+    frame.size.height += 10;
+    v.frame = frame;
+    return v;
+}
+@end

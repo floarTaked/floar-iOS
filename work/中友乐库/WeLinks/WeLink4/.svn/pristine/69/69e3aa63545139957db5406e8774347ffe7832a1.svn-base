@@ -1,0 +1,149 @@
+//
+//  ShareViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-26.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "ShareViewController.h"
+#import "LogicManager.h"
+
+
+@interface ShareViewController ()<UITableViewDataSource,UITableViewDelegate,UIActionSheetDelegate,UIAlertViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate>
+{
+    UIImagePickerController *imagePicker;
+}
+
+@property (weak, nonatomic) IBOutlet UITableView *shareTableView;
+
+@end
+
+@implementation ShareViewController
+
+@synthesize shareTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setTitleString:@"分享"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -20, 0, 0) target:self selector:@selector(gotoBack)];
+    [self.navigationItem setRightBarButtonItem:nil imageSelected:nil title:@"发送" inset:UIEdgeInsetsZero target:self selector:@selector(sendShareAction)];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+#pragma mark - UITableViewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 2;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 1;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    if (indexPath.section == 1)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+            btn.frame = CGRectMake(10+71*i, 11, 61, 61);
+            btn.tag = 70+i;
+            [btn addTarget:self action:@selector(AddSometingAction:) forControlEvents:UIControlEventTouchUpInside];
+            if (btn.tag == 70)
+            {
+                [btn setBackgroundImage:[UIImage imageNamed:@"img_addImage"] forState:UIControlStateNormal];
+            }
+            else
+            {
+                [btn setBackgroundImage:[UIImage imageNamed:@"img_addLink"] forState:UIControlStateNormal];
+            }
+            [cell.contentView addSubview:btn];
+        }
+    }
+    
+    return cell;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section == 0)
+    {
+        return 120;
+    }
+    else
+    {
+        return 82;
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (section == 0)
+    {
+        return 0.1;
+    }
+    else
+    {
+        return 5;
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    return 5;
+}
+
+#pragma mark - UINavigationBarBtnAction
+-(void)gotoBack
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)sendShareAction
+{
+    
+}
+
+#pragma mark - Action
+-(void)AddSometingAction:(UIButton *)btn
+{
+    if (btn.tag == 70)
+    {
+        UIActionSheet *imageAction = [[UIActionSheet alloc] initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"图片",@"照相", nil];
+        [imageAction showInView:self.view];
+    }
+    else
+    {
+        UIAlertView *linkAlert = [[UIAlertView alloc] initWithTitle:@"请输入链接地址" message:nil delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+        linkAlert.alertViewStyle = UIAlertViewStylePlainTextInput;
+        [linkAlert show];
+    }
+}
+
+@end

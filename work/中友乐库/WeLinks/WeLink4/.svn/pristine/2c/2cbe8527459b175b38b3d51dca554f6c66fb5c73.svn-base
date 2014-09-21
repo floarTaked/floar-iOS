@@ -1,0 +1,45 @@
+//
+//  FriendCircleViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/14/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "FriendCircleViewController.h"
+#import "Common.h"
+@interface FriendCircleViewController ()
+
+@end
+
+@implementation FriendCircleViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        self.tabBarItem.image = [UIImage imageNamed:@"tab"];
+        self.tabBarItem.selectedImage = [UIImage imageNamed:@"tabSelected"];
+        self.tabBarItem.title = @"职脉圈";
+        NSMutableDictionary *textAttributes = [NSMutableDictionary dictionary];
+        [textAttributes setObject:[UIColor whiteColor] forKey:UITextAttributeTextColor];
+        [self.tabBarItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:colorWithHex(NAVBARCOLOR),
+                                                 UITextAttributeTextColor, nil] forState:UIControlStateSelected];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

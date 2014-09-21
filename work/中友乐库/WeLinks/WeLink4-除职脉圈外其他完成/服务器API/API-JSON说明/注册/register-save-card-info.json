@@ -1,0 +1,20 @@
+注册用户时保存名片信息
+
+请求URL: /register/save-card-info
+
+请求方式: POST
+
+请求参数: 
+	image:用户头像(文件流)/headerUrl:头像url 
+	name：姓名 
+	company：公司 
+	job：职位 
+	phone ：多个电话，格式:移动电话,工作电话，其他号码
+	email：电子邮件
+	companyAddress：公司地址
+	account：即时通信账号
+	cardPosition：名片的位置
+        cardImage:名片文件
+
+返回结果
+user对象

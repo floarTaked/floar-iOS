@@ -1,0 +1,72 @@
+获取消息，服务器将消息状态自动变更
+
+请求URL: /msg/get-msgs
+
+请求方式: GET
+
+请求参数：
+ isAll：1   是最近20天的全部消息
+	0   是所有未读信息
+
+返回结果：
+消息列表
+{
+	"data":[
+		{
+			  content:内容,
+			  createTime:创建时间,
+			  receiveTime：服务器发送的时间
+			  storeSecond：定时删除需要保存的秒数
+			  id:消息id,
+			  isSender:1=是发送者 0=是接收者,
+			  msgType:1=普通文本 2=通知消息 3=阅后即焚消息,4=定时删除,5=好友请求,
+			  otherAvatar:图片url,
+			  otherName:接收者姓名,
+			  otherUserId:接收者id,
+			  status:0=未读 1=已读,
+			  userId:用户id，
+			  job:职位,
+			  company:公司
+		 },
+		 {
+			  content:内容,
+			  createTime:创建时间,
+			  receiveTime：服务器发送的时间
+			  storeSecond：定时删除需要保存的秒数
+			  id:消息id,
+			  isSender:1=是发送者 0=是接收者,
+			  msgType:1=普通文本 2=通知消息 3=阅后即焚消息,4=定时删除,5=好友请求,
+			  otherAvatar:图片url,
+			  otherName:接收者姓名,
+			  otherUserId:接收者id,
+			  status:0=未读 1=已读,
+			  userId:用户id，
+			  job:职位,
+			  company:公司
+		 }
+	 ],
+	 "msg":"",
+	 "retcode":"0"
+}
+
+返回示例：
+{
+	"data":[{
+		"content":"{\"text\":\"我已经同意添加你为联系人，现在可以开始对话了\"}",
+		"createTime":1399516094000,
+		"receiveTime"：1399517019000,
+		"storeSecond"：600
+		"id":21326,
+		"isSender":1,
+		"msgType":2,
+		"otherAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+		"otherName":"测试1222&",
+		"otherUserId":658455,
+		"status":0,
+		"userId":265958，
+		"job":经理,
+		"company":乐酷
+	}],
+	"msg":"",
+	"retcode":"0"
+}

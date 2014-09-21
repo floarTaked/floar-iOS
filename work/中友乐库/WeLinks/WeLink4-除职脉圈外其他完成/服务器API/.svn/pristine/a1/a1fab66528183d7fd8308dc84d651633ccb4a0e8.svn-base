@@ -1,0 +1,45 @@
+获取feed评论
+
+请求URL: /article/get-feed-comments
+
+请求方式: GET
+
+请求参数：
+	targetId：feed中的targetId
+
+返回结果：
+评论列表
+
+返回示例：
+{
+	"data":{
+		"comments":[
+			{
+				"content":"第2条评论",
+				"createTime":1399539189000,
+				"id":2,
+				"otherUserId":658455,
+				"targetId":"4",
+				"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-23b96d6f_d2fe_4438_b2f4_7fc9dbffe53c.jpg",
+				"userCompany":"测试company",
+				"userId":265958,
+				"userJob":"开发",
+				"userName":"测试13314961553"
+			},
+			{
+				"content":"第一条评论",
+				"createTime":1399538715000,
+				"id":1,
+				"otherUserId":658455,
+				"targetId":"4",
+				"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-23b96d6f_d2fe_4438_b2f4_7fc9dbffe53c.jpg",
+				"userCompany":"测试company",
+				"userId":265958,
+				"userJob":"开发",
+				"userName":"测试13314961553"
+			}
+		]
+	},
+	"msg":"",
+	"retcode":"0"
+}

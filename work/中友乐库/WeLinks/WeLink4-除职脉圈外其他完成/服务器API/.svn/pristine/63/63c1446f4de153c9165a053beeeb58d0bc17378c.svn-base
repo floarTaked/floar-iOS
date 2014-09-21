@@ -1,0 +1,67 @@
+读取我参与的问题
+
+请求URL: /question/my-answer
+
+请求方式: GET
+
+请求参数: 
+page=分页页码&limit=每页显示记录数
+limit默认为10.
+
+返回结果
+
+{
+  "msg": "",
+  "retcode": "0",
+  "data": [
+    {
+      "id": 6,
+      "userId": 658455,
+      "content": "this is question's content",
+      "allowedFriend": 2,
+      "createDate": 1400489339000,
+      "lastUpdate": 1400489703000,
+      "deleted": 0,
+      "hidden": 0,
+      "tagIds": "497130182,-1240244679,-703046977",
+      "tags": [
+        {
+          "id": -1240244679,
+          "title": "Google"
+        },
+        {
+          "id": 497130182,
+          "title": "Facebook"
+        },
+        {
+          "id": -703046977,
+          "title": "zhenai"
+        }
+      ],
+      "user": {
+        用户实体
+      },
+      "pollOptions": {
+        "3": " Option33 ",
+        "2": " Option22 ",
+        "1": " Option11 ",
+        "4": " Option44 "
+      },
+      "summary": { -- 投票统计
+        "optionId": 1,
+        "percent": "100.00%"
+      }
+      "extInfo": { -- 当前用户的投票
+          "answer": {
+	     "id": 6,
+	     "qid": 5,
+	     "userId": 265958,
+	     "questUserId": 313411,
+	     "createDate": 1400550514000,
+	     "relationDepth": -1,
+	     "optionId": 1
+	}
+      }
+    }
+  ]
+}

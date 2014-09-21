@@ -1,0 +1,13 @@
+获取我的发布
+
+请求URL: /user/getPulishByUserId
+
+请求方式: GET
+
+请求参数:
+page: 翻页页码(从1开始)
+limit: 每页显示记录数
+
+
+返回结果:
+参考 /article/get-feeds-normal 的返回结果

@@ -1,0 +1,54 @@
+//
+//  Feed.h
+//  WeLinked4
+//
+//  Created by floar on 14-5-13.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "NSObjectExtention.h"
+
+typedef enum{
+    FeedUserShare = 0,
+    FeedVote,
+    FeedRate
+}FeedType;
+
+typedef enum{
+    OnceCircleFriend = 1,
+    TwiceCircleFriend,
+    ThirdCircleFriend,
+}FriendType;
+
+typedef enum {
+    FeedContentTypeDefault = 0,
+    FeedContentTypeSupport,
+    FeedContentTypeComment,
+}FeedContentType;
+
+@interface Feed : NSObjectExtention
+{
+    NSString *commentString;  //JSON字符串
+}
+
+@property (nonatomic, assign)int DBUid;//区分数据库归属
+@property (nonatomic, assign) int commentUserNum;
+@property (nonatomic, strong) NSMutableArray *commentList;
+@property (nonatomic, assign) NSString *content;
+@property (nonatomic, assign) double createTime;
+@property (nonatomic, assign) FeedType feedType;
+@property (nonatomic, assign) FriendType friendType;
+@property (nonatomic, strong) NSString *feedId;
+@property (nonatomic, strong) NSString *image;
+@property (nonatomic, strong) NSString *targetId;
+@property (nonatomic, strong) NSString *targetContent;
+@property (nonatomic, strong) NSString *userAvatar;
+@property (nonatomic, strong) NSString *userCompany;
+@property (nonatomic, strong) NSString *userContent;
+@property (nonatomic, strong) NSString *userId;
+@property (nonatomic, strong) NSString *userJob;
+@property (nonatomic, strong) NSString *userName;
+
+//@property (nonatomic, assign) FeedContentType contentType;
+
+@end

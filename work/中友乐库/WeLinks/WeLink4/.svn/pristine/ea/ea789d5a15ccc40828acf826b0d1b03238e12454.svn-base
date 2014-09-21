@@ -1,0 +1,26 @@
+//
+//  Comment.h
+//  WeLinked4
+//
+//  Created by floar on 14-5-13.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "NSObjectExtention.h"
+
+@interface Comment : NSObjectExtention
+
+@property (nonatomic,strong)NSString* DBUid;//区分数据库归属
+
+@property (nonatomic, strong)NSString *content;
+@property (nonatomic, assign)double createTime;
+@property (nonatomic, strong)NSString *commentId;
+@property (nonatomic, strong)NSString *otherUserId; //评论人id
+@property (nonatomic, strong)NSString *targetId;
+@property (nonatomic, strong)NSString *userAvatar;
+@property (nonatomic, strong)NSString *userCompany;
+@property (nonatomic, strong)NSString *userId;
+@property (nonatomic, strong)NSString *userJob;
+@property (nonatomic, strong)NSString *userName;
+
+@end

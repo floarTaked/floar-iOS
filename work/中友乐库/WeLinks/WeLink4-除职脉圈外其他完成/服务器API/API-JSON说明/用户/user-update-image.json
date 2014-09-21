@@ -1,0 +1,16 @@
+修改头像
+
+请求URL: /user/update-image
+
+请求方式: POST
+
+请求参数
+image:用户头像(文件流)
+
+
+返回结果
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : "新头像URL"
+}

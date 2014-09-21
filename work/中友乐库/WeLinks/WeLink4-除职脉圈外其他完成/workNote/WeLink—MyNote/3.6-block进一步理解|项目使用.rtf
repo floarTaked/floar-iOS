@@ -1,0 +1,110 @@
+{\rtf1\ansi\ansicpg936\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fnil\fcharset134 STHeitiSC-Light;\f2\fnil\fcharset0 SimSun;
+\f3\fnil\fcharset134 STKaiti-SC-Regular;}
+{\colortbl;\red255\green255\blue255;\red118\green15\blue80;\red92\green38\blue153;\red63\green110\blue116;
+\red0\green0\blue255;\red35\green110\blue37;\red38\green71\blue75;\red46\green13\blue110;\red137\green19\blue21;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab722
+\pard\tx722\pardeftab722\pardirnatural
+
+\f0\fs36 \cf0 \CocoaLigature0 //
+\f1 \'bd\'d3\'bf\'da\'b6\'bc\'d0\'e8\'d2\'aa\'b4\'ab\'c8\'ebuserId\'a3\'actoken\'a3\'acos\'a3\'bb\'b2\'a2\'c7\'d2\'b7\'b5\'bb\'d8\'d6\'b5\{\'a1\'b0data\'a1\'b1\'a3\'ba\'a1\'b0\'a1\'b1\'a3\'ac\'a1\'b0msg\'a1\'b1\'a3\'ba\'a1\'b0\'a1\'b1\'a3\'ac\'a1\'b0retcode\'a1\'b1\'a3\'ba\'a1\'b0\'a1\'b1\}
+\f2\fs22\fsmilli11040 \CocoaLigature1 \
+\pard\tx866\pardeftab866\pardirnatural
+
+\f0\fs36 \cf2 \CocoaLigature0 \
+typedef\cf0  \cf2 void\cf0  (^ResponseCallBack)(\cf2 int\cf0  retcode,\cf2 id\cf0  data,\cf3 NSString\cf0 *msg);\
+\pard\tx722\pardeftab722\pardirnatural
+\cf0 \
+\pard\tx866\pardeftab866\pardirnatural
+\cf2 typedef\cf0  \cf2 void\cf0  (^EventCallBack)(\cf2 int\cf0  event,\cf2 id\cf0  object);\
+\pard\tx722\pardeftab722\pardirnatural
+\cf0 \
+===============================\
+-(\cf3 NSMutableDictionary\cf0 *)getCommonParamas\
+dic setObject:userId:\'93userId\'94\
+				 token:\'93token\'94\
+				 \'93ios\'94:\'93os
+\f1 "
+\f0 \
+				 APPVERSION:"v"\
+\
+-(\cf2 void\cf0 )subscribe:(\cf3 NSString\cf0 *)identity block:(\cf4 EventCallBack\cf0 )block\
+	1
+\f1 \'a3\'ac\'d4\'d9\'b4\'ce\'c6\'b4\'bd\'d3\'b6\'a9\'d4\'c4id\'b2\'ce\'ca\'fd\'a3\'ac\'b4\'ab\'c8\'eb\'b7\'fe\'ce\'f1\'c6\'f7\'a3\'ac\'b7\'b5\'bb\'d8\'d2\'bb\'b8\'f6
+\f0 responseObject
+\f1 \'a3\'ac\'d7\'f7\'ce\'aa\'b2\'ce\'ca\'fd\'b4\'ab\'b5\'dd\'b8\'f8
+\f0 resolveResponse
+\f1 \'bd\'e2\'ce\'f6\'ba\'af\'ca\'fd\
+	2\'a3\'ac\'b3\'c9\'b9\'a6\'ba\'f3\'b5\'f7\'d3\'c3\
+
+\f0 		-(\cf2 void\cf0 )resolveResponse:(\cf2 id\cf0 )responseObject block:(\cf4 ResponseCallBack\cf0 )block\
+\{\
+	1)
+\f1 \'bd\'e2\'ce\'f6
+\f0 "retcode","data","msg"\
+	2)
+\f1 \'bd\'e2\'ce\'f6\'cd\'ea\'b3\'c9\'ba\'f3\
+	
+\f0 \cf2 if\cf0 (block)\
+    \{\
+        block(retcode,data,msg);\
+    \}\
+	
+\f1 \'cd\'a8\'d6\'aa\'d6\'f7\'ba\'af\'ca\'fd
+\f0 subscribe
+\f1 \'bd\'e2\'ce\'f6\'cd\'ea\'b3\'c9\'a3\'ac\'bb\'d8\'b5\'bd\'d6\'f7\'ba\'af\'ca\'fd\'d6\'b4\'d0\'d0\'a3\'a8\'d6\'f7\'ba\'af\'ca\'fd\'bb\'d8\'b5\'f7\'a3\'a9\'b2\'a2\'c4\'dc\'b9\'bb\'bd\'ab\'b2\'ce\'ca\'fd\'b4\'f8\'b5\'bd\'d6\'f7\'ba\'af\'ca\'fd\'a3\'a8\'b4\'ab\'d6\'b5\'b9\'a6\'c4\'dc\'a3\'a9\
+	---\'c8\'e7\'b9\'fb\'c3\'bb\'d3\'d0\'d5\'e2\'b8\'f6(ResponseCallBack)block\'bb\'e1\'d4\'f5\'d1\'f9\'a3\'bf\
+	3\'a3\'a9\'ba\'f3\'c3\'e6\'b8\'f9\'be\'ddretcode\'b5\'c4\'d6\'b5\'bd\'f8\'d0\'d0\'bd\'f8\'d2\'bb\'b2\'bd\'b4\'a6\'c0\'ed\
+		
+\f0 \cf2 if\cf0 (retcode == \cf5 0\cf0 )\
+       \{\
+           block(\cf5 1\cf0 ,data);---
+\f1 \'d3\'d6\'b5\'bd\'c4\'c4\'c8\'a5\'c1\'cb\'a3\'bf\'d7\'d4\'bc\'ba\'d4\'da\'ca\'b2\'c3\'b4\'b5\'d8\'b7\'bd\'ca\'b9\'d3\'c3\'c1\'cb\'d5\'e2\'b8\'f6\'ba\'af\'ca\'fd\'be\'cd\'bb\'d8\'b5\'bd\'c4\'c4\'c8\'a5
+\f0 \
+       \}\
+       \cf2 else\cf0 \
+       \{\
+           block(\cf5 0\cf0 ,msg);\
+       \}\
+\}\
+	\
+---
+\f1 \'b2\'ce\'bf\'bcProfileViewController\'b5\'c4AddMybeContactsViewController\'c0\'e0\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab722\pardirnatural
+
+\f3\fs34 \cf0 \CocoaLigature1 http://10.10.151.248:8081\
+1\'a3\'ac/collection/get-subscribe-collections  \'b2\'bb\'d0\'e8\'d2\'aa\'b4\'ab\'b2\'ce\
+2\'a3\'ac/collection/get-industrys	\'b2\'bb\'d0\'e8\'d2\'aa\'b4\'ab\'b2\'ce\
+3\'a3\'ac/collection/get-collections-with-sub	\'b4\'ab\'c8\'ebparentId\
+4\'a3\'ac/article/get-articles-by-colllection	\'b4\'ab\'c8\'eb\'ce\'c4\'d5\'c2\'d4\'b4id\'a1\'a2articleId\
+5\'a3\'ac/collection/subscribe\
+6\'a3\'ac/collection/del-subscribe\
+\
+\pard\tx722\pardeftab722\pardirnatural
+
+\f0\fs36 \cf0 \CocoaLigature0     \cf6 //
+\f1 \'c6\'b4\'bd\'d3\'b2\'ce\'ca\'fd
+\f0 \cf0 \
+    \cf3 NSMutableDictionary\cf0 * dic = [\cf2 self\cf0  \cf7 getCommonParamas\cf0 ];\
+    \cf6 //
+\f1 \'d4\'d9\'b4\'ce\'d7\'d4\'b6\'a8\'d2\'e5\'c6\'b4\'bd\'d3\'b2\'ce\'ca\'fd
+\f0 ---detailSubscription
+\f1 \'b5\'c4
+\f0 id\cf0 \
+    [dic \cf8 setObject\cf0 :identity==\cf2 nil\cf0 ?\cf9 @""\cf0 :identity \cf8 forKey\cf0 :\cf9 @"id"\cf0 ];\
+    \cf6 //
+\f1 \'cf\'f2\'b7\'fe\'ce\'f1\'c6\'f7\'b7\'a2\'cb\'cd\'c7\'eb\'c7\'f3\'b4\'f8\'c9\'cf\'c6\'b4\'bd\'d3\'ba\'c3\'b5\'c4\'b2\'ce\'ca\'fd
+\f0 ---
+\f1 \'b6\'d4\'d3\'a6\'b5\'c4\'bd\'d3\'bf\'da\'ce\'c4\'b5\'b5\'d2\'aa\'c7\'f3\'b4\'ab\'c8\'eb\'b5\'c4\'b2\'ce\'ca\'fd\cf0 \
+	\
+\
+\'bd\'f1\'cc\'ec\'b1\'e0\'b3\'cc\'d3\'f6\'b5\'bdcell\'ce\'aa\'bf\'d5\'b5\'c4\'c7\'e9\'bf\'f6\'a3\'ac\'ce\'aa\'ca\'b2\'c3\'b4cell\'ce\'aa\'bf\'d5\'a3\'bfuitableview\'b8\'b4\'d3\'c3\'bb\'fa\'d6\'c6\'a3\'bf\
+\
+button\'b5\'c4\'b1\'e4\'bb\'af\'a3\'ba\'c2\'cc\'c9\'ab\
+
+\f0 \
+	}

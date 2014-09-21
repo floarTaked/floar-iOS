@@ -1,0 +1,103 @@
+//
+//  LogicManager.h
+//  UnNamed
+//
+//  Created by yohunl on 13-8-15.
+//  Copyright (c) 2013年 jonas. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <AddressBook/AddressBook.h>
+#import <CommonCrypto/CommonCrypto.h>
+#import <CoreLocation/CoreLocation.h>
+//#import <LIALinkedInHttpClient.h>
+//#import <LIALinkedInApplication.h>
+#import "Common.h"
+#import "ProfileInfo.h"
+#import "MineProfileViewController.h"
+#import "OtherProfileViewController.h"
+#import "PublicObject.h"
+#import "CustomPickerView.h"
+@class MessageData;
+@interface LogicManager : NSObject<CLLocationManagerDelegate,WeiboSDKDelegate,WBHttpRequestDelegate>
+{
+    //linkedin
+//    LIALinkedInHttpClient *linkedinManager;
+    CLLocationManager* locationManager;
+    int homeTimeLinePage;
+    EventCallBack locationCallBack;
+    EventCallBack weiboLoginCallBack;
+    EventCallBack commentCallBack;
+    EventCallBack homeTimelineCallBack;
+}
+-(id)getPublicObject:(NSString*)code type:(PickerType)type;
+-(NSString*)getEducation:(int)education;
+-(NSString*)getJobYear:(int)index;
+-(NSString*)getJobLevel:(int)level;
+-(NSString*)getSalary:(int)level;
+
+-(NSString*)getSalaryK:(int)level;
+-(NSString*)objectToJsonString:(id)object;
+-(id)jsonStringTOObject:(NSString*)value;
+
+-(void)setRootViewContrllerWithNavigationBar:(UIViewController*)controller;
+-(void)setRootViewContrller:(UIViewController*)controller;
+-(id)getSharedDataWithKey:(id)key;
+-(void)setSharedData:(id)object withKey:(id)key;
+- (BOOL) validateEmail:(NSString *)email;
+@property(nonatomic,assign)BOOL enableChatViewRefresh;//聊天窗口刷新时 长按时间会失控
+//处理链接
+-(BOOL)handleRequest:(NSURLRequest*)request callBack:(EventCallBack)callBack;
+//消息处理
+-(int)getUnReadMessageCountWithOtherUser:(NSString*)userId;
+//获取行业图片
+-(NSString*)getIndustryImage:(NSString*)industryId;
+-(void)setPersistenceData:(id)object withKey:(id)key;
+-(id)getPersistenceDataWithKey:(id)key;
+-(NSString*)getPersistenceStringWithKey:(id)key;
+-(int)getPersistenceIntegerWithKey:(id)key;
+-(double)getPersistenceDoubleWithKey:(id)key;
+-(float)getPersistenceFloatWithKey:(id)key;
+//判断这个id是否是我的朋友
+-(BOOL)isMyFriend:(NSString*)userId;
+//判断是不是在app里
+-(BOOL)isInApp:(UserInfo*)userInfo;
+
+-(void)getContactFriends:(EventCallBack)call;
+- (NSData*) base64Decode:(NSString *)string;
+- (NSString*) base64Encode:(NSData *)data;
+-(BOOL)isMobileNumber:(NSString*)mobileNum;
+-(BOOL)checkPassword:(NSString *)pwd;
+-(void)showAlertWithTitle:(NSString*)title message:(NSString*)message actionText:(NSString*)actinText;
+-(NSString *)encodePasswordWithMD5:(NSString*)password;
+-(void)queryLocation:(EventCallBack)callBack;
+-(void)upgradeDataBase;
+-(void)gotoProfile:(UIViewController*)controller userId:(NSString*)userId showBackButton:(BOOL)back;
+-(void)gotoProfile:(UIViewController*)controller userId:(NSString*)userId;
+//好友关系状态
+-(RelationState)getRelationState:(NSString*)userId;
+-(void)setRelationSatte:(NSString*)userId state:(RelationState)state;
+//微博
+
+//登录微博
+-(void)weiBoLogin:(EventCallBack)block;
+//登出微博
+- (void)weiBoLogout;
+//发微博
+//-(void)sendWeiBo:(NSString *)content;
+-(void)sendWeiBo:(NSString *)articleId
+           title:(NSString *)title
+           image:(NSString *)imageString;
+////获取双向关注用户的最新微博
+-(void)getAllLatestWeibo;
+//获取我的主页的微博
+//-(void)getHomeTimeline:(EventCallBack)block;
+//发评论到最新一条微博
+//-(void)commentLatestWeibo:(NSString*)content weiboUid:(NSString*)weiboUid block:(EventCallBack)block;
+//获取微博一度好友
+//-(void)getWeiboFriends1;
+
+//linkedin
+//- (LIALinkedInHttpClient *)linkedinManager;
++ (LogicManager*)sharedInstance;
+@end

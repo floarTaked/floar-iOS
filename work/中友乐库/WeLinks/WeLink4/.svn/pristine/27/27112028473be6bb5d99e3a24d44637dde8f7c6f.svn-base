@@ -1,0 +1,198 @@
+//
+//  DoubleQuestionViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-26.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "DoubleQuestionViewController.h"
+#import "VisualRangeViewController.h"
+#define FontSize 15
+
+@interface DoubleQuestionViewController ()<UITableViewDataSource,UITableViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UITableView *doubleTableView;
+
+
+@end
+
+@implementation DoubleQuestionViewController
+@synthesize doubleTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self.navigationItem setTitleString:@"提问-double"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -50, 0, 0) target:self selector:@selector(gotoBack)];
+    [self.navigationItem setRightBarButtonItem:nil imageSelected:nil title:@"发送" inset:UIEdgeInsetsZero target:self selector:@selector(sendQuestion)];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 4;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (section != 1)
+    {
+        return 1;
+    }
+    else
+    {
+        return 2;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+    }
+    
+    if (indexPath.section == 1)
+    {
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        [self customAnswerCell:cell index:indexPath];
+    }
+    if (indexPath.section == 2 || indexPath.section == 3)
+    {
+        cell.selectionStyle = UITableViewCellSelectionStyleGray;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        [self customNormalCell:cell index:indexPath];
+    }
+    return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (indexPath.section == 3)
+    {
+        VisualRangeViewController *visualCtl = [[VisualRangeViewController alloc] initWithNibName:NSStringFromClass([VisualRangeViewController class]) bundle:nil];
+        visualCtl.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:visualCtl animated:YES];
+    }
+    
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section == 0)
+    {
+        return 120;
+    }
+    else
+    {
+        return 40;
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (section == 0)
+    {
+        return 0.1;
+    }
+    else
+    {
+        return 5;
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    return 5;
+}
+
+-(void)customAnswerCell:(UITableViewCell *)cell index:(NSIndexPath *)indexPath
+{
+    UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:10];
+    if (titleLabel == nil)
+    {
+        titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 50, 20)];
+        titleLabel.tag = 10;
+        titleLabel.textAlignment = NSTextAlignmentLeft;
+        titleLabel.text = [NSString stringWithFormat:@"答案%d",indexPath.row+1];
+        titleLabel.font = getFontWith(NO, FontSize);
+        [cell.contentView addSubview:titleLabel];
+    }
+    
+    UITextField *textField = (UITextField *)[cell.contentView viewWithTag:indexPath.row+20];
+    if (textField == nil)
+    {
+        textField = [[UITextField alloc] initWithFrame:CGRectMake(CGRectGetMaxX(titleLabel.frame)+20, CGRectGetMinY(titleLabel.frame), 200, 20)];
+        textField.tag = indexPath.row +20;
+        textField.placeholder = @"必填";
+        [cell.contentView addSubview:textField];
+    }
+}
+
+-(void)customNormalCell:(UITableViewCell *)cell index:(NSIndexPath *)index
+{
+    UILabel *titleLabel = (UILabel *)[cell.contentView viewWithTag:10];
+    if (titleLabel == nil)
+    {
+        titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 60, 20)];
+        titleLabel.tag = 30;
+        titleLabel.textAlignment = NSTextAlignmentLeft;
+        titleLabel.font = getFontWith(NO, FontSize);
+        [cell.contentView addSubview:titleLabel];
+    }
+    
+    UILabel *subTitleLabel = (UILabel *)[cell.contentView viewWithTag:10];
+    if (subTitleLabel == nil)
+    {
+        subTitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(titleLabel.frame)+10, 10, 100, 20)];
+        subTitleLabel.tag = 40;
+        subTitleLabel.textAlignment = NSTextAlignmentLeft;
+        subTitleLabel.font = getFontWith(NO, FontSize);
+        subTitleLabel.textColor = [UIColor lightGrayColor];
+        [cell.contentView addSubview:subTitleLabel];
+    }
+    
+    if (index.section == 2)
+    {
+        titleLabel.text = @"选择分类";
+        subTitleLabel.text = @"百科";
+    }
+    if (index.section == 3)
+    {
+        titleLabel.text = @"可见范围";
+        subTitleLabel.text = @"3度好友可见";
+    }
+}
+
+#pragma mark - UINavigationBarBtnAction
+-(void)gotoBack
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)sendQuestion
+{
+    
+}
+
+@end

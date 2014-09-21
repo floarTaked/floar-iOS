@@ -1,0 +1,25 @@
+//
+//  EditInformationViewController.h
+//  WeLinked4
+//
+//  Created by jonas on 5/22/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface EditInformationViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,UIGestureRecognizerDelegate>
+{
+    IBOutlet UITableView* table;
+    UITextField* nameFiled;
+    UITextField* phoneFiled;
+    UITextField* companyFiled;
+    UITextField* postFiled;
+    UITextField* descFiled;
+    
+    
+    UITextField* birthFiled;
+    UITextField* mailFiled;
+    UITextField* addressFiled;
+}
+@end

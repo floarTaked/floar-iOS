@@ -1,0 +1,35 @@
+获取消息状态
+
+请求URL: /msg/get-msg-status
+
+请求方式: GET
+
+请求参数：
+	id:消息id
+
+返回结果：
+{
+	"data":[
+		
+		 {		 
+			  id:消息id,
+			  status:0=未读 1=已读,2=已删除
+			  userId:用户id
+			  otherUserId：其他用户id
+		 }
+	 ],
+	 "msg":"",
+	 "retcode":"0"
+}
+
+返回示例：
+{
+	"data":{
+		"id":21329,
+		"otherUserId":21806,
+		"status":2,
+		"userId":72298
+	},
+	"msg":"",
+	"retcode":"0"
+}

@@ -1,0 +1,84 @@
+获取最新动态通知的动态流(注意不传autoId，只使用整型的id值)
+
+请求URL: /article/get-feeds-dynamic
+
+请求方式: GET
+
+请求参数：
+	page=分页页码
+	limit=每页显示记录数，默认10
+返回结果：
+
+allowedFriend：允许几度好友可见，1,2,3
+friendId、friendName是1度好友的id和名字
+friendType:1=1度好友 2=2度好友 3=3度好友
+feedType: 3=原创内容 4=个人资料更新 5=系统消息 6=问题
+targetContent ：如果为feedType=6问题，就为question对象的json
+targetId:普通的=id，问题="question-"+问题id
+feedCount:参与人的数量
+tags：标签,逗号分隔
+返回示例：
+{
+	"data":[
+		{
+			"allowedFriend":3,
+			"commentUserNum":2,
+			"comments":[{
+				"content":"第一条评论",
+				"createTime":1399538715000,
+				"id":1,
+				"otherUserId":658455,
+				"targetId":"4",
+				"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-23b96d6f_d2fe_4438_b2f4_7fc9dbffe53c.jpg",
+				"userCompany":"珍爱",
+				"userId":265958,
+				"userJob":"开发",
+				"userName":"小张"
+			}],
+			"content":"今天第一次发动态,mark一个",
+			"contentType":0,
+			"createTime":1399530133000,
+			"feedType":3,
+			"feedUrl":"http://10.10.15.30/get-feed-share/userId=ae5ef4cae758d79f&id=0aa1a9b5911df7c8",
+			"friendType":1,
+			"id":4,
+			"image":"",
+			"targetId":"4",
+			"targetContent":"{\"content\":\"今天第一次发动态,mark一个\",\"createTime\":1399530133126,\"image\":\"\"}",
+			"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-23b96d6f_d2fe_4438_b2f4_7fc9dbffe53c.jpg",
+			"userCompany":"珍爱",
+			"userContent":"",
+			"userId":265958,
+			"userJob":"",
+			"userName":"小张",
+			"feedCount":100,
+			"tags":
+		},
+		{
+			"allowedFriend":3,
+			"commentUserNum":0,
+			"comments":[]
+			"content":"this is question's content",
+			"contentType":0,
+			"createTime":1399530625000,
+			"feedType":1,
+			"feedUrl":"http://10.10.15.30/get-feed-share/userId=ae5ef4cae758d79f&id=695ed6ebb906154c",
+			"friendType":1,
+			"id":5,
+			"image":"",
+			"targetId":"question-15",
+			"targetContent":"{\"id\":15,\"userId\":658455,\"content\":\"this is question's content\",\"allowedFriend\":3,\"typeId\":21,\"createDate\":1400826015000,\"lastUpdate\":null,\"tagIds\":\"497130182,-1240244679,-703046977\",\"tags\":null,\"extInfo\":{},\"user\":{\"userId\":658455,\"name\":\"测试1222&\",\"avatar\":\"http://photo.leku.com/e/lekumobile/8555/160x160/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg\",\"phone\":\"13314961552\",\"phoneStatus\":0,\"company\":\"测试1222-company\",\"job\":\"测试1222-job\",\"jobCode\":\"测试1222job\",\"jobYear\":10,\"jobSalary\":1,\"salaryStatus\":1,\"jobLevel\":0,\"industryId\":\"10\",\"education\":2,\"infoStep\":2,\"sex\":0,\"token\":null,\"city\":\"01210\",\"email\":\"1222@test.com\",\"descriptions\":\"互联网,大数据,descriptions\",\"tags\":\"tags互联网,大数据\",\"jobTags\":\"jobTags互联网,大数据\",\"linkedInName\":\"LinkedInName\",\"linkedInToken\":\"LinkedInToken\",\"cardImage\":null,\"birthday\":null,\"createTime\":1399360419000},\"summary\":null,\"pollOptions\":null}",
+			"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-23b96d6f_d2fe_4438_b2f4_7fc9dbffe53c.jpg",
+			"userCompany":"珍爱",
+			"userContent":"",
+			"userId":265958,
+			"userJob":"",
+			"userName":"小张",
+			"feedCount":100,
+			"tags":
+		}
+
+	],
+	"msg":"",
+	"retcode":"0"
+}

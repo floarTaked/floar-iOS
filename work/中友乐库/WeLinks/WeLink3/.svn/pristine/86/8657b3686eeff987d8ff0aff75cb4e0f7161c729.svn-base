@@ -1,0 +1,507 @@
+//
+//  Common.m
+//  ChatView
+//
+//  Created by jonas on 12/5/13.
+//  Copyright (c) 2013 jonas. All rights reserved.
+//
+
+#import "Common.h"
+#import "UserInfo.h"
+
+#define MINUTE 60
+#define HOUR 60 * 60
+#define DAY 60 * 60 * 24
+
+
+@implementation Common
+UIFont* getFontWith(BOOL bold,int size)
+{
+    //粗体 HiraKakuProN-W6
+    //正常 HiraKakuProN-W3
+    if(bold)
+    {
+        UIFont* font = [UIFont fontWithName:@"FZLTZHK--GBK1-0" size:size];
+        if(font == nil)
+        {
+            font = [UIFont boldSystemFontOfSize:size];
+        }
+        return font;
+    }
+    else
+    {
+        UIFont* font = [UIFont fontWithName:@"HiraKakuProN-W3" size:size];
+        if(font == nil)
+        {
+            font = [UIFont systemFontOfSize:size];
+        }
+        return font;
+    }
+}
+UIColor* colorWithHex(int value)
+{
+    float red   = (value & 0xFF0000)>>16;
+    float green = (value & 0x00FF00)>>8;
+    float blue  = (value & 0x0000FF);
+    UIColor* color = [UIColor colorWithRed:red/255 green:green/255 blue:blue/255 alpha:1.0];
+    return color;
+}
+NSString* getIdentityKey(NSString* key)
+{
+    if(key == nil)
+    {
+        return nil;
+    }
+    NSString* s = [NSString stringWithFormat:@"%@_%@",key,[UserInfo myselfInstance].userId];
+    return s;
+}
+NSTimeInterval getDateTimeIntervalWithYearMonth(int year,int month)
+{
+    NSDateFormatter * formatter = [[NSDateFormatter alloc]init];
+    [formatter setDateFormat:@"yyyy-MM"];
+    NSString * dateStr = [NSString stringWithFormat:@"%d-%d",year,month];
+    NSDate * date = [formatter dateFromString:dateStr];//把字符串转换成Date格式
+    return [date timeIntervalSince1970];
+}
+NSTimeInterval getDateTimeIntervalWithYearMonthDay(int year,int month,int day)
+{
+    NSDateFormatter * formatter = [[NSDateFormatter alloc]init];
+    [formatter setDateFormat:@"yyyy-MM-dd"];
+    NSString * dateStr = [NSString stringWithFormat:@"%d-%d-%d",year,month,day];
+    NSDate * date = [formatter dateFromString:dateStr];//把字符串转换成Date格式
+    return [date timeIntervalSince1970];
+}
+NSString* formatDateMonth(NSDate* dateTime)
+{
+    if (dateTime == nil)
+    {
+        return @"";
+    }
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"YYYY.MM"];
+    NSString *dateString = [NSString stringWithFormat:@"%@",[formatter stringFromDate:dateTime]];
+    return dateString;
+}
+NSString* formatDateShort(NSDate* dateTime)
+{
+    if (dateTime == nil)
+    {
+        return @"000月";
+    }
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"ddM"];
+    NSString *dateString = [NSString stringWithFormat:@"%@月",[formatter stringFromDate:dateTime]];
+    return dateString;
+}
+NSString* formatDate(NSDate* dateTime)
+{
+    return formatDateWith(dateTime, NO);
+}
+
++(NSString *)timeIntervalStringFromTime:(NSTimeInterval)timeInterval
+{
+    NSDate *fromDate = [NSDate dateWithTimeIntervalSince1970:timeInterval / 1000];
+    NSTimeInterval timeIntervalFromDate = [[NSDate date] timeIntervalSinceDate:fromDate];
+    if (timeIntervalFromDate >= 2 * DAY) {
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"MM-dd"];
+        NSString *timeStr = [dateFormatter stringFromDate:fromDate];
+        return timeStr;
+    }else{
+        if (timeIntervalFromDate >= 1 * DAY) {
+            return @"1天前";
+        }else if (timeIntervalFromDate >= 1 * HOUR)
+        {
+            NSInteger timeIntervalInt = (double)timeIntervalFromDate;
+            NSInteger hours = timeIntervalInt / 3600 + 1;
+            return [NSString stringWithFormat:@"%d小时前",hours];
+        }else if (timeIntervalFromDate > 1 * MINUTE)
+        {
+            NSInteger minutes = timeIntervalFromDate / MINUTE;
+            return [NSString stringWithFormat:@"%d分钟前",minutes];
+        }else if(timeIntervalFromDate >= 5){
+            return [NSString stringWithFormat:@"%.lf秒前",timeIntervalFromDate];
+        }else
+            return @"刚刚";
+    }
+    return nil;
+}
+
+NSString* formatDateWith(NSDate* dateTime,BOOL word)
+{
+    if (dateTime == nil)
+    {
+        return @"";
+    }
+    
+    NSString *_timestamp;
+    
+    time_t now;
+    time(&now);
+    
+    time_t createdAt = [dateTime timeIntervalSince1970];
+    
+    int distance = (int)difftime(now, createdAt);
+    if (distance < 0) distance = 0;
+    
+    if (distance < 60)
+    {
+        if(word)
+        {
+            _timestamp = @"刚刚";
+        }
+        else
+        {
+            _timestamp =[NSString stringWithFormat:@"%d秒前", distance];
+        }
+    }
+    else if (distance < 60 * 60)
+    {
+        distance = distance / 60;
+        _timestamp = [NSString stringWithFormat:@"%d分钟前", distance];
+    }
+    else if (distance < 60 * 60 * 24)
+    {
+        distance = distance / 60 / 60;
+        _timestamp = [NSString stringWithFormat:@"%d小时前", distance];
+    }
+    else if (distance < 60 * 60 * 24 * 7)
+    {
+        distance = distance / 60 / 60 / 24;
+        _timestamp = [NSString stringWithFormat:@"%d天前", distance];
+    }
+    else if (distance < 60 * 60 * 24 * 7 * 4)
+    {
+        distance = distance / 60 / 60 / 24 / 7;
+        _timestamp = [NSString stringWithFormat:@"%d星期前", distance];
+    }
+    else if (distance < 60 * 60 * 24 * 7 * 4 * 12)
+    {
+        distance = distance / 60 / 60 / 24 / 7 / 4;
+        _timestamp = [NSString stringWithFormat:@"%d月前", distance];
+    }
+    else
+    {
+        static NSDateFormatter *dateFormatter = nil;
+        if (dateFormatter == nil)
+        {
+            dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateStyle:NSDateFormatterShortStyle];
+            [dateFormatter setTimeStyle:NSDateFormatterShortStyle];
+        }
+        
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:createdAt];
+        _timestamp = [dateFormatter stringFromDate:date];
+    }
+    
+    return _timestamp;
+}
+//float getMargin()
+//{
+//    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0)
+//    {
+//        return 20;
+//    }
+//    else
+//    {
+//        return 0;
+//    }
+//}
+BOOL isSystemVersionIOS7()
+{
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0)
+    {
+        return YES;
+    }
+    else
+    {
+        return NO;
+    }
+}
+
++ (void)setNavigationBarWMStyle
+{
+//    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque];
+    if ([UINavigationBar respondsToSelector:@selector(appearance)])
+    {
+        UIImage *img = [UIImage imageNamed:@"navBar_bg"];
+        if(!isSystemVersionIOS7())
+        {
+            //6.0
+            img = [UIImage imageNamed:@"navBar_bg2"];
+        }
+        [[UINavigationBar appearance] setBackgroundImage:img forBarMetrics:UIBarMetricsDefault];
+        UIColor *color = [UIColor colorWithRed:150.0/255.0 green:202.0/255.0 blue:174.0/255.0 alpha:0.12];
+        [[UINavigationBar appearance] setTintColor:color];
+        [[UIBarButtonItem appearance] setBackgroundImage:[[UIImage imageNamed:@"barBtn_n.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(15, 15, 15, 15)] forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+        [[UIBarButtonItem appearance] setBackButtonBackgroundImage:[[UIImage imageNamed:@"barBtn_n.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(15, 15, 15, 15)] forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+        
+        NSShadow *shadow = [[NSShadow alloc] init];
+        shadow.shadowColor = [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.8];
+        shadow.shadowOffset = CGSizeMake(0, 1);
+        [[UINavigationBar appearance] setTitleTextAttributes: [NSDictionary dictionaryWithObjectsAndKeys:
+                                                               [UIColor colorWithRed:245.0/255.0 green:245.0/255.0 blue:245.0/255.0 alpha:1.0], NSForegroundColorAttributeName,
+                                                               shadow, NSShadowAttributeName,
+                                                               [UIFont fontWithName:@"HelveticaNeue-CondensedBlack" size:21.0], NSFontAttributeName, nil]];
+        
+        NSMutableDictionary *textAttributes = [NSMutableDictionary dictionary];
+        UIColor *textColor = [UIColor whiteColor];
+        [textAttributes setObject:textColor forKey:UITextAttributeTextColor];
+        [textAttributes setObject:[UIColor whiteColor] forKey:UITextAttributeTextShadowColor];
+        [textAttributes setObject:[NSValue valueWithUIOffset:UIOffsetMake(0, 0)] forKey:UITextAttributeTextShadowOffset];
+        [[UIBarButtonItem appearance] setTitleTextAttributes:textAttributes forState:UIControlStateNormal];
+        [[UISegmentedControl appearance] setTitleTextAttributes:textAttributes forState:UIControlStateNormal];
+        NSMutableDictionary *newTextAttr = [NSMutableDictionary dictionaryWithDictionary:textAttributes];
+        [newTextAttr setObject:[UIColor whiteColor] forKey:UITextAttributeTextColor];
+        [[UISegmentedControl appearance] setTitleTextAttributes:newTextAttr forState:UIControlStateSelected];
+    }
+}
+@end
+@implementation UILabel(Flexible)
+-(UILabel*)FlexibleWidthWith:(NSString*)text height:(float)height
+{
+    if(text == nil)
+    {
+        text = @"";
+    }
+    [self setText:text];
+    [self setNumberOfLines:0];
+    CGRect rect = self.frame;
+    CGSize labelsize = [text sizeWithFont:self.font
+                        constrainedToSize:CGSizeMake(99999, height)
+                            lineBreakMode:self.lineBreakMode];
+    rect.size = labelsize;
+    [self setFrame:rect];
+    return self;
+}
+-(UILabel*)FlexibleHeightWith:(NSString*)text width:(float)width
+{
+    if(text == nil)
+    {
+        text = @"";
+    }
+    [self setText:text];
+    [self setNumberOfLines:0];
+    CGRect rect = self.frame;
+    CGSize labelsize = [text sizeWithFont:self.font
+                        constrainedToSize:CGSizeMake(width, 99999)
+                            lineBreakMode:self.lineBreakMode];
+    rect.size = labelsize;
+    [self setFrame:rect];
+    return self;
+}
++(float)calculateHeightWith:(NSString*)text font:(UIFont*)font width:(float)width lineBreakeMode:(NSLineBreakMode)mode
+{
+    if(text == nil)
+    {
+        text = @"";
+    }
+    CGSize labelsize = [text sizeWithFont:font constrainedToSize:CGSizeMake(width, 99999) lineBreakMode:mode];
+    return labelsize.height;
+}
++(float)calculateWidthWith:(NSString*)text font:(UIFont*)font height:(float)height lineBreakeMode:(NSLineBreakMode)mode
+{
+    if(text == nil)
+    {
+        text = @"";
+    }
+    CGSize labelsize = [text sizeWithFont:font constrainedToSize:CGSizeMake(99999,height) lineBreakMode:mode];
+    return labelsize.width;
+}
+@end
+
+
+@implementation UIImage (Resize)
+-(UIImage*)resizeWithSize:(CGSize)targetSize
+{
+    UIImage *sourceImage = self;
+    UIImage *newImage = nil;
+    CGSize imageSize = sourceImage.size;
+    CGFloat width = imageSize.width;
+    CGFloat height = imageSize.height;
+    CGFloat targetWidth = targetSize.width;
+    CGFloat targetHeight = targetSize.height;
+    CGFloat scaleFactor = 0.0;
+    CGFloat scaledWidth = targetWidth;
+    CGFloat scaledHeight = targetHeight;
+    CGPoint thumbnailPoint = CGPointMake(0.0,0.0);
+    if (CGSizeEqualToSize(imageSize, targetSize) == NO)
+    {
+        CGFloat widthFactor = targetWidth / width;
+        CGFloat heightFactor = targetHeight / height;
+        if (widthFactor > heightFactor)
+            scaleFactor = widthFactor; // scale to fit height
+        else
+            scaleFactor = heightFactor; // scale to fit width
+        scaledWidth= width * scaleFactor;
+        scaledHeight = height * scaleFactor;
+        // center the image
+        if (widthFactor > heightFactor)
+        {
+            thumbnailPoint.y = (targetHeight - scaledHeight) * 0.5;
+        }
+        else if (widthFactor < heightFactor)
+        {
+            thumbnailPoint.x = (targetWidth - scaledWidth) * 0.5;
+        }
+    }
+    UIGraphicsBeginImageContext(targetSize); // this will crop
+    CGRect thumbnailRect = CGRectZero;
+    thumbnailRect.origin = thumbnailPoint;
+    thumbnailRect.size.width= scaledWidth;
+    thumbnailRect.size.height = scaledHeight;
+    [sourceImage drawInRect:thumbnailRect];
+    newImage = UIGraphicsGetImageFromCurrentImageContext();
+    if(newImage == nil)
+        NSLog(@"could not scale image");
+    //pop the context to get back to the default
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+@end
+
+@implementation UIView (Animate)
+-(void)endRotate:(CGFloat)duration block:(EventCallBack)block
+{
+    [UIView animateWithDuration:duration animations:^{
+        self.layer.transform = CATransform3DIdentity;
+        if(block != nil)
+        {
+            block(1,nil);
+        }
+    } completion:^(BOOL finished) {
+        [self.layer display];
+        if(block != nil)
+        {
+            block(0,nil);
+        }
+    }];
+}
+CATransform3D CATransform3DMakePerspective(CGPoint center, float disZ)
+{
+    CATransform3D transToCenter = CATransform3DMakeTranslation(-center.x, -center.y, 0);
+    CATransform3D transBack = CATransform3DMakeTranslation(center.x, center.y, 0);
+    CATransform3D scale = CATransform3DIdentity;
+    scale.m34 = -1.0f/disZ;
+    return CATransform3DConcat(CATransform3DConcat(transToCenter, scale), transBack);
+}
+
+CATransform3D CATransform3DPerspect(CATransform3D t, CGPoint center, float disZ)
+{
+    return CATransform3DConcat(t, CATransform3DMakePerspective(center, disZ));
+}
+-(void)beginRotate:(CGFloat)duration block:(EventCallBack)block
+{
+    float radius = M_PI/4;
+    self.layer.zPosition = 1000;
+    CATransform3D transform = CATransform3DIdentity;
+    transform =  CATransform3DTranslate(transform, -50, 0, -200);
+    transform = CATransform3DRotate(transform,radius, 0, 1, 0);
+    transform = CATransform3DPerspect(transform, CGPointMake(0, 0), 500);
+    
+    [UIView animateWithDuration:duration animations:^{
+        self.layer.transform = transform;
+        if(block != nil)
+        {
+            block(1,nil);
+        }
+    } completion:^(BOOL finished) {
+        if(block != nil)
+        {
+            block(0,nil);
+        }
+    }];
+}
+@end
+
+@implementation NSString (URL)
+- (NSString *)URLEncodedString
+{
+    NSString *result = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+                                                                                             (CFStringRef)self, NULL,CFSTR("!*'()^;:@&=+$,/?%#[]"),kCFStringEncodingUTF8));
+    return result;
+}
+
+- (NSString*)URLDecodedString
+{
+    NSString *result = (NSString *)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
+                                                                                                             (CFStringRef)self, CFSTR(""),  kCFStringEncodingUTF8));
+    return result;
+}
+- (BOOL)startWithHTTP
+{
+    if(self == nil || [self length]<=0)
+    {
+        return NO;
+    }
+    NSString*path = @"((http|ftp|https)://)([a-zA-Z0-9_-]+.)*";
+    NSPredicate*regextestmobile = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",path];
+    return [regextestmobile evaluateWithObject:self];
+}
+@end
+
+#import <objc/runtime.h>
+
+@implementation UIView (Feed)
+
+- (void)setWidth:(CGFloat)width
+{
+    self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, self.frame.size.height);
+}
+
+- (void)setHeight:(CGFloat)height
+{
+    self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, height);
+}
+
+- (CGFloat)width
+{
+    return self.frame.size.width;
+}
+
+- (CGFloat)height
+{
+    return self.frame.size.height;
+}
+
+- (void)setX:(CGFloat)x
+{
+    self.frame = CGRectMake(x, self.frame.origin.y, self.frame.size.width, self.frame.size.height);
+}
+
+- (void)setY:(CGFloat)y
+{
+    self.frame = CGRectMake(self.frame.origin.x, y, self.frame.size.width, self.frame.size.height);
+}
+
+- (CGFloat)x
+{
+    return self.frame.origin.x;
+}
+
+- (CGFloat)y
+{
+    return self.frame.origin.y;
+}
+
+- (CGFloat)right
+{
+    return self.frame.origin.x + self.frame.size.width;
+}
+
+- (CGFloat)bottom
+{
+    return self.frame.origin.y + self.frame.size.height;
+}
+
+- (void)setUserObject:(id)userObject
+{
+    objc_setAssociatedObject(self, @"user_object", userObject, OBJC_ASSOCIATION_RETAIN);
+}
+
+- (id)userObject
+{
+    return objc_getAssociatedObject(self,@"user_object");
+}
+
+@end

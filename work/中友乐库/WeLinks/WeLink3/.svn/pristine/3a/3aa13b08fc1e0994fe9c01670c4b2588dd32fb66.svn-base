@@ -1,0 +1,468 @@
+//
+//  FeedsTableCell.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 2/25/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "FeedsTableCell.h"
+#import "FeedsCommentCell.h"
+#import "Common.h"
+#import "RCLabel.h"
+#import "UserInfo.h"
+#import "Comment.h"
+#import "RCLabel.h"
+#import "Article.h"
+#import "JobInfo.h"
+#import "LogicManager.h"
+
+@interface FeedsTableCell()
+@property (weak, nonatomic) IBOutlet UITableView *commentList;
+@property (weak, nonatomic) IBOutlet UIButton *commentButton;
+@property (weak, nonatomic) IBOutlet EGOImageView *userHead;
+@property (weak, nonatomic) IBOutlet UIView *bgView;
+@property (weak, nonatomic) IBOutlet UILabel *userName;
+@property (weak, nonatomic) IBOutlet UILabel *jobTitle;
+@property (weak, nonatomic) IBOutlet UIView *SupportAndCommentContainViwe;
+@property (weak, nonatomic) IBOutlet UIView *SupportView;
+@property (weak, nonatomic) IBOutlet UIView *commentView;
+@property (weak, nonatomic) IBOutlet RCLabel *supportLabel;
+@property (weak, nonatomic) IBOutlet RCLabel *commentLabel;
+@property (weak, nonatomic) IBOutlet UIView *originView;
+@property (weak, nonatomic) IBOutlet RCLabel *feedsLabel;
+@property (weak, nonatomic) IBOutlet UIView *line;
+@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet UIButton *commentMaskButton;
+@property (weak, nonatomic) IBOutlet UIView *line2;
+
+@property (weak, nonatomic) IBOutlet UIButton *supportButton;
+- (IBAction)commentButton:(id)sender;
+- (IBAction)support:(id)sender;
+- (IBAction)maskClick:(id)sender;
+
+@end
+
+@implementation FeedsTableCell
+
++(float)cellHeightWithFeed:(Feeds *)feed
+{
+    float cellHeight = 58;
+    //    评论内容
+    RCLabel *rcLabel = [[RCLabel alloc] initWithFrame:CGRectMake(0, 0, 280, 10)];
+    [rcLabel setText:[NSString stringWithFormat:@"<p><font size = 14 color='#333333'face = Farah >%@</font></p>",feed.content]];
+//    rcLabel.text = feed.content;
+    
+    cellHeight += [rcLabel optimumSize].height + 10; //feed.content.length > 0 ? size.height : 0;
+    DLog(@"feed content %@ height %f",feed.content, [rcLabel optimumSize].height);
+    //    判断是否显示原文摘要
+    switch (feed.feedsType) {
+        case FeedsArticle:
+        case FeedsJob:
+            cellHeight += 80;
+            break;
+        case FeedsUserPost:
+        {
+            NSError *error = nil;
+            id data = nil;
+            if (feed.targetContent.length) {
+                data = [NSJSONSerialization JSONObjectWithData:[feed.targetContent dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:NSJSONReadingMutableLeaves error:&error];
+            }
+            if(error != nil)
+            {
+                data = nil;
+            }
+            if ([[data objectForKey:@"image"] length]) {
+                cellHeight += 160;
+            }
+        }
+            break;
+        case FeedsUpdateProfile:
+            break;
+        default:
+            break;
+    }
+    
+    //    赞 评论的人
+    if (feed.zanUserNum > 0 && feed.commentUserNum > 0) {
+        cellHeight += 50 ;
+    }else if (feed.zanUserNum == 0 && feed.commentUserNum == 0)
+    {
+        cellHeight += 0;
+    }else{
+        cellHeight += 25;
+    }
+    
+    //    评论列表高度
+//    for (Comment *comment in feed.commentList) {
+//        cellHeight += [FeedsCommentCell cellHeightWithComment:comment];
+//    }
+    cellHeight += 35 * feed.commentList.count;
+    
+    if (feed.commentList.count) {
+        cellHeight += 5;
+    }
+    
+    //    赞评论 View
+    switch (feed.feedsType) {
+        case FeedsArticle:
+        case FeedsJob:
+        case FeedsUserPost:
+            cellHeight += 40;
+            break;
+            
+        default:
+            break;
+    }
+    return cellHeight ;
+    
+}
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        // Initialization code
+        [self initlize];
+    }
+    return self;
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+    
+    // Configure the view for the selected state
+}
+
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    [self initlize];
+}
+
+- (void)initlize
+{
+    DLog(@"new cell");
+    self.commentList.scrollEnabled = NO;
+    self.clipsToBounds = YES;
+    UITapGestureRecognizer *originTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(originTap)];
+    [self.originView addGestureRecognizer:originTap];
+    
+    UITapGestureRecognizer *headerTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(headTap)];
+    [self.userHead addGestureRecognizer:headerTap];
+    self.userHead.userInteractionEnabled = YES;
+    
+    self.bgView.layer.borderColor = colorWithHex(0xcccccc).CGColor;
+    self.bgView.layer.borderWidth = 0.5;
+    
+}
+
+- (void)originTap
+{
+    if ([_delegate respondsToSelector:@selector(didClickOriginViewAtCell:)]) {
+        [_delegate didClickOriginViewAtCell:self];
+    }
+}
+
+- (void)headTap
+{
+    if ([_delegate respondsToSelector:@selector(didClickUserHeadAtCell:)]) {
+        [_delegate didClickUserHeadAtCell:self];
+    }
+}
+
+-(void)setFeeds:(Feeds *)feeds
+{
+    if (_feeds == feeds) {
+        return;
+    }
+    _feeds = feeds;
+    //    用户
+    _userHead.imageURL = [NSURL URLWithString:_feeds.userAvatar];
+    _userName.text = _feeds.userName;
+    _jobTitle.text = [NSString stringWithFormat:@"%@ %@",feeds.userCompany,feeds.userJob];
+    //    动态内容
+    [_feedsLabel setText:[NSString stringWithFormat:@"<p><font size = 14 color='#333333' face = Farah>%@ </font></p>",_feeds.content]];
+    //    评论 赞
+    [_supportLabel setText:[NSString stringWithFormat:@"<p><font size = 10 color='#333333' face=FZLTZHK--GBK1-0>%@</font></p><p lineSpacing=0><font size=10 color='#999999'>等%d人觉得很赞</font></p>",_feeds.zanUser,_feeds.zanUserNum]];
+    [_commentLabel setText:[NSString stringWithFormat:@"<p><font size = 10 color='#333333' face=FZLTZHK--GBK1-0>%@</font></p><p lineSpacing=0><font size=10 color='#999999'>等%d人评论</font></p>",_feeds.commentUser,_feeds.commentUserNum]];
+    [self.commentList reloadData];
+    
+    _supportButton.selected = _feeds.hasZan;
+    
+    _timeLabel.text = [Common timeIntervalStringFromTime:_feeds.createTime];
+    _timeLabel.font = getFontWith(NO, 8);
+    _timeLabel.textColor = colorWithHex(0x999999);
+    
+//    [self.commentList reloadData];
+    self.originView.hidden = NO;
+    switch (_feeds.feedsType) {
+        case FeedsArticle:
+        {
+            self.originView.height = 70;
+            self.SupportAndCommentContainViwe.height = 40;
+            for (UIView *view in self.originView.subviews) {
+                [view removeFromSuperview];
+            }
+            
+            NSError* error = nil;
+            id data = nil;
+            if (_feeds.targetContent.length) {
+                data = [NSJSONSerialization JSONObjectWithData:[_feeds.targetContent dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:NSJSONReadingMutableLeaves error:&error];
+            }
+            if(error != nil)
+            {
+                data = nil;
+            }
+            Article *article = [[Article alloc] init];
+            
+            [article setValuesForKeysWithDictionary:data];
+            
+            EGOImageView *imageView = [[EGOImageView alloc] initWithFrame:CGRectMake(0, 0, 130, 70)];
+            imageView.imageURL = [NSURL URLWithString:article.image];
+            [self.originView addSubview:imageView];
+            
+            UILabel *summary = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(imageView.frame) + 10, 10, self.width - imageView.width - 60, 40)];
+            summary.font = getFontWith(YES, 13);
+            summary.textColor = colorWithHex(0x333333);
+            summary.text = article.title;
+            summary.numberOfLines = 2;
+            summary.backgroundColor = [UIColor clearColor];
+            [self.originView addSubview:summary];
+            
+            UILabel *source = [[UILabel alloc] initWithFrame:CGRectMake(summary.x, CGRectGetMaxY(summary.frame) , summary.width, 20)];
+            source.font = getFontWith(NO, 10);
+            source.textColor = colorWithHex(0x999999);
+            source.text = [NSString stringWithFormat:@"来自 %@",article.via];
+            [self.originView addSubview:source];
+            
+        }
+            break;
+        case FeedsJob:
+        {
+            self.originView.height = 70;
+            self.SupportAndCommentContainViwe.height = 40;
+            for (UIView *view in self.originView.subviews) {
+                [view removeFromSuperview];
+            }
+            
+            NSError* error = nil;
+            id data = nil;
+            if (_feeds.targetContent.length) {
+                data = [NSJSONSerialization JSONObjectWithData:[_feeds.targetContent dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:NSJSONReadingMutableLeaves error:&error];
+            }
+            if(error != nil)
+            {
+                data = nil;
+            }
+            JobInfo *job = [[JobInfo alloc] init];
+            [job setValuesForKeysWithDictionary:data];
+            
+            EGOImageView *imageView = [[EGOImageView alloc] initWithFrame:CGRectMake(10, 10, 50, 50)];
+            imageView.image = [UIImage imageNamed:job.jobImage];
+            //            imageView.imageURL = [NSURL URLWithString:job.jobImage];
+            [self.originView addSubview:imageView];
+            
+            UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(imageView.frame) + 10, 10, self.width - imageView.width - 30, 15)];
+            title.font = getFontWith(YES, 13);
+            title.textColor = colorWithHex(0x333333);
+            JobObject *jobObj = [[LogicManager sharedInstance] getPublicObject:job.jobCode type:Job];
+            title.text = jobObj.name;
+            [self.originView addSubview:title];
+            
+            UILabel *salary = [[UILabel alloc] initWithFrame:CGRectMake(title.x, CGRectGetMaxY(title.frame) + 10, title.width, 10)];
+            salary.font = getFontWith(NO, 10);
+            salary.textColor = colorWithHex(0x999999);
+            salary.text = [[LogicManager sharedInstance] getSalary:job.salaryLevel];
+            [self.originView addSubview:salary];
+            
+            UILabel *company = [[UILabel alloc] initWithFrame:CGRectMake(title.x, CGRectGetMaxY(salary.frame) + 5, title.width, 10)];
+            company.font = getFontWith(NO, 10);
+            CityObject *city = [[LogicManager sharedInstance] getPublicObject:job.locationCode type:City];
+            company.text = [NSString stringWithFormat:@"%@",city.fullName];
+            company.textColor = colorWithHex(0x999999);
+            [self.originView addSubview:company];
+            
+            UIImageView *arrow = [[UIImageView alloc] initWithFrame:CGRectMake(self.originView.width - 20, self.originView.height/ 2 - 5, 11, 11)];
+            arrow.image = [UIImage imageNamed:@"img_arrow.png"];
+            [self.originView addSubview:arrow];
+        }
+            
+            break;
+        case FeedsFinishProfile:
+        case FeedsUpdateProfile:
+            self.originView.height = 0;
+            self.SupportAndCommentContainViwe.height = 0;
+            self.originView.hidden = YES;
+            break;
+        case FeedsUserPost:
+        {
+            
+            for ( UIView *view in self.originView.subviews) {
+                [view removeFromSuperview];
+            }
+            
+            NSError *error = nil;
+            id data = nil;
+            if (_feeds.targetContent.length) {
+                data = [NSJSONSerialization JSONObjectWithData:[_feeds.targetContent dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:NSJSONReadingMutableLeaves error:&error];
+            }
+            if(error != nil)
+            {
+                data = nil;
+            }
+            self.originView.height = 150;
+            self.SupportAndCommentContainViwe.height = 40;
+            if (![[data objectForKey:@"image"] length]) {
+                self.originView.height = 0;
+            }
+            EGOImageView *imageView = [[EGOImageView alloc] initWithFrame:self.originView.bounds];
+            imageView.imageURL = [NSURL URLWithString:[data objectForKey:@"image"]];
+            imageView.contentMode = UIViewContentModeScaleAspectFill;
+            imageView.clipsToBounds = YES;
+            [self.originView addSubview:imageView];
+        }
+            
+            break;
+        default:
+            break;
+    }
+    
+    self.userName.font = getFontWith(YES, 14);
+    self.userName.textColor = colorWithHex(0x333333);
+    self.jobTitle.font = getFontWith(NO, 10);
+    self.jobTitle.textColor = colorWithHex(0x999999);
+    self.feedsLabel.font = getFontWith(NO, 13);
+    self.feedsLabel.textColor = colorWithHex(0x333333);
+    
+    self.SupportAndCommentContainViwe.backgroundColor = colorWithHex(0xf1f1f1);
+    self.originView.backgroundColor = colorWithHex(0xf1f1f1);
+
+    [self setNeedsLayout];
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+#pragma mark - 计算各个控件位置
+    
+    //    DLog(@"layout feed content %@ height %f",_feeds.content, [_feedsLabel optimumSize].height);
+    _supportButton.selected = _feeds.hasZan;
+    //    计算各个控件的位置
+    self.feedsLabel.y = CGRectGetMaxY(self.userHead.frame) + 5;
+    //    self.feedsLabel.height = _feeds.content.length ? size.height +10 : 0;
+    self.feedsLabel.height = [self.feedsLabel optimumSize].height;
+    self.feedsLabel.width = 280;
+    self.line2.backgroundColor = colorWithHex(0xcccccc);
+    self.line.backgroundColor = colorWithHex(0xcccccc);
+    //    原文
+    self.originView.y = CGRectGetMaxY(self.feedsLabel.frame) + 5;//MAX( CGRectGetMaxY(self.feedsLabel.frame), CGRectGetMaxY(self.userHead.frame) + 15);
+    //    赞和评论人列表
+    self.line.y = CGRectGetMaxY(self.originView.frame) + 9;
+    self.line.height = self.feeds.commentUserNum || self.feeds.zanUserNum ? 0.5 : 0;
+    self.SupportView.y = CGRectGetMaxY(self.originView.frame) + 10;
+    self.SupportView.height = _feeds.zanUserNum > 0 ? 25 : 0;
+    self.commentView.y = CGRectGetMaxY(self.SupportView.frame);
+    self.commentView.height = _feeds.commentUserNum > 0 ? 25 : 0;
+    
+    self.line2.y = self.feeds.zanUserNum ? CGRectGetMaxY(self.commentView.frame): self.line.y;
+    self.line2.height = (self.feeds.commentUserNum || self.feeds.zanUserNum) ? 0.5 : 0;
+    
+    //    DLog(@"line Height %f supportView height %f commentView height %f",self.line.height,self.SupportView.height,self.commentView.height);
+    //    评论列表
+    self.commentList.y = CGRectGetMaxY(self.line2.frame) ;
+    //    评论列表高度
+    
+    self.commentList.height = 45 * _feeds.commentList.count;//self.height - self.commentList.y;
+    
+    self.SupportAndCommentContainViwe.y = self.height - self.SupportAndCommentContainViwe.height;//CGRectGetMaxY(self.commentList.frame) ;
+    //    评论区域点击
+    self.commentMaskButton.y = self.line.y;
+    self.commentMaskButton.height = CGRectGetMaxY(self.commentList.frame) - self.commentMaskButton.y;
+    //    self.feedsLabel.backgroundColor = [UIColor redColor];
+    //
+    //    self.commentMaskButton.y = self.SupportView.y;
+    //    self.commentMaskButton.height = self.height - self.SupportView.y;
+}
+
+#pragma mark - Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    // Return the number of sections.
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    // Return the number of rows in the section.
+    return _feeds.commentList.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    FeedsCommentCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (!cell) {
+        cell = [[FeedsCommentCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    }
+    // Configure the cell...
+    cell.comment = [_feeds.commentList objectAtIndex:indexPath.row];
+    cell.backgroundColor = [UIColor clearColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleGray;
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    Comment *comment = [self.feeds.commentList objectAtIndex:indexPath.row];
+    return [FeedsCommentCell cellHeightWithComment:comment];
+}
+
+- (void)dealloc
+{
+    self.delegate = nil;
+    self.feedsController = nil;
+}
+
+- (IBAction)commentButton:(id)sender
+{
+    if ([_delegate respondsToSelector:@selector(didSelectCell:)]) {
+        [_delegate didSelectCell:self];
+    }
+}
+
+- (IBAction)support:(id)sender
+{
+    if (!self.feeds.hasZan) {
+        [UIView animateWithDuration:0.3 animations:^{
+            self.supportButton.transform = CGAffineTransformMakeScale(1.2, 1.2);
+        } completion:^(BOOL finished) {
+            [UIView animateWithDuration:0.3 animations:^{
+                self.supportButton.transform = CGAffineTransformIdentity;
+            }];
+
+        }];
+    }
+    if ([_delegate respondsToSelector:@selector(didClickSupportAtCell:)]) {
+        [_delegate didClickSupportAtCell:self];
+    }
+}
+
+- (IBAction)maskClick:(id)sender
+{
+    if ([_delegate respondsToSelector:@selector(didClickCommentViewAtCell:)]) {
+        [_delegate didClickCommentViewAtCell:self];
+    }
+}
+@end

@@ -1,0 +1,266 @@
+//
+//  CardPreviewViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/16/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "CardPreviewViewController.h"
+#import "SaveCardViewController.h"
+#import "LogicManager.h"
+#import "VcardParser.h"
+@interface CardPreviewViewController ()
+@end
+@implementation CardPreviewViewController
+@synthesize stillImageOutput;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    recognizer = [[ISWebRecognizer alloc]init];
+    recognizer.language = BCRLanguageChinese_Simplified;
+    recognizer.userName = @"shu.wu@leku.com";
+    recognizer.password = @"HA7KE4L5TMLAGRAN";
+    
+    
+    [[UIApplication sharedApplication] setStatusBarHidden:YES];
+#ifdef TARGET_OS_IPHONE
+    session = [[AVCaptureSession alloc] init];
+	session.sessionPreset = AVCaptureSessionPresetHigh;
+    
+    
+	AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+	NSError *error = nil;
+	AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
+	if (!input)
+    {
+		NSLog(@"ERROR: trying to open camera: %@", error);
+	}
+	[session addInput:input];
+    
+	stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+	NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+	[stillImageOutput setOutputSettings:outputSettings];
+	[session addOutput:stillImageOutput];
+    AVCaptureVideoDataOutput *captureOutput = [[AVCaptureVideoDataOutput alloc] init];
+	captureOutput.alwaysDiscardsLateVideoFrames = YES;
+	dispatch_queue_t queue;
+	queue = dispatch_queue_create("cameraQueue", NULL);
+	[captureOutput setSampleBufferDelegate:self queue:queue];
+    
+	[captureOutput setVideoSettings:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA],
+                                     (NSString*)kCVPixelBufferPixelFormatTypeKey,
+                                     nil]];
+    [session addOutput:captureOutput];
+	[session startRunning];
+#endif
+}
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    if([session isRunning])
+    {
+        [session stopRunning];
+    }
+}
+-(void)setEventCallBack:(EventCallBack)call
+{
+    callback = call;
+}
+-(void)processImage:(UIImage*)image
+{
+    maskView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, captureImageView.frame.size.width, captureImageView.frame.size.height)];
+    maskView.backgroundColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:0.5];
+    [captureImageView addSubview:maskView];
+    
+    [recognizer cropAndRecognizeImage:image croppedHandler:^(UIImage *cropAndEnhancedImage){
+        if(cropAndEnhancedImage)
+        {
+            
+        }
+    }completionHandler:^(NSString *vCardRepresentation, NSError *error)
+    {
+        [self processAnimation:vCardRepresentation image:image];
+    }];
+//    [recognizer recognizeImage:image completionHandler:^(NSString *vCardRepresentation, NSError *error)
+//     {
+//         //BEGIN:VCARD
+//         //VERSION:2.1
+//         //REV:20140514T174500Z
+//         //X-GENERATOR:IntSig
+//         //X-IS-ANGLE:0
+//         //N;CHARSET=utf-8:许;文
+//         //X-IS-INFO:591,696,721,693,721,755,592,757;1,2,13
+//         //FN;CHARSET=utf-8:许文
+//         //X-IS-INFO:591,696,721,693,721,755,592,757;0,9,10,13
+//         //NICKNAME;CHARSET=utf-8:Vincent
+//         //X-IS-INFO:600,657,719,655,719,681,600,684;17,0,13
+//         //TEL;CELL;VOICE:+8613922336969
+//         //X-IS-INFO:442,440,712,435,712,463,442,467;6,13
+//         //X-MS-IMADDRESS;CHARSET=utf-8:QQ:94423456
+//         //X-IS-INFO:516,332,709,329,709,353,516,356;14,7,13
+//         //EMAIL;PREF;INTERNET:wen.xu@leku.com
+//         //X-IS-INFO:373,406,711,400,711,428,373,434;7,14,13
+//         //TITLE;CHARSET=utf-8:市场推广经理
+//         //X-IS-INFO:535,616,718,613,718,644,536,647;9,16,11,10,0,13
+//         //ORG;CHARSET=utf-8:;珍爱集团一珍爱实验室
+//         //X-IS-INFO:327,545,716,538,716,576,328,583;16,9,11,10,0,13
+//         //ADR;WORK;PREF;CHARSET=utf-8:;;南山区科技园北区朗山路1 1 号同方信息港 A 座3楼;深圳;;;中国
+//         //X-IS-INFO:23,505,714,499,714,532,23,538;11,13
+//         //LABEL;WORK;PREF;CHARSET=utf-8:深圳南山区科技园北区朗山路1 1 号同方信息港 A 座3楼
+//         //X-IS-INFO:23,505,714,499,714,532,23,538;11,13
+//         //NOTE;CHARSET=utf-8:唯邻
+//         //X-IS-INFO:445,223,548,222,549,257,446,259;13,10,11,9,0
+//         //NOTE;CHARSET=utf-8:WE, LINK
+//         //X-IS-INFO:554,227,703,225,703,247,554,250;13,10,11,9,0
+//         //END:VCARD
+//         if(!error)
+//         {
+//             runOnMainQueueWithoutDeadlocking(^{
+//                 
+//                 UIAlertView* alert = [[UIAlertView alloc]initWithTitle:nil message:vCardRepresentation delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+//                 [alert show];
+//             });
+//         }
+//         else
+//         {
+//             runOnMainQueueWithoutDeadlocking(^{
+//                 UIAlertView* alert = [[UIAlertView alloc]initWithTitle:nil message:[NSString stringWithFormat:@"%@",error] delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+//                 [alert show];
+//             });
+//         }
+//     }];
+}
+-(void)processAnimation:(NSString*)value image:(UIImage*)image
+{
+    [UIView animateWithDuration:3 animations:^{
+        maskView.frame = CGRectMake(0,captureImageView.frame.size.height,captureImageView.frame.size.width, 0);
+    } completion:^(BOOL finished) {
+        [maskView removeFromSuperview];
+        
+//        SaveCardViewController* save = [[SaveCardViewController alloc]initWithNibName:@"SaveCardViewController" bundle:nil];
+//        save.card = image;
+//        save.value = value;
+//        [save setEventCallBack:callback];
+//        [self presentViewController:save animated:YES completion:nil];
+    }];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+}
+#pragma mark - Video Frame Delegate
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+	   fromConnection:(AVCaptureConnection *)connection
+{
+    UIImage* image = [self imageFromSampleBuffer:sampleBuffer];
+    runOnMainQueueWithoutDeadlocking(^{
+        previewImageView.image = image;
+    });
+}
+- (UIImage *)imageFromSampleBuffer:(CMSampleBufferRef) sampleBuffer
+{
+    // Get a CMSampleBuffer's Core Video image buffer for the media data
+    CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    // Lock the base address of the pixel buffer
+    CVPixelBufferLockBaseAddress(imageBuffer, 0);
+    
+    // Get the number of bytes per row for the pixel buffer
+    void *baseAddress = CVPixelBufferGetBaseAddress(imageBuffer);
+    
+    // Get the number of bytes per row for the pixel buffer
+    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer);
+    // Get the pixel buffer width and height
+    size_t width = CVPixelBufferGetWidth(imageBuffer);
+    size_t height = CVPixelBufferGetHeight(imageBuffer);
+    
+    // Create a device-dependent RGB color space
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    
+    // Create a bitmap graphics context with the sample buffer data
+    CGContextRef context = CGBitmapContextCreate(baseAddress, width, height, 8,
+                                                 bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+    // Create a Quartz image from the pixel data in the bitmap graphics context
+    CGImageRef quartzImage = CGBitmapContextCreateImage(context);
+    // Unlock the pixel buffer
+    CVPixelBufferUnlockBaseAddress(imageBuffer,0);
+    
+    // Free up the context and color space
+    CGContextRelease(context);
+    CGColorSpaceRelease(colorSpace);
+    
+    // Create an image object from the Quartz image
+    //UIImage *image = [UIImage imageWithCGImage:quartzImage];
+    UIImage *image = [UIImage imageWithCGImage:quartzImage scale:1.0f orientation:UIImageOrientationRight];
+    
+    // Release the Quartz image
+    CGImageRelease(quartzImage);
+    
+    return (image);
+}
+-(IBAction)takePhoto:(id)sender
+{
+    AVCaptureConnection *videoConnection = nil;
+	for (AVCaptureConnection *connection in stillImageOutput.connections)
+	{
+		for (AVCaptureInputPort *port in [connection inputPorts])
+		{
+			if ([[port mediaType] isEqual:AVMediaTypeVideo] )
+			{
+				videoConnection = connection;
+				break;
+			}
+		}
+		if (videoConnection)
+        {
+            break;
+        }
+	}
+	[stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection
+                                                  completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
+     {
+         NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
+         UIImage *image = [[UIImage alloc] initWithData:imageData];
+         previewImageView.hidden = YES;
+         captureImageView.image = image;
+         if([session isRunning])
+         {
+             [session stopRunning];
+         }
+         [self processImage:image];
+	 }];
+}
+-(IBAction)cancelAction:(id)sender
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+-(IBAction)contactAction:(id)sender
+{
+    
+}
+-(IBAction)cardAction:(id)sender
+{
+    
+}
+-(IBAction)QRAction:(id)sender
+{
+    
+}
+@end

@@ -1,0 +1,18 @@
+获取消息状态
+
+请求URL: /msg/get-msg-status-unread
+
+请求方式: GET
+
+请求参数：
+	id:消息id
+
+返回结果：
+ data包含多个消息的id，逗号分隔符
+
+返回示例：
+{
+	"data":"12,14",
+	"msg":"",
+	"retcode":"0"
+}

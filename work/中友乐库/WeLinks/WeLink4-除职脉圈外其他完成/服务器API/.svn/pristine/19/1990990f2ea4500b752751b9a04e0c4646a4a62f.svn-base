@@ -1,0 +1,47 @@
+发动态
+
+请求URL: /article/send-feed
+
+请求方式: POST
+
+请求参数：
+	content:发布的文字  
+	image:发布的照片(文件流)
+	url：链接的url
+	tags: 标签，逗号分隔
+image和url只能二选一
+
+返回结果：
+新的feed对象,注意没有了autoId，使用整型的id代替，增加了新的image行记录发布的照片
+普通动态的targetContent中只有content、image和createTime
+
+feedCount:参与人的数量
+tags：标签,逗号分隔
+返回示例：
+
+{
+	"data":{
+		"commentUser":"",
+		"commentUserNum":0,
+		"comments":[],
+		"content":"今天第一次发动态,mark一个",
+		"contentType":0,
+		"createTime":1399535010933,
+		"feedType":3,
+		"id":2,
+		"image":"",
+		"targetContent":"{\"content\":\"今天第一次发动态,mark一个\",\"createTime\":1399535010933,\"image\":\"\"}",
+		"targetId":"2",
+		"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-897b4beb_785e_4396_b1cb_b80559ba2d01.jpg",
+		"userCompany":"",
+		"userId":21806,
+		"userName":"",
+		"userJob":"",
+		"url":"",
+		"feedUrl":"http://10.10.15.30/get-feed-share/userId=ae5ef4cae758d79f&id=695ed6ebb906154c",
+		"feedCount":0,
+		"tags":互联网,大数据
+	},
+	"msg":"",
+	"retcode":"0"
+}

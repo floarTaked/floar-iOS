@@ -1,0 +1,798 @@
+//
+//  PublishJobViewController.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 2/26/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "PublishJobViewController.h"
+#import "CustomCellView.h"
+#import "JobInfo.h"
+#import "JobTitleViewController.h"
+#import "SelectFriendViewController.h"
+#import "NetworkEngine.h"
+#import "UIPlaceHolderTextView.h"
+#import "CustomPickerView.h"
+#import "LogicManager.h"
+#import "CustomIOS7AlertView.h"
+#import <MBProgressHUD.h>
+#import "AutoScrollUITextField.h"
+
+#define kCompanyTextFieldTag 10000
+#define kJobDescriptionTextViewTag 10001
+
+@interface PublishJobViewController ()<UITextViewDelegate,CustomIOS7AlertViewDelegate,UIAlertViewDelegate,UITextFieldDelegate>
+{
+    int _currentIndex;
+    CGRect _currentCellRect;
+    float _currentTableViewContentOffset;
+    CGRect _keyboardRect;
+    CustomPickerView *pickerView;
+    UIPlaceHolderTextView* jobDescription;
+}
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic, strong) UITextField *companyField;
+@property (nonatomic, strong) UILabel *jobDescriptionNum;
+@property (nonatomic, strong) UITextField *emailField;
+
+@end
+
+@implementation PublishJobViewController
+
+- (void)dealloc
+{
+    self.companyField = nil;
+    self.jobInfo = nil;
+    self.jobDescriptionNum = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack title:nil target:self selector:@selector(backAction)];
+    self.tableView.contentInset = UIEdgeInsetsMake(0, 0, 30, 0);
+    if(self.jobInfo == nil)
+    {
+        [self.navigationItem setTitleViewWithText:@"发布职位"];
+        [self.navigationItem setRightBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleConfirm title:@"发布" target:self selector:@selector(confirm)];
+        //监听键盘高度的变换
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillChangeFrameNotification object:nil];
+        pickerView = [CustomPickerView sharedInstance];
+        [self.navigationController.view addSubview:pickerView];
+        
+        
+        self.jobInfo = [[JobInfo alloc] init];
+        self.jobInfo.poster = [UserInfo myselfInstance].name;
+        self.jobInfo.posterId = [UserInfo myselfInstance].userId;
+        [self.tableView reloadData];
+    }
+    else
+    {
+        [self.navigationItem setTitleViewWithText:self.jobInfo.company];
+        self.jobInfo.poster = [UserInfo myselfInstance].name;
+        self.jobInfo.posterId = [UserInfo myselfInstance].userId;
+        [self.tableView reloadData];
+        UIView* maskView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, self.tableView.contentSize.width, self.tableView.contentSize.height)];
+        maskView.backgroundColor = [UIColor clearColor];
+        [self.tableView addSubview:maskView];
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    // Return the number of sections.
+    return 3;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    // Return the number of rows in the section.
+    if ( 0 == section) {
+        return 6;
+    }else if (1== section)
+    {
+        return 4;
+    }
+    return 2;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if((indexPath.section == 0 || indexPath.section == 1 || indexPath.section == 2) && indexPath.row == 0)
+    {
+        static NSString* Identifier = @"SectionHeader";
+        CustomCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[CustomCellView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:Identifier];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            cell.backgroundColor = [UIColor clearColor];
+            cell.contentView.backgroundColor = [UIColor clearColor];
+        }
+        if(indexPath.section == 0)
+        {
+            cell.textLabel.text = @"公司信息";
+        }
+        else if(indexPath.section == 1)
+        {
+            cell.textLabel.text = @"职位信息";
+        }else if(indexPath.section == 2)
+        {
+            cell.textLabel.text = @"职位描述";
+            self.jobDescriptionNum = cell.textLabel;
+        }
+        cell.textLabel.font = [UIFont systemFontOfSize:12];
+        cell.textLabel.textColor = colorWithHex(0x666666);
+        return cell;
+    }
+    else if (indexPath.section == 0 && indexPath.row == 1)
+    {
+
+        static NSString* Identifier = @"CompanyCell";
+        CustomMarginCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[CustomMarginCellView alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+            cellBackgroundView.backgroundColor = [UIColor whiteColor];
+            cell.backgroundView = cellBackgroundView;
+            
+            cell.backgroundColor = [UIColor whiteColor];
+            cell.textLabel.font = getFontWith(YES, 13);
+            cell.textLabel.textColor = [UIColor blackColor];
+            cell.detailTextLabel.font = getFontWith(NO, 12);
+            cell.detailTextLabel.textColor = colorWithHex(0x3287E6);
+        }
+        cell.textLabel.text = @"公司";
+        cell.imageView.image = nil;
+        self.companyField = [self customTextFiled:cell];
+        [self.companyField setText:self.jobInfo.company];
+        [self customLine:cell];
+        return cell;
+    }
+    else
+    {
+        static NSString* Identifier = @"Cell";
+        CustomMarginCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[CustomMarginCellView alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+            UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+            cellBackgroundView.backgroundColor = [UIColor whiteColor];
+            cell.backgroundView = cellBackgroundView;
+            
+            
+            cell.backgroundColor = [UIColor whiteColor];
+            cell.textLabel.font = getFontWith(YES, 13);
+            cell.textLabel.textColor = [UIColor blackColor];
+            cell.detailTextLabel.font = getFontWith(NO, 12);
+            cell.detailTextLabel.textColor = colorWithHex(0x3287E6);
+            cell.textLabel.backgroundColor = [UIColor clearColor];
+            cell.detailTextLabel.backgroundColor = [UIColor clearColor];
+        }
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.textLabel.text = @"";
+        cell.imageView.image = nil;
+        cell.detailTextLabel.text = @"";
+        if(indexPath.section == 0)
+        {
+            if(indexPath.row == 2)
+            {
+                cell.textLabel.text = @"职位";
+                JobObject *job = [[LogicManager sharedInstance] getPublicObject:self.jobInfo.jobCode type:Job];
+                if (job.name) {
+                    cell.detailTextLabel.text = job.name;
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+                [self customLine:cell];
+            }
+            else if(indexPath.row == 3)
+            {
+                cell.textLabel.text = @"行业";
+                IndustryObject *industry = [[LogicManager sharedInstance] getPublicObject:self.jobInfo.industryId type:Industry];
+                if (industry) {
+                    cell.detailTextLabel.text = [NSString stringWithFormat:@"%@ %@",industry.parentName,industry.name];
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+                [self customLine:cell];
+            }
+            else if(indexPath.row == 4)
+            {
+                cell.textLabel.text = @"工作地点";
+                CityObject *city = [[LogicManager sharedInstance] getPublicObject:self.jobInfo.locationCode type:City];
+                if (city) {
+                    cell.detailTextLabel.text = city.fullName;
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+                [self customLine:cell];
+            }
+            else if(indexPath.row == 5)
+            {
+                cell.textLabel.text = @"薪酬范围";
+                if (self.jobInfo.salaryLevel) {
+                    cell.detailTextLabel.text =  [[LogicManager sharedInstance] getSalary:self.jobInfo.salaryLevel];
+                }else if(self.jobInfo.salaryLevel == 0){
+                    cell.detailTextLabel.text = @"面议";
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+            }
+        }
+        else if (indexPath.section == 1)
+        {
+            if(indexPath.row == 1)
+            {
+                cell.textLabel.text = @"级别";
+                [self customLine:cell];
+                if (self.jobInfo.jobLevel) {
+                    cell.detailTextLabel.text = [[LogicManager sharedInstance] getJobLevel:self.jobInfo.jobLevel];
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+            }
+            else if(indexPath.row == 2)
+            {
+                cell.textLabel.text = @"工作年限";
+                [self customLine:cell];
+                if (self.jobInfo.howLong) {
+                    cell.detailTextLabel.text = [[LogicManager sharedInstance] getJobYear:self.jobInfo.howLong];
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+            }
+            else if(indexPath.row == 3)
+            {
+                cell.textLabel.text = @"学历";
+                [self customLine:cell];
+                if (self.jobInfo.education) {
+                    cell.detailTextLabel.text = [[LogicManager sharedInstance] getEducation:self.jobInfo.education];
+                }else{
+                    cell.detailTextLabel.text = @"必选";
+                }
+                
+            }
+            
+        }
+        else if (indexPath.section == 2)
+        {
+            static NSString* Identifier = @"SectionInput";
+            CustomMarginCellView* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+            if(cell == nil)
+            {
+                cell = [[CustomMarginCellView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:Identifier];
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                cell.accessoryType = UITableViewCellAccessoryNone;
+                cell.backgroundColor = [UIColor clearColor];
+                cell.contentView.backgroundColor = [UIColor clearColor];
+            }
+            jobDescription = (UIPlaceHolderTextView*)[cell.contentView viewWithTag:100];
+            if(jobDescription == nil)
+            {
+                jobDescription = [[UIPlaceHolderTextView alloc]initWithFrame:CGRectMake(0, 0, cell.contentView.frame.size.width, 100)];
+                jobDescription.placeholder = @"填写你的详细情况,或对内推职位的要求...";
+                [cell.contentView addSubview:jobDescription];
+                jobDescription.font = getFontWith(NO, 13);
+                jobDescription.delegate = self;
+                jobDescription.tag = 100;
+            }
+            [jobDescription setText:self.jobInfo.describes];
+            return cell;
+        }
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        return cell;
+    }
+    
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section == 1 || indexPath.section == 0)
+    {
+        if(indexPath.row == 0)
+        {
+            return 30;
+        }
+        return 55;
+    }else if (indexPath.section == 2){
+        if (indexPath.row == 0) {
+            return 30;
+        }else{
+            return 100;
+        }
+    }
+    return 0;
+}
+
+-(void)customLine:(UITableViewCell*)cell
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        return;
+    }
+    UIView* line = [cell.contentView viewWithTag:2];
+    if(line == nil)
+    {
+        line = [[UIView alloc]initWithFrame:CGRectMake(0, 54.5, cell.frame.size.width, 0.5)];
+        line.backgroundColor = colorWithHex(0xCCCCCC);
+        line.tag = 2;
+        [cell.contentView addSubview:line];
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(indexPath.row == 0)
+    {
+        [self clearState];
+        if(indexPath.section == 2)
+        {
+            [UIView animateWithDuration:0.3 animations:^{
+                [self.tableView setContentOffset:offsetPoint animated:YES];
+            }];
+        }
+        return;
+    }
+    
+    offsetPoint = tableView.contentOffset;
+    
+    CGRect rectInTableView = [tableView rectForRowAtIndexPath:indexPath];
+    CGRect rect = [tableView convertRect:rectInTableView toView:self.view];
+//    需要移动的位置
+    float targetY = self.view.height - pickerView.height - rect.size.height;
+    float offSet = rect.origin.y - targetY;
+    float currentContentOffset = tableView.contentOffset.y;
+    
+    if (currentContentOffset + offSet > 0)
+    {
+        [tableView setContentOffset:CGPointMake(0, currentContentOffset + offSet) animated:YES];
+    }
+    
+    if (indexPath.section == 0)
+    {
+        switch (indexPath.row)
+        {
+            case 2:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = Job;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         JobObject* job = (JobObject*)object;
+                         self.jobInfo.jobCode = job.code;
+//                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+            case 3:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = Industry;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         IndustryObject *industry = (IndustryObject *)object;
+                         self.jobInfo.industryId = industry.code;
+                         self.jobInfo.subIndustryId = industry.parentCode;
+                         //                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+            case 4:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = City;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         CityObject* city = (CityObject*)object;
+                         self.jobInfo.locationCode = city.code;
+//                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+            case 5:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = JobSalary;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         self.jobInfo.salaryLevel = [object intValue];
+                        //                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+            default:
+                break;
+        }
+    }
+    else if (1 == indexPath.section)
+    {
+        switch (indexPath.row)
+        {
+            case 1:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = JobLevel;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         self.jobInfo.jobLevel = [object intValue] + 1;
+                         //                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+            case 2:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = JobYear;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         self.jobInfo.howLong = [object intValue] + 1;
+                         //                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+            case 3:
+            {
+                [self saveTempValue];
+                pickerView.pickerType = Education;
+                [pickerView showWithObject:nil block:^(int event, id object)
+                 {
+                     if(event == 1)
+                     {
+                         self.jobInfo.education = [object intValue] + 1;
+                         //                         [self clearState];
+                         [tableView reloadData];
+                     }
+                     [tableView setContentOffset:offsetPoint animated:YES];
+                 }];
+            }
+                break;
+                
+            default:
+                break;
+        }
+    }
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    [self.view endEditing:YES];
+}
+
+- (void)confirm
+{
+    [self clearState];
+    if (self.jobInfo.company == nil ||  [self.jobInfo.company length]<= 0)
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请输入公司" actionText:@"确定"];
+        return;
+    }
+    if (self.jobInfo.jobCode ==nil || [self.jobInfo.jobCode length]<=0)
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请选择职位" actionText:@"确定"];
+        return;
+    }
+    
+    if (self.jobInfo.industryId ==nil || [self.jobInfo.industryId length]<=0)
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请输选择行业" actionText:@"确定"];
+        return;
+    }
+    
+    if (self.jobInfo.locationCode ==nil || [self.jobInfo.locationCode length]<=0)
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请选择工作地点" actionText:@"确定"];
+        return;
+    }
+    
+    
+    if (self.jobInfo.jobLevel <=0 )
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请选择级别" actionText:@"确定"];
+        return;
+    }
+    
+    if (self.jobInfo.howLong <=0 )
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请选择工作年限" actionText:@"确定"];
+        return;
+    }
+    
+    if (self.jobInfo.education <= 0 )
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"请选择学历" actionText:@"确定"];
+        return;
+    }
+    
+    if ([UserInfo myselfInstance].email.length < 1)
+    {
+        
+        if (isSystemVersionIOS7())
+        {
+            CustomIOS7AlertView *alertView = [[CustomIOS7AlertView alloc] init];
+            // Add some custom content to the alert view
+            UIView *containView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 290, 120)];
+            UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(20, 20, 250, 30)];
+            label.font = getFontWith(NO, 14);
+            label.backgroundColor = [UIColor clearColor];
+            label.textAlignment = NSTextAlignmentCenter;
+            label.text = @"请设置邮箱 方便接收候选人简历";
+            [containView addSubview:label];
+            
+            UITextField *textFiled = [[UITextField alloc] initWithFrame:CGRectMake(20, 70, 250, 30)];
+            textFiled.borderStyle = UITextBorderStyleNone;
+            textFiled.layer.borderColor = colorWithHex(0xbbbbbb).CGColor;
+            textFiled.layer.borderWidth = 0.5;
+            textFiled.clipsToBounds = YES;
+            [containView addSubview:textFiled];
+            
+            [alertView setContainerView:containView];
+            self.emailField = textFiled;
+            
+            [alertView setButtonTitles:[NSMutableArray arrayWithObjects:@"取消", @"确定", nil]];
+            [alertView setDelegate:self];
+            
+            // You may use a Block, rather than a delegate.
+            [alertView setOnButtonTouchUpInside:^(CustomIOS7AlertView *alertView, int buttonIndex) {
+                NSLog(@"Block: Button at position %d is clicked on alertView %d.", buttonIndex, [alertView tag]);
+                [alertView close];
+            }];
+            
+            [alertView setUseMotionEffects:true];
+            
+            // And launch the dialog
+            [alertView show];
+        }
+        else
+        {
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"请设置邮箱 方便接收候选人简历" message:@"\n\n\n" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+            UITextField *textFiled = [[UITextField alloc] initWithFrame:CGRectMake(20, 60, 250, 30)];
+            textFiled.borderStyle = UITextBorderStyleRoundedRect;
+            [alertView addSubview:textFiled];
+            self.emailField = textFiled;
+            [alertView show];
+        }
+        
+        
+        
+        return;
+    }
+//    DLog(@"email is %@",[UserInfo myselfInstance].email);
+    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    self.navigationItem.rightBarButtonItem.enabled = NO;
+    [[NetworkEngine sharedInstance] postNewJob:self.jobInfo Block:^(int event, id object)
+    {
+        DLog(@"pulishNew job %@",object);
+        self.navigationItem.rightBarButtonItem.enabled = YES;
+        [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
+        if (1 == event)
+        {
+            self.jobInfo = object;
+            [MobClick event:SOCIAL2];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kPublishJobSuccess object:self.jobInfo userInfo:nil];
+            SelectFriendViewController *selectFriend = [[SelectFriendViewController alloc] init];
+            selectFriend.type = SelectFriendViewTypePublishJob;
+            selectFriend.jobInfo = self.jobInfo;
+            [self.navigationController pushViewController:selectFriend animated:YES];
+        }
+    }];
+    
+}
+
+- (void)backAction
+{
+    [pickerView hide];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+-(void)clearState
+{
+    [self.view endEditing:YES];
+    [pickerView hide];
+    self.jobInfo.describes = jobDescription.text;
+    self.jobInfo.company = self.companyField.text;
+}
+-(void)saveTempValue
+{
+    [self.view endEditing:YES];
+    self.jobInfo.describes = jobDescription.text;
+    self.jobInfo.company = self.companyField.text;
+}
+#pragma --mark - UITextFieldDelegate
+-(BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    [pickerView hide];
+    return YES;
+}
+#pragma mark - UITextViewDelegate
+-(BOOL)textViewShouldBeginEditing:(UITextView *)textView
+{
+    if(textView == jobDescription)
+    {
+        offsetPoint = self.tableView.contentOffset;
+        CGRect rectInTableView = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:2]];
+        CGRect rect = [self.tableView convertRect:rectInTableView toView:self.view];
+        _currentTableViewContentOffset = self.tableView.contentOffset.y;
+        _currentCellRect = rect;
+        [UIView animateWithDuration:0.3 animations:^{
+            [pickerView hide];
+        }];
+    }
+    return YES;
+}
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+    self.jobInfo.describes = textView.text;
+    return YES;
+}
+
+#pragma mark - UIAlertViewDelegate
+
+- (void)customIOS7dialogButtonTouchUpInside: (CustomIOS7AlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (1 == buttonIndex) {
+        if ([[LogicManager sharedInstance] validateEmail:self.emailField.text]) {
+            
+            NSDictionary *dic = [NSDictionary dictionaryWithObject:self.emailField.text forKey:@"email"];
+            NSString *json = [[LogicManager sharedInstance] objectToJsonString:dic];
+            [[NetworkEngine sharedInstance] saveProfileInfo:json block:^(int event, id object) {
+                if (1 == event) {
+                    [UserInfo myselfInstance].email = self.emailField.text;
+                    [[UserInfo myselfInstance] synchronize:nil];
+                    [self confirm];
+                }else{
+                    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:Nil message:@"设置邮箱失败，请重新设置" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+                    [alertView show];
+                }
+            }];
+            
+        }else{
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:Nil message:@"请输入正确的邮箱格式" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+            [alertView show];
+            return;
+        }
+        
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (1 == buttonIndex) {
+        if ([[LogicManager sharedInstance] validateEmail:self.emailField.text]) {
+            NSDictionary *dic = [NSDictionary dictionaryWithObject:self.emailField.text forKey:@"email"];
+            NSString *json = [[LogicManager sharedInstance] objectToJsonString:dic];
+            [[NetworkEngine sharedInstance] saveProfileInfo:json block:^(int event, id object) {
+                if (1 == event) {
+                    [UserInfo myselfInstance].email = self.emailField.text;
+                    [[UserInfo myselfInstance] synchronize:nil];
+                    [self confirm];
+                }else{
+                    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:Nil message:@"设置邮箱失败，请重新设置" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+                    [alertView show];
+                }
+            }];
+        }else{
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:Nil message:@"请输入正确的邮箱格式" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+            [alertView show];
+            return;
+        }
+        
+    }
+}
+
+-(UITextField*)customTextFiled:(UITableViewCell*)cell
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        nil;
+    }
+    AutoScrollUITextField* textField = (AutoScrollUITextField*)[cell.contentView viewWithTag:200];
+    if(textField == nil)
+    {
+        textField = [[AutoScrollUITextField alloc]initWithFrame:CGRectMake(80, 5, cell.frame.size.width-115, 44)];
+        textField.table = self.tableView;
+        textField.delegate = self;
+        textField.tag = 200;
+        [cell.contentView addSubview:textField];
+        textField.backgroundColor = [UIColor clearColor];
+        textField.textAlignment = NSTextAlignmentRight;
+        textField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+        textField.font = getFontWith(NO, 12);
+        textField.textColor = colorWithHex(0x3287E6);
+        if ([textField respondsToSelector:@selector(setAttributedPlaceholder:)])
+        {
+            textField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:@"必填"
+                                                                              attributes:@{NSForegroundColorAttributeName:colorWithHex(0x3287E6)}];
+        }
+    }
+    return textField;
+}
+#pragma mark - Keyboard Notification
+- (void)keyboardWillShow:(NSNotification *)notification
+{
+    NSDictionary *userInfo = [notification userInfo];
+    NSValue* aValue = [userInfo objectForKey:UIKeyboardFrameEndUserInfoKey];
+    CGRect keyboardRect = [aValue CGRectValue];
+    NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSTimeInterval animationDuration;
+    [animationDurationValue getValue:&animationDuration];
+    _keyboardRect = keyboardRect;
+    if (_keyboardRect.origin.y < self.view.height)
+    {
+        [self moveCommentInputeView:_keyboardRect];
+    }
+}
+
+
+- (void)keyboardWillHide:(NSNotification *)notification
+{
+    
+}
+
+
+- (void)moveCommentInputeView:(CGRect)keyboardRect
+{
+    //    需要移动到的位置
+    CGRect targetRect = CGRectMake(0, self.view.height - keyboardRect.size.height  - _currentCellRect.size.height, _currentCellRect.size.width, _currentCellRect.size.height);
+    //    tableview内容要滚到合适位置的偏移量
+    float shouldMoveOffset = targetRect.origin.y - _currentCellRect.origin.y;
+    float offset = _currentTableViewContentOffset - shouldMoveOffset;
+    if (offset < 0 )
+    {
+        offset = 0;
+    }
+    [UIView animateWithDuration:0.3 animations:^{
+        self.tableView.contentOffset = CGPointMake(0, offset);
+    }];
+}
+@end

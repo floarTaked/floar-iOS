@@ -1,0 +1,35 @@
+消息发送
+
+请求URL: /msg/send-msg
+
+请求方式: POST
+
+请求参数：
+	receiverId:接收者id 
+	content:消息内容 
+	msgType：1=普通文本 3=阅后即焚消息 4=定时删除消息
+	storeSecond：定时删除需要保存的秒数，单位为秒
+
+返回结果：
+消息对象
+
+返回示例：
+
+{
+	"data":{
+		"content":"{\"text\":\"你好吗,打个招呼\"}",
+		"createTime":1399519686525,
+		"receiveTime"：,
+		"storeSecond":600
+		"id":21331,
+		"isSender":0,
+		"msgType":1,
+		"otherAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+		"otherName":"测试1222&",
+		"otherUserId":658455,
+		"status":1,
+		"userId":265958
+	},
+	"msg":"",
+	"retcode":"0"
+}

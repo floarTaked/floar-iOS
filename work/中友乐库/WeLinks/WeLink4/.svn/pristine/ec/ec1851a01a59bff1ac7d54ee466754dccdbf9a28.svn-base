@@ -1,0 +1,23 @@
+//
+//  VoteView.h
+//  WeLinked4
+//
+//  Created by floar on 14-5-30.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+typedef enum
+{
+    voteTypeHttp= 0,
+    voteTypeNormal,
+    voteTypeRate
+}VoteType;
+
+@interface VoteView : UIView
+
+@property (nonatomic, assign) int voteCount;
+@property (nonatomic, assign) VoteType voteType;
+
+@end

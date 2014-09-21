@@ -1,0 +1,49 @@
+//
+//  Article.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 3/4/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "Article.h"
+
+#import "UserInfo.h"
+@implementation Article
+
+-(id)init
+{
+    self = [super init];
+    if (self) {
+        self.DBUid = [UserInfo myselfInstance].userId;
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    self.articleID = nil;
+    self.content = nil;
+    self.image = nil;
+    self.title = nil;
+    self.via = nil;
+    self.viaUrl = nil;
+    self.columnId = nil;
+}
+
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    if ([key isEqualToString:@"id"])
+    {
+        self.articleID = value;
+    }
+}
+
+
++(NSString*)primaryKey
+{
+    return @"articleID";
+}
+
+
+@end

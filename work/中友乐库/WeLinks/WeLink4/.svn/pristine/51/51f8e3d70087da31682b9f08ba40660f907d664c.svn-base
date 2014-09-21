@@ -1,0 +1,93 @@
+//
+//  VoteView.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-30.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "VoteView.h"
+#import "CustomProcessView.h"
+
+@implementation VoteView
+{
+    CustomProcessView *processView;
+    
+    UILabel *voteLabel;
+}
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+
+//-(void)setVoteType:(VoteType)voteType
+//{
+//    if (voteType == voteTypeHttp)
+//    {
+//        
+//    }
+//    else
+//    {
+//        
+//    }
+//}
+
+-(void)setVoteCount:(int)voteCount
+{
+    NSArray *longthArray = @[@"0",@"0.8",@"0.9"];
+    NSArray *backgoundArray = @[[UIColor orangeColor],[UIColor orangeColor],[UIColor orangeColor]];
+    NSArray *foreArray = @[[UIColor blueColor],[UIColor greenColor],[UIColor redColor]];
+    NSArray *titleArray = @[@"好疼",@"疼",@"有点疼"];
+    
+    if (voteCount > 0)
+    {
+        for (int i = 0; i<voteCount; i++)
+        {
+            processView = [[CustomProcessView alloc] initWithFrame:CGRectMake(0,40*i, 320, 40)];
+            processView.tag = 100+i;
+            processView.foreLongth = [[longthArray objectAtIndex:i] doubleValue];
+            processView.backgroundColor = [backgoundArray objectAtIndex:i];
+            processView.foreColor = [foreArray objectAtIndex:i];
+            processView.title = [titleArray objectAtIndex:i];
+            
+            [self addSubview:processView];
+        }
+        
+        voteLabel = [[UILabel alloc] initWithFrame:CGRectMake(15,CGRectGetMaxY(processView.frame)+10, 290, 40)];
+        voteLabel.text = @"还没投票";
+        [self addSubview:voteLabel];
+//        
+//        voteBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+//        voteBtn.frame = CGRectMake(0, 0, 290, 40);
+//        [voteBtn addTarget:self action:@selector(showComment) forControlEvents:UIControlEventTouchUpInside];
+//        [voteView addSubview:voteLabel];
+//        [voteView addSubview:voteBtn];
+//        [self addSubview:voteView];
+    }
+    else if (voteCount == 0)
+    {
+        
+    }
+}
+
+-(void)layoutSubviews
+{
+    
+}
+
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

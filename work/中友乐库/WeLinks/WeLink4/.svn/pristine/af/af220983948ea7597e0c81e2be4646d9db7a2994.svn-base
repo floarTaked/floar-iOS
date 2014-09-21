@@ -1,0 +1,58 @@
+//
+//  FriendCircleViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/14/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "FriendCircleViewController.h"
+#import "PublishViewController.h"
+#import "Common.h"
+@interface FriendCircleViewController ()
+
+@end
+
+@implementation FriendCircleViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        self.tabBarItem.image = [UIImage imageNamed:@"feeds"];
+        self.tabBarItem.selectedImage = [UIImage imageNamed:@"feedsSelected"];
+        self.tabBarItem.imageInsets = UIEdgeInsetsMake(6, 0, -6, 0);
+        self.title = nil;
+        
+        NSMutableDictionary *textAttributes = [NSMutableDictionary dictionary];
+        [textAttributes setObject:[UIColor whiteColor] forKey:UITextAttributeTextColor];
+        [self.tabBarItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:colorWithHex(NAVBARCOLOR),
+                                                 UITextAttributeTextColor, nil] forState:UIControlStateSelected];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self.navigationItem setTitleString:@"职脉圈"];
+    [self.navigationItem setRightBarButtonItem:[UIImage imageNamed:@"img_rightChange_n"] imageSelected:[UIImage imageNamed:@"img_rightChange_h"] title:@"缺失" inset:UIEdgeInsetsZero target:self selector:@selector(rightBarBtnAction)];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UINavigatinBarButtonAction
+-(void)rightBarBtnAction
+{
+    PublishViewController *publishCtl = [[PublishViewController alloc] initWithNibName:NSStringFromClass([PublishViewController class]) bundle:nil];
+    publishCtl.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:publishCtl animated:YES];
+}
+
+@end

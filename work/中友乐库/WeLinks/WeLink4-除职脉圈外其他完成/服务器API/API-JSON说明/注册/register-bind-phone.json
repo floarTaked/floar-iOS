@@ -1,0 +1,17 @@
+绑定手机
+
+请求URL: /register/bind-phone
+
+请求方式: POST
+
+请求参数: 
+
+phone=用户手机号
+verifiCode=验证码
+
+返回结果:
+{
+  "msg" : "",
+  "retcode" : "0 或 2", 0是全新用户, 2是旧的用户
+  "data" : ""
+}

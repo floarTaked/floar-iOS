@@ -1,0 +1,12 @@
+评论回复问题
+
+请求URL: /question/comment/add
+
+请求方式: POST
+
+请求参数: 
+id=问题id
+content=回复内容（最多100个字符）
+
+返回结果
+{"msg":"","retcode":"0","data":回复记录id}

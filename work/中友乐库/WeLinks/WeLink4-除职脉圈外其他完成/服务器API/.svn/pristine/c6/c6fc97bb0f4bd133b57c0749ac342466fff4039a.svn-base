@@ -1,0 +1,14 @@
+确认加为好友
+
+请求URL: /friend/confirm-friend
+
+请求方式: POST
+
+请求参数：
+	friendId：好友的userId
+
+返回结果：
+默认
+
+返回示例：
+默认

@@ -1,0 +1,68 @@
+获取用户主页信息
+
+请求URL: /user/user-profile
+
+请求方式: GET
+
+请求参数:
+otherUserId:目标用户id(看自己的可以不传这个参数)
+
+返回结果：
+
+包含用户的工作(job)、学历(education)、基本资料(user)
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : {
+    "job" : {
+      "id" : null, (记录id)
+      "userId" : null, (用户标示)
+      "companyName" : null, (公司名称)
+      "industry" : null, (行业代号)
+      "jobCode" : null, (职位代号)
+      "jobDesc" : null, (职位描述)
+      "year" : null,  (工作年)
+      "canDel" : 0 (1=可以删除 0=不能删除)
+    },
+    "education" : {
+      "id" : null, (记录id)
+      "userId" : null, (用户标示)
+      "school" : null, (学校名称)
+      "department" : null, (学院)
+      "specialty" : null, (专业)
+      "education" : 0, (1=大专及以下 2=本科 3=硕士 4=博士及以上)
+      "year" : null, (就读年份)
+      "educationDesc" : null, (补充说明)
+      "canDel" : 0, (1=可以删除 0=不能删除)
+    },
+    "user" : {
+      "userId" : null, (用户标示)
+      "name" : null, (名称)
+      "avatar" : null, (头像URL)
+      "phone" : null, (手机号)
+      "phoneStatus" : 0, (0=好友可见 1=隐藏)
+      "company" : null, (公司名称)
+      "job" : null, (职位)
+      "jobCode" : null, (职位代号)
+      "jobYear" : 0, (工作年限)
+      "jobSalary" : 0, (薪酬代号)
+      "salaryStatus" : 0, (0=隐藏 1=好友可见)
+      "jobLevel" : 0, (职位的级别)
+      "industryId" : null, (行业代号)
+      "education" : 0, (1=大专及以下 2=本科 3=硕士 4=博士及以上)
+      "infoStep" : 0, (完善信息步骤)
+      "sex" : 0, (性别, 0为男,1为女)
+      "token" : null, （账号验证授权码）
+      "city" : null, (当前所在城市)
+      "email" : null, (邮箱)
+      "descriptions" : null, (个人简介)
+      "tags" : null, (业务标签)
+      "jobTags" : null, (职业标签)
+      "linkedInName" : null, (LinkedIn账号名)
+      "linkedInToken" : null,
+      "friendType" : 0, (好友度数,1/2/3)
+      "createTime" : null (创建时间),
+      "birthday": 日期时间戳 (生日)
+    }
+  }
+}

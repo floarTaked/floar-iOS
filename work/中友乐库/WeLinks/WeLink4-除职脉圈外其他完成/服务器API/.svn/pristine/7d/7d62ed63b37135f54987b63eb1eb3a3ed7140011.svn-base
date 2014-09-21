@@ -1,0 +1,69 @@
+修改用户信息
+
+请求URL: /user/update-user-info
+
+请求方式: POST
+
+请求参数: 
+json=(仅需要修改过的字段，字段名和/user/user-info返回的保持一致！如下所示)
+{
+      "name" : null, (名称)
+      "phone" : null, (手机号)
+      "phoneStatus" : 0, (0=好友可见 1=隐藏)
+      "company" : null, (公司名称)
+      "job" : null, (职位)
+      "jobCode" : null, (职位代号)
+      "jobYear" : 0, (工作年限)
+      "jobSalary" : 0, (薪酬代号)
+      "salaryStatus" : 0, (0=隐藏 1=好友可见)
+      "jobLevel" : 0, (职位的级别)
+      "industryId" : null, (行业, 最多100字符)
+      "education" : 0, (1=大专及以下 2=本科 3=硕士 4=博士及以上)
+      "sex" : 0, (性别, 0为男,1为女)
+      "city" : null, (当前所在城市)
+      "email" : null, (邮箱)
+      "descriptions" : null, (个人简介)
+      "tags" : null, (业务标签)
+      "jobTags" : null, (职业标签)
+      "birthday": 日期时间戳 (生日)
+}
+
+返回结果
+
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : null
+}
+
+
+字段长度定义如下:
+  `userId` int(11) NOT NULL,
+  `email` varchar(50) DEFAULT NULL COMMENT '邮箱',
+  `name` varchar(100) DEFAULT '' COMMENT '名称',
+  `sex` tinyint(10) DEFAULT '0',
+  `avatar` varchar(500) DEFAULT '' COMMENT '头像',
+  `phone` varchar(20) DEFAULT '' COMMENT '手机号码',
+  `phoneStatus` tinyint(4) DEFAULT '0' COMMENT '0=好友可见 1=隐藏',
+  `education` tinyint(10) DEFAULT '0' COMMENT '1=大专及以下 2=本科 3=硕士 4=博士及以上',
+  `company` varchar(100) DEFAULT '',
+  `job` varchar(32) DEFAULT NULL,
+  `jobCode` varchar(100) DEFAULT '',
+  `jobLevel` tinyint(2) DEFAULT '0' COMMENT '职位的级别',
+  `jobYear` tinyint(2) DEFAULT '0' COMMENT '工作年限',
+  `jobSalary` tinyint(2) DEFAULT '0' COMMENT '薪酬',
+  `salaryStatus` tinyint(4) NOT NULL DEFAULT '0' COMMENT '0=隐藏 1=好友可见',
+  `industryId` varchar(100) DEFAULT '0',
+  `createTime` datetime DEFAULT NULL COMMENT '创建时间',
+  `infoStep` tinyint(4) DEFAULT '0' COMMENT '完善信息步骤',
+  `city` varchar(50) DEFAULT '',
+  `token` varchar(50) DEFAULT NULL,
+  `tags` varchar(256) DEFAULT '',
+  `jobTags` varchar(512) DEFAULT NULL,
+  `descriptions` varchar(100) DEFAULT '',
+  `isSpark` int(11) DEFAULT '0',
+  `memberId` int(11) DEFAULT NULL,
+  `linkedInName` varchar(50) DEFAULT NULL,
+  `linkedInToken` varchar(50) DEFAULT NULL,
+  `cardImage` varchar(500) DEFAULT NULL,
+  `birthday` bigint(12) DEFAULT NULL,

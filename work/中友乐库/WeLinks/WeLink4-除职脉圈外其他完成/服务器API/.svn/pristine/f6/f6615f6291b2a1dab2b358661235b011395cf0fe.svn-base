@@ -1,0 +1,20 @@
+
+上传手机通讯录
+
+请求URL: /register/save-phone-friends
+
+请求方式: POST
+
+请求参数: 
+
+userId:用户id 
+json:通讯录号码(phone)和名称(name) json数组
+
+返回结果:
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : ""
+}
+
+

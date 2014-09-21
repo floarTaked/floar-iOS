@@ -1,0 +1,110 @@
+//
+//  InforCollectionCell.m
+//  WeLinked3
+//
+//  Created by Floar on 14-3-4.
+//  Copyright (c) 2014年 WeLinked. All rights reserved.
+//
+
+#import "InforCollectionCell.h"
+#import "AnimationDelegate.h"
+
+@implementation InforCollectionCell
+{
+    
+    __weak IBOutlet EGOImageView *inforCellImageView;
+    
+    __weak IBOutlet UILabel *inforCellLabel;
+    
+    CGSize cellSize;
+    
+    AnimationDelegate *flipAnimationDelegate;
+}
+
+//- (void)awakeFromNib{
+//    [super awakeFromNib];
+//    flipAnimationDelegate = [[AnimationDelegate alloc] initWithSequenceType:kSequenceAuto directionType:kDirectionForward];
+//    flipAnimationDelegate.controller = self;
+//    flipAnimationDelegate.repeat = YES;
+//    flipAnimationDelegate.repeatDelay = 3.0;
+//    flipAnimationDelegate.perspectiveDepth = 200;
+//    
+//    self.flipView = [[FlipView alloc] initWithAnimationType:kAnimationFlipVertical frame:self.frame];
+//    flipAnimationDelegate.transformView = self.flipView;
+//}
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+//        flipAnimationDelegate = [[AnimationDelegate alloc] initWithSequenceType:kSequenceAuto directionType:kDirectionForward];
+//        flipAnimationDelegate.controller = self;
+//        flipAnimationDelegate.repeat = YES;
+//        flipAnimationDelegate.repeatDelay = 3.0;
+//        flipAnimationDelegate.perspectiveDepth = 200;
+//        
+//        self.flipView = [[FlipView alloc] initWithAnimationType:kAnimationFlipVertical frame:self.frame];
+//        flipAnimationDelegate.transformView = self.flipView;
+
+    }
+    return self;
+}
+
+-(void)setColumn:(Column *)column
+{
+    _column = column;
+    inforCellImageView.backgroundColor = self.cellColor;
+    inforCellImageView.imageURL = [NSURL URLWithString:column.img];
+    inforCellLabel.text = column.title;
+    inforCellLabel.font = getFontWith(NO, 17);
+    
+//    [self addSubview:self.flipView];
+
+//    [self.flipView printText:nil usingImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:column.img]]] backgroundColor:nil textColor:nil];
+//    [self.flipView printText:nil usingImage:[UIImage imageNamed:@"133.jpg"] backgroundColor:[UIColor redColor] textColor:nil];
+//    
+//    [self.contentView addSubview:self.flipView];
+//    
+//    [flipAnimationDelegate startAnimation:kDirectionNone];
+    
+    
+//    cellSize = [column.title sizeWithFont:getFontWith(NO, 17) constrainedToSize:CGSizeMake(inforCellLabel.frame.size.width, 2000)];
+//    inforCellLabel.frame = CGRectMake(inforCellLabel.frame.origin.x, inforCellLabel.frame.origin.y, inforCellLabel.frame.size.width, cellSize.height);
+    
+    [self setNeedsLayout];
+}
+
+//-(void)startFlip
+//{
+//        if (flipAnimationDelegate.repeat)
+//        {
+//            [flipAnimationDelegate startAnimation:kDirectionNone];
+//        }
+//}
+
+//UI显示最后一个cell用
+-(void)lastCell
+{
+    inforCellImageView.image = [UIImage imageNamed:@"img_add_subscription"];
+//    inforCellLabel.frame = CGRectMake(8, -10, 114, 57);
+    inforCellLabel.text = @"点击添加订阅";
+}
+
+-(void)layoutSubviews
+{
+    //重设尺寸
+//    inforCellLabel.frame = CGRectMake(inforCellLabel.frame.origin.x, inforCellLabel.frame.origin.y, inforCellLabel.frame.size.width, cellSize.height);
+    [super layoutSubviews];
+}
+
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

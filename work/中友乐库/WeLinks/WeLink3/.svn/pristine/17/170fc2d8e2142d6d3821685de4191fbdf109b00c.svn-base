@@ -1,0 +1,226 @@
+//
+//  NewFeedViewController.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 3/4/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "NewFeedViewController.h"
+#import "UIPlaceHolderTextView.h"
+#import "ImageEditorViewController.h"
+#import <AssetsLibrary/AssetsLibrary.h>
+#import "NetworkEngine.h"
+
+@interface NewFeedViewController ()<UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+{
+    UIImagePickerController* imagePicker;
+}
+@property(nonatomic,strong) ImageEditorViewController *imageEditor;
+@property(nonatomic,strong) ALAssetsLibrary *library;
+@property (weak, nonatomic) IBOutlet UILabel *textNum;
+@property (weak, nonatomic) IBOutlet UIPlaceHolderTextView *content;
+@property (nonatomic, strong) UIImage *postImage;
+
+@property (weak, nonatomic) IBOutlet UIButton *imageButton;
+- (IBAction)addPhoto:(id)sender;
+@end
+
+@implementation NewFeedViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+- (void)dealloc
+{
+    self.imageEditor = nil;
+    self.postImage = nil;
+    self.library = nil;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    [self.navigationItem setTitleViewWithText:@"发动态"];
+    [self.navigationItem setRightBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleNewPost title:@"分享" target:self selector:@selector(confirm)];
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack title:nil target:self selector:@selector(back)];
+    self.content.placeholder = @"谈谈你的想法...";
+    imagePicker = [[UIImagePickerController alloc]init];
+    imagePicker.delegate = self;
+    imagePicker.wantsFullScreenLayout = NO;
+    
+    self.textNum.font = getFontWith(NO, 7);
+    self.textNum.textColor = colorWithHex(0x999999);
+    self.textNum.text = @"0/200";
+    self.navigationItem.rightBarButtonItem.enabled = NO;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (IBAction)addPhoto:(id)sender
+{
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera])
+    {
+        UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                                 delegate:self
+                                                        cancelButtonTitle:@"取消"
+                                                   destructiveButtonTitle:nil
+                                                        otherButtonTitles:@"拍照",@"相册",nil];
+        [actionSheet showInView:self.view];
+    }
+    else
+    {
+        [self showPhotoLibrary];
+    }
+
+
+}
+
+- (void)confirm
+{
+    [self.navigationController.navigationBar showLoadingIndicator];
+    self.navigationItem.rightBarButtonItem.enabled = NO;
+    [MobClick event:CONTACTS9];
+    [[NetworkEngine sharedInstance] addNewFeedWithContent:self.content.text Image:self.postImage Block:^(int event, id object) {
+        [self.navigationController.navigationBar hideLoadingIndicator];
+        self.navigationItem.rightBarButtonItem.enabled = YES;
+        DLog(@"add new post %@",object);
+        if (1 == event) {
+            Feeds *feed = [[Feeds alloc] init];
+            [feed setValuesForKeysWithDictionary:object];
+            if ([_delegate respondsToSelector:@selector(newFeedViewController:AddNewFeedsSuccess:)]) {
+                [_delegate newFeedViewController:self AddNewFeedsSuccess:feed];
+            }
+            [self.navigationController popViewControllerAnimated:YES];
+        }else{
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"发送失败" message:[object objectForKey:@"message"] delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+            [alertView show];
+        }
+        
+    }];
+}
+
+- (void)back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark UIActionSheetDelegate
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex)
+    {
+        case 0:
+            [self showCamera];
+            break;
+        case 1:
+            [self showPhotoLibrary];
+            break;
+        case 2:
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)showCamera
+{
+    [self initEditController];
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypeCamera];
+    [imagePicker setCameraDevice:UIImagePickerControllerCameraDeviceFront];
+    [imagePicker setCameraFlashMode:UIImagePickerControllerCameraFlashModeAuto];
+    imagePicker.showsCameraControls = YES;
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+
+- (void)showPhotoLibrary
+{
+//    [self initEditController];
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+//    imagePicker.allowsEditing = YES;
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+
+-(void)initEditController
+{
+    self.library = [[ALAssetsLibrary alloc] init];
+    self.imageEditor = [[ImageEditorViewController alloc] initWithNibName:@"ImageEditorViewController" bundle:nil];
+    __weak UIImagePickerController* piker =  imagePicker;
+    __weak typeof(self) weakSelf = self;
+    self.imageEditor.doneCallback = ^(int event,id object)
+    {
+        if(event == 1)
+        {
+            if(object != nil)
+            {
+                weakSelf.postImage =  object;
+                [weakSelf.imageButton setImage:object forState:UIControlStateNormal];
+                [weakSelf.imageButton setImage:object forState:UIControlStateHighlighted];
+            }
+        }
+        else
+        {
+            [piker popViewControllerAnimated:YES];
+        }
+    };
+}
+#pragma --mark UIImagePickerControllerDelegate
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo
+{
+    [picker dismissViewControllerAnimated:NO completion:nil];
+}
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    UIImage *image =  [info objectForKey:UIImagePickerControllerOriginalImage];
+    self.postImage =  image;
+    [self.imageButton setImage:image forState:UIControlStateNormal];
+    [self.imageButton setImage:image forState:UIControlStateHighlighted];
+    [picker dismissViewControllerAnimated:NO completion:nil];
+    return;
+    NSURL *assetURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+    
+    [self.library assetForURL:assetURL resultBlock:^(ALAsset *asset) {
+        UIImage *preview = [UIImage imageWithCGImage:[asset aspectRatioThumbnail]];
+        
+        self.imageEditor.sourceImage = image;
+        self.imageEditor.previewImage = preview;
+        [self.imageEditor reset:NO];
+        
+        [picker dismissViewControllerAnimated:NO completion:nil];
+        [self.navigationController pushViewController:self.imageEditor animated:YES];
+    } failureBlock:^(NSError *error) {
+        NSLog(@"Failed to get asset from library");
+    }];
+}
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    [picker dismissViewControllerAnimated:NO completion:nil];
+}
+
+#pragma mark - UITextViewDelegate
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+    if (textView.text.length) {
+        self.navigationItem.rightBarButtonItem.enabled = YES;
+    }else{
+        self.navigationItem.rightBarButtonItem.enabled = NO;
+    }
+    if (textView.text.length < 201) {
+        self.textNum.text = [NSString stringWithFormat:@"%d/200",textView.text.length];
+        return YES;
+    }else{
+        return NO;
+    }
+}
+
+@end

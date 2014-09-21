@@ -1,0 +1,16 @@
+获取验证码
+
+请求URL: /register/verifi-code
+
+请求方式: GET
+
+请求参数: 
+
+phone=用户手机号
+
+返回结果:
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : "验证码"
+}

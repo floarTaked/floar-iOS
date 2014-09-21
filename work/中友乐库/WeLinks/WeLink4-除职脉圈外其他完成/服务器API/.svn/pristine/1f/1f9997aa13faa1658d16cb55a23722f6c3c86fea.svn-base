@@ -1,0 +1,44 @@
+获取用户保存的名片列表
+
+请求URL: /card/card-people-info
+
+请求方式: GET
+
+请求参数：
+默认
+
+返回结果：
+json格式：
+{
+	"data"[
+		{
+			id：名片的id
+			name:名字
+			avatar：头像
+			company：公司
+			job：职位
+			phone：手机号码，格式:移动电话,工作电话，其他号码
+			email：邮箱
+			companyAddress：公司地址
+			account：即时通讯账号
+			cardPosition：gps位置
+			descriptions:备注
+		},
+		{
+			id：名片的id
+			name:名字
+			avatar：头像
+			company：公司
+			job：职位
+			phone：手机号码，格式:移动电话,工作电话，其他号码
+			email：邮箱
+			companyAddress：公司地址
+			account：即时通讯账号
+			cardPosition：gps位置
+			descriptions:备注
+		}],
+	"msg":"",
+	"retcode":"0"
+}
+
+返回示例：

@@ -1,0 +1,63 @@
+//
+//  ScanningViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/14/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "ScanningViewController.h"
+#import "Common.h"
+@interface ScanningViewController ()
+
+@end
+
+@implementation ScanningViewController
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        self.tabBarItem.image = [UIImage imageNamed:@"scanCard"];
+        self.tabBarItem.selectedImage = [UIImage imageNamed:@"scanCardSelected"];
+        self.tabBarItem.imageInsets = UIEdgeInsetsMake(6, 0, -6, 0);
+        self.title = nil;
+        NSMutableDictionary *textAttributes = [NSMutableDictionary dictionary];
+        [textAttributes setObject:[UIColor whiteColor] forKey:UITextAttributeTextColor];
+        [self.tabBarItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:colorWithHex(NAVBARCOLOR),
+                                                 UITextAttributeTextColor, nil] forState:UIControlStateSelected];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+}
+-(void)loadCamera
+{
+    previewController = [[CardPreviewViewController alloc]initWithNibName:@"CardPreviewViewController" bundle:nil];
+//    __block UIViewController* slf = self;
+    [previewController setEventCallBack:^(int event, id object)
+     {
+         if(event == 1)
+         {
+//             runOnMainQueueWithoutDeadlocking(^{
+//                 SaveCardViewController* save = [[SaveCardViewController alloc]initWithNibName:@"SaveCardViewController" bundle:nil];
+//                 save.card = [(NSDictionary*)object objectForKey:@"image"];
+//                 save.value = [(NSDictionary*)object objectForKey:@"value"];
+//                 [slf.navigationController pushViewController:save animated:YES];
+//             });
+         }
+     }];
+    [self presentViewController:previewController animated:YES completion:nil];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+@end

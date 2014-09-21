@@ -1,0 +1,25 @@
+//
+//  ScanningViewController.h
+//  WeLinked4
+//
+//  Created by jonas on 5/14/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <ISWebRecognition/ISWebRecognizer.h>
+@interface ScanningViewController : UIViewController<UINavigationControllerDelegate,UIImagePickerControllerDelegate>
+{
+    UIImagePickerController* imagePicker;
+    ISWebRecognizer* recognizer;
+    IBOutlet UIImageView* scanImageView;
+    
+    
+    IBOutlet UIView* overlayView;
+    IBOutlet UIButton* takeButton;
+    IBOutlet UIButton* cancelButton;
+    IBOutlet UIButton* contactButton;
+    IBOutlet UIButton* cardButton;
+    IBOutlet UIButton* QRButton;
+}
+@end

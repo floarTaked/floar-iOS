@@ -1,0 +1,23 @@
+//
+//  SaveCardViewController.h
+//  WeLinked4
+//
+//  Created by jonas on 5/16/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "Common.h"
+#import <EGOImageView.h>
+@interface SaveCardViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,UIActionSheetDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate>
+{
+    UIImageView* cardImage;
+    IBOutlet UITableView* table;
+    EventCallBack callback;
+    EGOImageView* headImageView;
+    UIImage* newHeadImage;
+}
+@property(nonatomic,strong)UIImage* card;
+@property(nonatomic,strong)NSMutableDictionary* value;
+-(void)setEventCallBack:(EventCallBack)call;
+@end

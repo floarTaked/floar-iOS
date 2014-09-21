@@ -1,0 +1,160 @@
+//
+//  AppDelegate.m
+//  WeLinked4
+//
+//  Created by jonas on 5/9/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "AppDelegate.h"
+#import "HeartBeatManager.h"
+#import "Common.h"
+#import "LogicManager.h"
+#import "UserInfo.h"
+#import "LoginViewController.h"
+#import "SplashViewController.h"
+#import "SettingViewController.h"
+#import "MainViewController.h"
+#import "BasicInformationViewController.h"
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+    [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|UIRemoteNotificationTypeAlert|UIRemoteNotificationTypeSound];
+    [self login];
+    [self.window makeKeyAndVisible];
+    [self initApplication];
+    return YES;
+}
+-(void)initApplication
+{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        [MobClick startWithAppkey:UMENG_APPKEY reportPolicy:(ReportPolicy) REALTIME channelId:nil];
+//        [MobClick updateOnlineConfig];
+//        [WeiboSDK enableDebugMode:YES];
+//        [WeiboSDK registerApp:kAppKey];
+//        [WXApi registerApp:@"wxe394ac1a2cda0b0e"];
+//        NSString* uid = [[LogicManager sharedInstance] getPersistenceStringWithKey:USERID];
+//        if(uid != nil && [uid length]>0)
+//        {
+//            [[NetworkEngine sharedInstance] saveDeviceToken];
+//        }
+        [[HeartBeatManager sharedInstane] start];
+    });
+}
+-(void)login
+{
+    NSString* uid = [[LogicManager sharedInstance] getPersistenceStringWithKey:USERID];
+    if(uid == nil || [uid length]<=0)
+    {
+        //UID为空 需要先登录
+        int first = [[LogicManager sharedInstance] getPersistenceIntegerWithKey:FirstInstall];
+        if(first == 1)
+        {
+            //不是第一次安装
+            LoginViewController* login = [[LoginViewController alloc]init];
+            [[LogicManager sharedInstance] setRootViewContrllerWithNavigationBar:login];
+        }
+        else
+        {
+            //第一次安装
+            SplashViewController* splash = [SplashViewController sharedInstance];
+            [[LogicManager sharedInstance] setRootViewContrller:splash];
+        }
+    }
+    else
+    {
+        UserInfo* myself = [UserInfo myselfInstance];
+        if(myself.name != nil && [myself.name length]>0)
+        {
+            //已填资料
+            [[LogicManager sharedInstance] setRootViewContrller:[MainViewController sharedInstance]];
+        }
+        else
+        {
+            //未填资料
+            BasicInformationViewController* basic = [[BasicInformationViewController alloc]initWithNibName:@"BasicInformationViewController" bundle:nil];
+            [[LogicManager sharedInstance] setRootViewContrllerWithNavigationBar:basic];
+        }
+    }
+}
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    [[HeartBeatManager sharedInstane] end];
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    [[HeartBeatManager sharedInstane] end];
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    [[HeartBeatManager sharedInstane] end];
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+    [[HeartBeatManager sharedInstane] start];
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    [[HeartBeatManager sharedInstane] end];
+}
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    NSString* path = [url absoluteString];
+    if([[path substringToIndex:2] isEqualToString:@"wb"])
+    {
+        return YES;//[WeiboSDK handleOpenURL:url delegate:[LogicManager sharedInstance]];
+    }
+    else
+    {
+        return YES;//[WXApi handleOpenURL:url delegate:self];
+    }
+}
+#pragma --mark push notification
+//向APNS申请token成功
+- (void)application:(UIApplication *)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+    NSString *pushToken = [[[[deviceToken description]
+                             stringByReplacingOccurrencesOfString:@"<" withString:@""]
+                            stringByReplacingOccurrencesOfString:@">" withString:@""]
+                           stringByReplacingOccurrencesOfString:@" " withString:@""] ;
+    if(pushToken != nil && [pushToken length]>0)
+    {
+        [UserInfo myselfInstance].token = pushToken;
+//        [[NetworkEngine sharedInstance] savePhoneToken:pushToken block:^(int event, id object) {}];
+    }
+}
+//向APNS申请token失败
+- (void)application:(UIApplication *)app didFailToRegisterForRemoteNotificationsWithError:(NSError *)err
+{
+    NSString *str = [NSString stringWithFormat: @"%@", err];
+    NSLog(@"Failed to get token,err %@",str);
+}
+//获取到远程通知
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
+{
+    int badge = (int)[UIApplication sharedApplication].applicationIconBadgeNumber;
+    badge++;
+    [UIApplication sharedApplication].applicationIconBadgeNumber = badge;
+    for (id key in userInfo)
+    {
+        NSLog(@"key: %@, value: %@", key, [userInfo objectForKey:key]);
+    }
+}
+
+//微信返回第三方应用的回调：返回微信处理第三方应用结果
+//-(void) onResp:(BaseResp*)resp
+//{
+//    if([resp isKindOfClass:[SendMessageToWXResp class]])
+//    {
+//        [[NSNotificationCenter defaultCenter] postNotificationName:@"WXHandleResult" object:resp];
+//    }
+//}
+@end

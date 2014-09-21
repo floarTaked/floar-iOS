@@ -1,0 +1,358 @@
+//
+//  MyPublishViewController.m
+//  WeLinked3
+//
+//  Created by jonas on 2/26/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "MyPublishViewController.h"
+#import "JobDetailViewViewController.h"
+#import "InternalRecommendViewController.h"
+#import "PublishJobViewController.h"
+@interface MyPublishViewController ()
+
+@end
+
+@implementation MyPublishViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setTitleViewWithText:@"我的发布"];
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack
+                                                                 title:nil
+                                                                target:self
+                                                              selector:@selector(back:)];
+    
+    nullLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, self.view.frame.size.height/2-40, self.view.frame.size.width, 30)];
+    nullLabel.backgroundColor = [UIColor clearColor];
+    nullLabel.textColor = colorWithHex(0x666666);
+    nullLabel.textAlignment = NSTextAlignmentCenter;
+    nullLabel.shadowColor = [UIColor whiteColor];
+    nullLabel.shadowOffset = CGSizeMake(0, 1);
+    nullLabel.font = getFontWith(YES, 16);
+    nullLabel.hidden = YES;
+    [self.view addSubview:nullLabel];
+    
+    self.view.clipsToBounds = NO;
+    CGRect frame = segmentNav.frame;
+    frame.origin.y = 55;
+    segmentNav.frame = frame;
+    
+    scrollView = [[MMPagingScrollView alloc] initWithFrame:CGRectMake(0, 44, self.view.width, self.view.height - 44)];
+    scrollView.viewList = [NSMutableArray arrayWithObjects:postTable,recomandTable,nil];
+    scrollView.scrollingDelegate = self;
+    scrollView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin |UIViewAutoresizingFlexibleHeight;
+    //    _scrollView.scrollEnabled = NO;
+    [scrollView setInitialPageIndex:0];
+    scrollView.backgroundColor = [UIColor colorWithRed:229/255.0 green:229/255.0 blue:229/255.0 alpha:1.0f];
+    [self.view addSubview:scrollView];
+    
+    
+    jobDataSource = [[NSMutableArray alloc]init];
+    recommendDataSource = [[NSMutableArray alloc]init];
+    
+    [[NetworkEngine sharedInstance] getMyPublishedPost:^(int event, id object)
+    {
+        NSArray* arr = [[UserDataBaseManager sharedInstance]
+                        queryWithClass:[JobInfo class]
+                        tableName:MyPublishedJob
+                        condition:[NSString stringWithFormat:@" where DBUid='%@' order by identity desc",[UserInfo myselfInstance].userId]];
+        [jobDataSource removeAllObjects];
+        [jobDataSource addObjectsFromArray:arr];
+        [postTable reloadData];
+        [self updateView];
+    }];
+    [[NetworkEngine sharedInstance] getMyPublishedRecommendPost:^(int event, id object)
+    {
+        NSArray* arr = [[UserDataBaseManager sharedInstance]
+                        queryWithClass:[RecommendInfo class]
+                        tableName:MyRecommendJob
+                        condition:[NSString stringWithFormat:@" where DBUid='%@' order by identity desc",[UserInfo myselfInstance].userId]];
+        [recommendDataSource removeAllObjects];
+        [recommendDataSource addObjectsFromArray:arr];
+        [recomandTable reloadData];
+        [self updateView];
+    }];
+    [self switchTableView:1];
+}
+-(void)updateView
+{
+    if(type == 1)
+    {
+        [nullLabel setText:@"暂未发布职位信息"];
+        if(jobDataSource == nil || [jobDataSource count]==0)
+        {
+            nullLabel.hidden = NO;
+            [self.view bringSubviewToFront:nullLabel];
+        }
+        else
+        {
+            nullLabel.hidden = YES;
+        }
+    }
+    else if (type == 2)
+    {
+        [nullLabel setText:@"暂未发布内推信息"];
+        if(recommendDataSource == nil || [recommendDataSource count]==0)
+        {
+            nullLabel.hidden = NO;
+            [self.view bringSubviewToFront:nullLabel];
+        }
+        else
+        {
+            nullLabel.hidden = YES;
+        }
+    }
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self.navigationController.view addSubview:segmentNav];
+}
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [segmentNav removeFromSuperview];
+}
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+-(IBAction)switchButton:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    [UIView animateWithDuration:0.3 animations:^
+     {
+         [scrollView scrollToIndex:btn.tag-1];
+     }];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)switchTableView:(int)tag
+{
+    if(tag == 1)
+    {
+        //职位信息
+        segementBackground.image = [UIImage imageNamed:@"publishTab1"];
+        type = 1;
+        NSArray* arr = [[UserDataBaseManager sharedInstance]
+                        queryWithClass:[JobInfo class]
+                        tableName:MyPublishedJob
+                        condition:[NSString stringWithFormat:@" where DBUid='%@' order by identity desc",[UserInfo myselfInstance].userId]];
+        [jobDataSource removeAllObjects];
+        [jobDataSource addObjectsFromArray:arr];
+        [postTable reloadData];
+        [self updateView];
+    }
+    else if(tag == 2)
+    {
+        //求内荐
+        type = 2;
+        segementBackground.image = [UIImage imageNamed:@"publishTab2"];
+        NSArray* arr = [[UserDataBaseManager sharedInstance]
+                        queryWithClass:[RecommendInfo class]
+                        tableName:MyRecommendJob
+                        condition:[NSString stringWithFormat:@" where DBUid='%@' order by identity desc",[UserInfo myselfInstance].userId]];
+        [recommendDataSource removeAllObjects];
+        [recommendDataSource addObjectsFromArray:arr];
+        [recomandTable reloadData];
+        [self updateView];
+    }
+}
+#pragma --mark MMPagingScrollViewDelegate
+- (void) scrollView:(MMPagingScrollView *)scrollView willShowPageAtIndex:(NSInteger)index
+{
+    [self switchTableView:index+1];
+}
+#pragma --mark UITableView
+-(UIView*)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView* v = [[UIView alloc]initWithFrame:CGRectZero];
+    return v;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 10;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 70;
+}
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    if(type == 1)
+    {
+        return [jobDataSource count];
+    }
+    else if (type == 2)
+    {
+        return [recommendDataSource count];
+    }
+    return 0;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 1;
+}
+- (CustomMarginCellView *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString* Identifier = [NSString stringWithFormat:@"Cell%d",type];
+    CustomMarginCellView* cell = (CustomMarginCellView*)[tableView dequeueReusableCellWithIdentifier:Identifier];
+    if(cell == nil)
+    {
+        cell = [[CustomMarginCellView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:Identifier];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+        cellBackgroundView.backgroundColor = [UIColor whiteColor];
+        cell.backgroundView = cellBackgroundView;
+    }
+    if(type == 1)
+    {
+        [self buildJobCell:cell indexPath:indexPath];
+    }
+    else if (type == 2)
+    {
+        [self buildRecomandCell:cell indexPath:indexPath];
+    }
+    return cell;
+}
+-(void)buildJobCell:(UITableViewCell*)cell indexPath:(NSIndexPath *)indexPath
+{
+    JobInfo* info = (JobInfo*)[jobDataSource objectAtIndex:indexPath.section];
+    EGOImageView* imageView = (EGOImageView*)[cell.contentView viewWithTag:1];
+    if(imageView == nil)
+    {
+        imageView = [[EGOImageView alloc]initWithFrame:CGRectMake(10, 10, 50, 50)];
+        [cell.contentView addSubview:imageView];
+        imageView.tag = 1;
+    }
+    RCLabel* descLabel = (RCLabel*)[cell.contentView viewWithTag:2];
+    if(descLabel == nil)
+    {
+        descLabel = [[RCLabel alloc]initWithFrame:CGRectMake(70, 8, 160, 60)];
+        [cell.contentView addSubview:descLabel];
+        descLabel.tag = 2;
+    }
+    
+    UILabel* priceLabel = (UILabel*)[cell.contentView viewWithTag:3];
+    if(priceLabel == nil)
+    {
+        priceLabel = [[UILabel alloc]initWithFrame:CGRectMake(190, 10, cell.frame.size.width-200, 20)];
+        [cell.contentView addSubview:priceLabel];
+        priceLabel.tag = 3;
+        priceLabel.backgroundColor = [UIColor clearColor];
+        priceLabel.font = getFontWith(NO, 11);
+        priceLabel.textAlignment = NSTextAlignmentRight;
+    }
+    if(info.salaryLevel == 0)
+    {
+        [priceLabel setText:@"面议"];
+    }
+    else
+    {
+        [priceLabel setText:[NSString stringWithFormat:@"%@/月",[[LogicManager sharedInstance] getSalaryK:info.salaryLevel]]];
+    }
+//    [imageView setImageURL:[NSURL URLWithString:info.jobImage]];
+    [imageView setImage:[UIImage imageNamed:info.jobImage]];
+    
+    
+    NSMutableString* str = [[NSMutableString alloc]init];
+    JobObject* job = [[LogicManager sharedInstance] getPublicObject:info.jobCode type:Job];
+    CityObject* city = [[LogicManager sharedInstance] getPublicObject:info.locationCode type:City];
+    [str appendFormat:@"<p   lineSpacing=5><font color='#464646' face='FZLTZHK--GBK1-0' size=14>%@</font></p>",job.name];
+    [str appendFormat:@"\n<p lineSpacing=3><font size=11 color='#3287E6'>%@ %@</font></p>",city.name,info.company==nil?@"":info.company];
+    if(info.describes==nil || [info.describes length]<=0)
+    {
+        [str appendFormat:@"\n<p lineSpacing=3><font size=11 color='#3287E6'>没有职位描述</font></p>"];
+    }
+    else
+    {
+        [str appendFormat:@"\n<p lineSpacing=3><font size=11 color='#3287E6'>%@</font></p>",info.describes];
+    }
+    [descLabel setText:str];
+}
+-(void)buildRecomandCell:(UITableViewCell*)cell indexPath:(NSIndexPath *)indexPath
+{
+    RecommendInfo* info = (RecommendInfo*)[recommendDataSource objectAtIndex:indexPath.section];
+    EGOImageView* imageView = (EGOImageView*)[cell.contentView viewWithTag:1];
+    if(imageView == nil)
+    {
+        imageView = [[EGOImageView alloc]initWithFrame:CGRectMake(10, 10, 50, 50)];
+        [cell.contentView addSubview:imageView];
+        imageView.tag = 1;
+    }
+    RCLabel* descLabel = (RCLabel*)[cell.contentView viewWithTag:2];
+    if(descLabel == nil)
+    {
+        descLabel = [[RCLabel alloc]initWithFrame:CGRectMake(70, 8, 160, 60)];
+        descLabel.backgroundColor = [UIColor clearColor];
+        [cell.contentView addSubview:descLabel];
+        descLabel.tag = 2;
+    }
+    
+    UILabel* year = (UILabel*)[cell.contentView viewWithTag:3];
+    if(year == nil)
+    {
+        year = [[UILabel alloc]initWithFrame:CGRectMake(190, 10, cell.frame.size.width-200, 20)];
+        [cell.contentView addSubview:year];
+        year.tag = 3;
+        year.backgroundColor = [UIColor clearColor];
+        year.font = getFontWith(NO, 11);
+        year.textAlignment = NSTextAlignmentRight;
+    }
+    [year setText:[NSString stringWithFormat:@"%@经验",[[LogicManager sharedInstance] getJobYear:info.howLong]]];
+//    [imageView setImageURL:[NSURL URLWithString:info.jobImage]];
+    [imageView setImage:[UIImage imageNamed:info.jobImage]];
+    
+    NSMutableString* str = [[NSMutableString alloc]init];
+    IndustryObject* industry = [[LogicManager sharedInstance] getPublicObject:info.industryId type:Industry];
+    CityObject* city = [[LogicManager sharedInstance] getPublicObject:info.locationCode type:City];
+    
+    NSString* company = [NSString stringWithFormat:@"意向公司:%@ %@ %@",info.company1,info.company2,info.company3];
+    if(company != nil && [company length]>20)
+    {
+        company = [company substringWithRange:NSMakeRange(0, 20)];
+        company = [NSString stringWithFormat:@"%@...",company];
+    }
+    [str appendFormat:@"<p lineSpacing=5 ><font color='#464646' face='FZLTZHK--GBK1-0' size=14>%@</font></p>",industry.name];
+    [str appendFormat:@"\n<p lineSpacing=3><font size=11 color='#3287E6'>%@</font></p>",company];
+    [str appendFormat:@"\n<p lineSpacing=3><font size=11 color='#3287E6'>工作地点:%@</font></p>",city.name];
+    [descLabel setText:str];
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if(tableView == postTable)
+    {
+        JobInfo* job = [jobDataSource objectAtIndex:indexPath.section];
+        JobDetailViewViewController *jobDetail = [[JobDetailViewViewController alloc] init];
+        jobDetail.isFriendJob = NO;
+        jobDetail.jobIdentity = job.identity;
+        jobDetail.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:jobDetail animated:YES];
+    }
+    else if (tableView == recomandTable)
+    {
+        RecommendInfo* info = [recommendDataSource objectAtIndex:indexPath.section];
+        InternalRecommendViewController *jobDetail = [[InternalRecommendViewController alloc] init];
+        jobDetail.recommendInfo = info;
+        self.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:jobDetail animated:YES];
+    }
+}
+@end

@@ -1,0 +1,18 @@
+注册用户
+
+请求URL: /register/save-info-1
+
+请求方式: POST
+
+请求参数: 
+
+image:用户头像(文件流)
+headerUrl:头像url
+name：姓名
+company：公司
+job：职位
+
+image或headerUrl为二选1.
+
+返回结果
+user对象

@@ -1,0 +1,412 @@
+//
+//  SaveCardViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/16/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "SaveCardViewController.h"
+#import "Common.h"
+#import <AssetsLibrary/AssetsLibrary.h>
+#import "ImageEditorViewController.h"
+@interface SaveCardViewController ()
+{
+    UIImagePickerController* imagePicker;
+}
+@property(nonatomic,strong) ImageEditorViewController *imageEditor;
+@property(nonatomic,strong) ALAssetsLibrary *library;
+@end
+
+@implementation SaveCardViewController
+@synthesize card,value;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"]
+                                 imageSelected:[UIImage imageNamed:@"backSelected"]
+                                         title:nil
+                                         inset:UIEdgeInsetsMake(0, -30, 0, 0)
+                                        target:self
+                                      selector:@selector(back:)];
+    [self.navigationItem setRightBarButtonItem:nil
+                                 imageSelected:nil
+                                         title:@"保存"
+                                         inset:UIEdgeInsetsMake(0, -30, 0, 0)
+                                        target:self
+                                      selector:@selector(save:)];
+    [self.navigationItem setTitleString:@"编辑个人资料"];
+    imagePicker = [[UIImagePickerController alloc]init];
+    imagePicker.delegate = self;
+    imagePicker.wantsFullScreenLayout = NO;
+    NSLog(@"value:%@",value);
+}
+-(void)save:(id)sender
+{
+    
+}
+-(void)back:(id)sender
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+-(void)setEventCallBack:(EventCallBack)call
+{
+    callback = call;
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma --mark 选择头像
+-(void)setAvatar:(UIImage*)image
+{
+    headImageView.image = image;
+    newHeadImage = image;
+}
+- (void)showCamera
+{
+    [self initEditController];
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypeCamera];
+    [imagePicker setCameraDevice:UIImagePickerControllerCameraDeviceFront];
+    [imagePicker setCameraFlashMode:UIImagePickerControllerCameraFlashModeAuto];
+    imagePicker.showsCameraControls = YES;
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+
+- (void)showPhotoLibrary
+{
+    [self initEditController];
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+#pragma mark UIActionSheetDelegate
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex)
+    {
+        case 0:
+            [self showCamera];
+            break;
+        case 1:
+            [self showPhotoLibrary];
+            break;
+        case 2:
+            break;
+        default:
+            break;
+    }
+}
+-(void)takePhoto:(id)sender
+{
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera])
+    {
+        UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                                 delegate:self
+                                                        cancelButtonTitle:@"取消"
+                                                   destructiveButtonTitle:nil
+                                                        otherButtonTitles:@"拍照",@"相册",nil];
+        [actionSheet showInView:self.view];
+    }
+    else
+    {
+        [self showPhotoLibrary];
+    }
+}
+-(void)initEditController
+{
+    self.library = [[ALAssetsLibrary alloc] init];
+    self.imageEditor = [[ImageEditorViewController alloc] initWithNibName:@"ImageEditorViewController" bundle:nil];
+    __weak UIImagePickerController* piker =  imagePicker;
+    __weak typeof(self) weakSelf = self;
+    self.imageEditor.doneCallback = ^(int event,id object)
+    {
+        if(event == 1)
+        {
+            if(object != nil)
+            {
+                [weakSelf setAvatar:object];
+            }
+        }
+        else
+        {
+            [piker popViewControllerAnimated:YES];
+        }
+    };
+}
+#pragma --mark UIImagePickerControllerDelegate
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo
+{
+    [picker dismissViewControllerAnimated:NO completion:nil];
+}
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    UIImage *image =  [info objectForKey:UIImagePickerControllerOriginalImage];
+    NSURL *assetURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+    
+    [self.library assetForURL:assetURL resultBlock:^(ALAsset *asset) {
+        UIImage *preview = [UIImage imageWithCGImage:[asset aspectRatioThumbnail]];
+        
+        self.imageEditor.sourceImage = image;
+        self.imageEditor.previewImage = preview;
+        [self.imageEditor reset:NO];
+        
+        [picker dismissViewControllerAnimated:NO completion:nil];
+        self.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:self.imageEditor animated:YES];
+        self.hidesBottomBarWhenPushed = NO;
+    } failureBlock:^(NSError *error) {
+        NSLog(@"Failed to get asset from library");
+    }];
+}
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    [picker dismissViewControllerAnimated:NO completion:nil];
+}
+#pragma --mark TableView
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 3;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(section == 0)
+    {
+        return 2;
+    }
+    else if (section == 1)
+    {
+        return 5;
+    }
+    else if (section == 2)
+    {
+        return 8;
+    }
+    return 0;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(indexPath.row == 0)
+    {
+        return 30;
+    }
+    else
+    {
+        if(indexPath.section == 0)
+        {
+            if(indexPath.row == 1)
+            {
+                return 175;
+            }
+        }
+        else if (indexPath.section == 1)
+        {
+            if(indexPath.row == 1)
+            {
+                return 70;
+            }
+        }
+    }
+    return 45;
+}
+- (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.row == 0)
+    {
+        static NSString* Identifier = @"HeaderCell";
+        UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+        if(cell == nil)
+        {
+            cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+            cell.accessoryType = UITableViewCellAccessoryNone;
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+            cellBackgroundView.backgroundColor = colorWithHex(0xF1F1F1);
+            cell.backgroundView = cellBackgroundView;
+            cell.backgroundColor = [UIColor clearColor];
+        }
+        cell.textLabel.text = @"";
+        cell.imageView.image = nil;
+        cell.detailTextLabel.text = @"";
+        if(indexPath.row == 0)
+        {
+            if(indexPath.section == 0)
+            {
+                cell.imageView.image = [UIImage imageNamed:@"checkArea"];
+            }
+            else if(indexPath.section == 1)
+            {
+                cell.imageView.image = [UIImage imageNamed:@"basicInfo"];
+            }
+            else if(indexPath.section == 2)
+            {
+                cell.imageView.image = [UIImage imageNamed:@"detailInfo"];
+            }
+        }
+        return cell;
+    }
+    else
+    {
+        if(indexPath.section == 0 && indexPath.row == 1)
+        {
+            static NSString* Identifier = @"CheckCell";
+            UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+            if(cell == nil)
+            {
+                cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+                cell.accessoryType = UITableViewCellAccessoryNone;
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+                cellBackgroundView.backgroundColor = [UIColor whiteColor];
+                cell.backgroundView = cellBackgroundView;
+                cell.backgroundColor = [UIColor whiteColor];
+            }
+            cardImage = (EGOImageView*)[cell.contentView viewWithTag:30];
+            if(cardImage == nil)
+            {
+                cardImage = [[UIImageView alloc]initWithFrame:CGRectMake(10, 10, 290, 155)];
+                cardImage.tag = 30;
+                [cell.contentView addSubview:cardImage];
+            }
+            cardImage.image = card;
+            return cell;
+        }
+        else if(indexPath.section == 1 && indexPath.row == 1)
+        {
+            static NSString* Identifier = @"ImageCell";
+            UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+            if(cell == nil)
+            {
+                cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:Identifier];
+                cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+                
+                UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+                cellBackgroundView.backgroundColor = [UIColor whiteColor];
+                cell.backgroundView = cellBackgroundView;
+                
+                
+                cell.backgroundColor = [UIColor whiteColor];
+                cell.textLabel.font = getFontWith(NO, 13);
+                cell.textLabel.textColor = [UIColor blackColor];
+                cell.detailTextLabel.font = getFontWith(NO, 12);
+                cell.detailTextLabel.textColor = colorWithHex(0x3287E6);
+            }
+            cell.textLabel.text = @"形象照";
+            cell.imageView.image = nil;
+            cell.detailTextLabel.text = @"";
+            headImageView = (EGOImageView*)[cell.contentView viewWithTag:10];
+            if(headImageView == nil)
+            {
+                headImageView = [[EGOImageView alloc]initWithFrame:CGRectMake(70, 10, 50, 50)];
+                headImageView.layer.cornerRadius = 25;
+                headImageView.layer.masksToBounds = YES;
+                headImageView.layer.borderWidth = 0.5;
+                headImageView.layer.borderColor = [[UIColor lightGrayColor] CGColor];
+                headImageView.placeholderImage = [UIImage imageNamed:@"defaultHead"];
+                headImageView.image = [UIImage imageNamed:@"defaultHead"];
+                headImageView.tag = 10;
+                [cell.contentView addSubview:headImageView];
+            }
+            return cell;
+        }
+        else
+        {
+            static NSString* Identifier = @"Cell";
+            UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+            if(cell == nil)
+            {
+                cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleValue2 reuseIdentifier:Identifier];
+                cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+                
+                UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+                cellBackgroundView.backgroundColor = [UIColor whiteColor];
+                cell.backgroundView = cellBackgroundView;
+                
+                
+                cell.backgroundColor = [UIColor whiteColor];
+                cell.textLabel.font = getFontWith(NO, 14);
+                cell.textLabel.textColor = [UIColor blackColor];
+                cell.textLabel.textAlignment = NSTextAlignmentLeft;
+                cell.detailTextLabel.font = getFontWith(NO, 12);
+                cell.detailTextLabel.textColor = colorWithHex(0x3287E6);
+                cell.detailTextLabel.textAlignment = NSTextAlignmentLeft;
+            }
+            cell.textLabel.text = @"";
+            cell.imageView.image = nil;
+            cell.detailTextLabel.text = @"";
+            if(indexPath.section == 1)
+            {
+                if(indexPath.row == 2)
+                {
+                    cell.textLabel.text = @"姓名";
+                    cell.detailTextLabel.text = [value objectForKey:@"FN"];
+                }
+                else if(indexPath.row == 3)
+                {
+                    cell.textLabel.text = @"公司";
+                    cell.detailTextLabel.text = [value objectForKey:@"ORG"];
+                }
+                else if(indexPath.row == 4)
+                {
+                    cell.textLabel.text = @"职位";
+                    cell.detailTextLabel.text = [value objectForKey:@"TITLE"];
+                }
+            }
+            else if (indexPath.section == 2)
+            {
+                if(indexPath.row ==1)
+                {
+                    cell.textLabel.text = @"手机";
+                    cell.detailTextLabel.text = [value objectForKey:@"TEL"];
+                }
+                else if (indexPath.row == 2)
+                {
+                    cell.textLabel.text = @"添加手机";
+                }
+                else if (indexPath.row == 3)
+                {
+                    cell.textLabel.text = @"邮件";
+                    cell.detailTextLabel.text = [value objectForKey:@"EMAIL"];
+                }
+                else if (indexPath.row == 4)
+                {
+                    cell.textLabel.text = @"添加邮件";
+                }
+                else if (indexPath.row == 5)
+                {
+                    cell.textLabel.text = @"公司地址";
+                    cell.detailTextLabel.text = [value objectForKey:@"LABEL"];
+                }
+                else if (indexPath.row == 6)
+                {
+                    cell.textLabel.text = @"通讯帐号";
+                    cell.detailTextLabel.text = [value objectForKey:@"X-MS-IMADDRESS"];
+                }
+                else if (indexPath.row == 7)
+                {
+                    cell.textLabel.text = @"名片位置";
+                    cell.detailTextLabel.text = [value objectForKey:@"ADR"];
+                }
+            }
+            return cell;
+        }
+    }
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if(indexPath.section == 1 && indexPath.row == 1)
+    {
+        [self takePhoto:nil];
+    }
+}
+@end

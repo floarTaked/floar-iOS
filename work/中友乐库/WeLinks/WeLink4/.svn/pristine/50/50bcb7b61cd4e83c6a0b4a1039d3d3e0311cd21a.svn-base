@@ -1,0 +1,80 @@
+//
+//  QuestionView.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-29.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "QuestionView.h"
+
+@implementation QuestionView
+{
+    CGRect rect;
+    UILabel *questionLabel;
+    UILabel *tagLable;
+    
+    CGSize labelSize;
+    CGSize questionSize;
+}
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        rect = frame;
+        
+        questionLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+        questionLabel.numberOfLines = 0;
+        questionLabel.font = [UIFont systemFontOfSize:18];
+        questionLabel.textAlignment = NSTextAlignmentLeft;
+        [self addSubview:questionLabel];
+        
+        tagLable = [[UILabel alloc] initWithFrame:CGRectZero];
+        tagLable.font = [UIFont systemFontOfSize:12];
+        tagLable.userInteractionEnabled = YES;
+        tagLable.backgroundColor = [UIColor brownColor];
+        tagLable.textAlignment = NSTextAlignmentLeft;
+        [self addSubview:tagLable];
+        
+    }
+    return self;
+    
+}
+
+-(void)setTagString:(NSString *)tagString
+{
+    tagLable.text = tagString;
+}
+
+-(void)setContentString:(NSString *)contentString
+{
+    questionLabel.text = contentString;
+    
+    labelSize = [contentString boundingRectWithSize:CGSizeMake(rect.size.width, 2000) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIFont systemFontOfSize:18],NSFontAttributeName, nil] context:nil].size;
+}
+
+-(void)layoutSubviews
+{
+    questionLabel.frame = CGRectMake(0, 0, labelSize.width, labelSize.height);
+    tagLable.frame = CGRectMake(CGRectGetMinX(questionLabel.frame),CGRectGetMaxY(questionLabel.frame)+10, 290, 20);
+    self.frame = CGRectMake(rect.origin.x, rect.origin.y, labelSize.width+30+10, labelSize.height+tagLable.frame.size.height+10+10);
+    
+    NSLog(@"---view:%@",NSStringFromCGRect(self.frame));
+}
+
+-(double)viewHeight
+{
+    return labelSize.height+tagLable.frame.size.height+10+10+10;
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

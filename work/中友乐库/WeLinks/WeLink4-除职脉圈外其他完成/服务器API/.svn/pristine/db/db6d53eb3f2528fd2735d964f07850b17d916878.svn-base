@@ -1,0 +1,12 @@
+评论回复问题
+
+请求URL: /question/answer/add
+
+请求方式: POST
+
+请求参数: 
+id=问题id
+optionid=投票选项id或是打分的星星数
+
+返回结果
+{"msg":"","retcode":"0","data":""}

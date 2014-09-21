@@ -1,0 +1,167 @@
+//
+//  JobViewDataManager.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 2/27/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "JobViewDataManager.h"
+#import "JobInfo.h"
+#import "NetworkEngine.h"
+
+
+@implementation JobViewDataManager
+{
+    int _friendJobPage;
+    int _companyJobPage;
+}
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        self.friendJobList = [NSMutableArray array];
+        self.companyJobList = [NSMutableArray array];
+        
+        NSArray *friendList =  [[UserDataBaseManager sharedInstance] queryWithClass:[JobInfo class] tableName:nil condition:@"where isFriendJob = 1"];
+        NSArray *companyList =  [[UserDataBaseManager sharedInstance] queryWithClass:[JobInfo class] tableName:nil condition:@"where isFriendJob = 0"];
+        [self.friendJobList addObjectsFromArray:friendList];
+        [self.companyJobList addObjectsFromArray:companyList];
+        _friendJobPage = 0;
+        _companyJobPage = 0;
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    self.friendJobList = nil;
+    self.companyJobList = nil;
+}
+
+- (void)loadFriendJob
+{
+    [[NetworkEngine sharedInstance] getFriendJobListWithPage:0 Block:^(int event, id object) {
+//        DLog(@"get Friend job list %@",object);
+        if (1 == event) {
+//            if (![object isMemberOfClass:[NSDictionary class]]) {
+//                if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListFailed)]) {
+//                    [_delegate jobViewDataManagerGetFriendJobListFailed];
+//                }
+//                return ;
+//            }
+
+            _friendJobPage = [[object objectForKey:@"pageNo"] intValue];
+            self.friendJobList = [NSMutableArray array];
+            for (NSDictionary *jobDic in [object objectForKey:@"infos"]) {
+                JobInfo *job = [[JobInfo alloc] init];
+                [job setValuesForKeysWithDictionary:jobDic];
+                job.isFriendJob = YES;
+                [job synchronize:nil];
+                [self.friendJobList addObject:job];
+            }
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListSuccess)]) {
+                [_delegate jobViewDataManagerGetFriendJobListSuccess];
+            }
+        }else{
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListFailed)]) {
+                [_delegate jobViewDataManagerGetFriendJobListFailed];
+            }
+        }
+    }];
+}
+- (void)loadCompanyJob
+{
+    [[NetworkEngine sharedInstance] getCompanyJobListWithPage:0 Block:^(int event, id object) {
+        DLog(@"get Company job list %@",object);
+        if (1 == event) {
+//            if (![object isMemberOfClass:[NSDictionary class]]) {
+//                if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListFailed)]) {
+//                    [_delegate jobViewDataManagerGetCompanyJobListFailed];
+//                }
+//                return ;
+//            }
+            _companyJobPage = [[object objectForKey:@"pageNo"] intValue];
+            self.companyJobList = [NSMutableArray array];
+            for (NSDictionary *jobDic in [object objectForKey:@"infos"]) {
+                JobInfo *job = [[JobInfo alloc] init];
+                [job setValuesForKeysWithDictionary:jobDic];
+                job.isFriendJob = NO;
+                [job synchronize:nil];
+                [self.companyJobList addObject:job];
+            }
+            
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetCompanyJobListSuccess)]) {
+                [_delegate jobViewDataManagerGetCompanyJobListSuccess];
+            }
+        }else{
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetCompanyJobListFailed)]) {
+                [_delegate jobViewDataManagerGetCompanyJobListFailed];
+            }
+        }
+    }];
+}
+- (void)loadFriendJobNextPageData
+{
+    _friendJobPage ++;
+    [[NetworkEngine sharedInstance] getFriendJobListWithPage:_friendJobPage Block:^(int event, id object) {
+        DLog(@"get Friend job list %@",object);
+        if (1 ==event) {
+//            if (![object isMemberOfClass:[NSDictionary class]]) {
+//                if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListFailed)]) {
+//                    [_delegate jobViewDataManagerGetFriendJobListFailed];
+//                }
+//                return ;
+//            }
+            _friendJobPage = [[object objectForKey:@"pageNo"] intValue];
+            for (NSDictionary *jobDic in [object objectForKey:@"infos"]) {
+                JobInfo *job = [[JobInfo alloc] init];
+                [job setValuesForKeysWithDictionary:jobDic];
+                job.isFriendJob = YES;
+                [job synchronize:nil];
+                [self.friendJobList addObject:job];
+            }
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListSuccess)]) {
+                [_delegate jobViewDataManagerGetFriendJobListSuccess];
+            }
+        }else{
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListFailed)]) {
+                [_delegate jobViewDataManagerGetFriendJobListFailed];
+            }
+        }
+    }];
+}
+- (void)loadCompanyJobNextPageData
+{
+    _companyJobPage ++;
+    [[NetworkEngine sharedInstance] getCompanyJobListWithPage:_companyJobPage Block:^(int event, id object) {
+        //DLog(@"get Company job list %@",object);
+        if (1 == event) {
+//            if (![object isMemberOfClass:[NSDictionary class]]) {
+//                if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetFriendJobListFailed)]) {
+//                    [_delegate jobViewDataManagerGetCompanyJobListFailed];
+//                }
+//                return ;
+//            }
+            _companyJobPage = [[object objectForKey:@"pageNo"] intValue];
+            for (NSDictionary *jobDic in [object objectForKey:@"infos"]) {
+                JobInfo *job = [[JobInfo alloc] init];
+                [job setValuesForKeysWithDictionary:jobDic];
+                job.isFriendJob = NO;
+                [job synchronize:nil];
+                [self.companyJobList addObject:job];
+            }
+            
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetCompanyJobListSuccess)]) {
+                [_delegate jobViewDataManagerGetCompanyJobListSuccess];
+            }
+        }else{
+            if ([_delegate respondsToSelector:@selector(jobViewDataManagerGetCompanyJobListFailed)]) {
+                [_delegate jobViewDataManagerGetCompanyJobListFailed];
+            }
+        }
+    }];
+}
+
+@end

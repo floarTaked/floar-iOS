@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>75276E61-ECA8-47D4-A9AD-D9D729C2B3C3</string>
+	<key>IDESourceControlProjectName</key>
+	<string>WeLinked3</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>B0854AB9-ACC3-4538-94A0-BB9B78408176</key>
+		<string>http://10.10.151.237/svn/app/iOS</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>WeLinked3/Trunk/WeLinked3.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>B0854AB9-ACC3-4538-94A0-BB9B78408176</key>
+		<string>../../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectRepositoryRootDictionary</key>
+	<dict>
+		<key>B0854AB9-ACC3-4538-94A0-BB9B78408176</key>
+		<string>http://10.10.151.237/svn/app</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>http://10.10.151.237/svn/app/iOS/WeLinked3/Trunk/WeLinked3/WeLinked3.xcodeproj</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B0854AB9-ACC3-4538-94A0-BB9B78408176</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B0854AB9-ACC3-4538-94A0-BB9B78408176</string>
+			<key>IDESourceControlWCCName</key>
+			<string>iOS</string>
+		</dict>
+	</array>
+</dict>
+</plist>

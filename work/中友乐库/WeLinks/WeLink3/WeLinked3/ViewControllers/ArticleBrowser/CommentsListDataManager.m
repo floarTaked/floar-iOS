@@ -1,0 +1,150 @@
+//
+//  CommentsListDataManager.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 3/10/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "CommentsListDataManager.h"
+#import "NetworkEngine.h"
+#import "Comment.h"
+#import "Support.h"
+
+@implementation CommentsListDataManager
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        self.supportList = [NSMutableArray array];
+        self.commentList = [NSMutableArray array];
+        self.supportDetailArray = [NSMutableArray array];
+    }
+    return self;
+}
+
+
+- (void)loadData
+{
+    [[NetworkEngine sharedInstance] getArcticleCommentListWithArticleID:_typeId Block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            NSArray *commentArray = [object objectForKey:@"comments"];
+            for (NSDictionary *dic in commentArray)
+            {
+                Comment *comment = [[Comment alloc] init];
+                [comment setValuesForKeysWithDictionary:dic];
+                [self.commentList addObject:comment];
+//                [comment synchronize:nil];
+            }
+            NSArray *supportArray = [object objectForKey:@"zans"];
+            [self.supportList removeAllObjects];
+            [self.supportDetailArray removeAllObjects];
+            for (NSDictionary *dic in supportArray)
+            {
+                [self.supportList addObject:[dic objectForKey:@"userAvatar"]];
+                Support *support = [[Support alloc] init];
+                [support setValuesForKeysWithDictionary:dic];
+                [self.supportDetailArray addObject:support];
+//                [support synchronize:nil];
+            }
+            if ([_delegate respondsToSelector:@selector(getCommentListSuccess:)])
+            {
+                [_delegate getCommentListSuccess:nil];
+            }
+        }
+        else
+        {
+            [_delegate getCommentListFailed:nil];
+        }
+    }];
+}
+
+-(void)loadCommentAndSupport:(NSString *)targetId
+{
+    [[NetworkEngine sharedInstance] getJobCommentAndSupport:targetId Block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            NSArray *commentArray = [object objectForKey:@"comments"];
+            for (NSDictionary *dic in commentArray)
+            {
+                Comment *comment = [[Comment alloc] init];
+                [comment setValuesForKeysWithDictionary:dic];
+                [self.commentList addObject:comment];
+            }
+            NSArray *supportArray = [object objectForKey:@"zans"];
+            [self.supportList removeAllObjects];
+            [self.supportDetailArray removeAllObjects];
+            for (NSDictionary *dic in supportArray)
+            {
+                [self.supportList addObject:[dic objectForKey:@"userAvatar"]];
+                Support *support = [[Support alloc] init];
+                [support setValuesForKeysWithDictionary:dic];
+                [self.supportDetailArray addObject:support];
+                //                [support synchronize:nil];
+            }
+            if ([_delegate respondsToSelector:@selector(getCommentListSuccess:)])
+            {
+                [_delegate getCommentListSuccess:nil];
+            }
+        }
+        else
+        {
+            [_delegate getCommentListFailed:nil];
+        }
+    }];
+}
+
+-(void)loadUserPostCommentAndSupport:(NSString *)targetId
+{
+    [[NetworkEngine sharedInstance] getUserPostCommentAndSupport:targetId Block:^(int event, id object) {
+        if (1 == event)
+        {
+            NSArray *commentArray = [object objectForKey:@"comments"];
+            for (NSDictionary *dic in commentArray)
+            {
+                Comment *comment = [[Comment alloc] init];
+                [comment setValuesForKeysWithDictionary:dic];
+                [self.commentList addObject:comment];
+            }
+            NSArray *supportArray = [object objectForKey:@"zans"];
+            [self.supportList removeAllObjects];
+            [self.supportDetailArray removeAllObjects];
+            for (NSDictionary *dic in supportArray)
+            {
+                [self.supportList addObject:[dic objectForKey:@"userAvatar"]];
+                Support *support = [[Support alloc] init];
+                [support setValuesForKeysWithDictionary:dic];
+                [self.supportDetailArray addObject:support];
+                //                [support synchronize:nil];
+            }
+            if ([_delegate respondsToSelector:@selector(getCommentListSuccess:)])
+            {
+                [_delegate getCommentListSuccess:nil];
+            }
+        }
+        else
+        {
+            [_delegate getCommentListFailed:nil];
+        }
+    }];
+}
+
+- (void)addNewComment:(NSString *)comment
+{
+    [[NetworkEngine sharedInstance] addNewCommentWithArticleID:_typeId Comment:comment Block:^(int event, id object)
+    {
+//        DLog(@"文章添加新评论 %@",object);
+        if (1 == event)
+        {
+            if ([_delegate respondsToSelector:@selector(addNewCommentSuccess:)])
+            {
+                [_delegate addNewCommentSuccess:nil];
+            }
+
+        }
+    }];
+}
+@end

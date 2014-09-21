@@ -1,0 +1,134 @@
+//
+//  VcardParser.m
+//  WeLinked4
+//
+//  Created by jonas on 5/22/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "VcardParser.h"
+#import <AddressBook/AddressBook.h>
+@implementation VcardParser
+
+//5哥，这个是解析vcf文件
++(void)parse:(NSString*)vcardString
+{
+    
+    
+//    NSArray *lines = [vcardString componentsSeparatedByString:@"\n"];
+//    for(NSString* line in lines)
+//    {
+//        if ([line hasPrefix:@"BEGIN"])
+//        {
+//            NSLog(@"parse start");
+//        }
+//        else if ([line hasPrefix:@"END"])
+//        {
+//            NSLog(@"parse end");
+//        }
+//        else if ([line hasPrefix:@"N:"])
+//        {
+//            NSArray *upperComponents = [line componentsSeparatedByString:@":"];
+//            NSArray *components = [[upperComponents objectAtIndex:1] componentsSeparatedByString:@";"];
+//            
+//            NSString * lastName = [components objectAtIndex:0];
+//            NSString * firstName = [components objectAtIndex:1];
+//            NSLog(@"name %@ %@",lastName,firstName);
+//            
+//        }
+//        else if ([line hasPrefix:@"EMAIL;"])
+//        {
+//            NSArray *components = [line componentsSeparatedByString:@":"];
+//            NSString *emailAddress = [components objectAtIndex:1];
+//            NSLog(@"emailAddress %@",emailAddress);
+//            
+//        }
+//        else if ([line hasPrefix:@"TEL;"])
+//        {
+//            NSArray *components = [line componentsSeparatedByString:@":"];
+//            NSString *phoneNumber = [components objectAtIndex:1];
+//            NSLog(@"phoneNumber %@",phoneNumber);
+//        }
+//    }
+    
+}
+//-(NSString*)saveVCF:(CFArrayRef)contacts
+//{
+//    NSString *str = @"";
+//    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 5.0) { // 5.0版本用系统自带的
+//        CFDataRef vcards = (CFDataRef)ABPersonCreateVCardRepresentationWithPeople(contacts);
+//        str = [[NSString alloc] initWithData:(NSData *)vcards encoding:NSUTF8StringEncoding];
+//        CFRelease(vcards);
+//    }
+//    else
+//    { //4.x 代码在这里哦～
+//        str = [self generateVCardStringWithContacts:contacts];
+//    }
+//    
+//    NSLog(@"save vcf str %@",str);
+//    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+//    NSString *folderPath = [paths objectAtIndex:0];
+//    NSString *filePath = [folderPath stringByAppendingPathComponent:@"contacts.vcf"];
+//    [str writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+//    NSLog(@"save vcf to path %@",filePath);
+//    return filePath;
+//}
+//
+//-(void)loadVCF:(NSString*)filePath {
+//    
+//    NSString* str = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+//    
+//    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 5.0) { // 5.0版本用系统自带的
+//        NSLog(@"load vcf str %@",str);
+//        
+//        CFDataRef vcardData = (CFDataRef)CFBridgingRetain([str dataUsingEncoding:NSUTF8StringEncoding]);
+//        ABAddressBookRef book = ABAddressBookCreate();
+//        ABRecordRef ref = ABAddressBookCopyDefaultSource(book);
+//        CFArrayRef contacts = ABPersonCreatePeopleInSourceWithVCardRepresentation(ref, vcardData);
+//        NSLog(@"load vcf form path %@",filePath);
+//        [self paintInfo:contacts];
+//        
+//        CFRelease(vcardData);
+//        CFRelease(book);
+//        CFRelease(ref);
+//    }
+//    else { //4.x 代码在这里哦～
+//        [self parseVCardString:str];
+//    }
+//    
+//}
+
+//-(void)paintInfo:(CFArrayRef)contacts {
+//    
+//    for(CFIndex i = 0; i < CFArrayGetCount(contacts); i++) {
+//        ABRecordRef person = CFArrayGetValueAtIndex(contacts, i);
+//        
+//        NSString *firstName = (NSString*)ABRecordCopyValue(person, kABPersonFirstNameProperty);
+//        NSLog(@"first name: %@",firstName);
+//        
+//        NSString *lastName = (NSString *)ABRecordCopyValue(person, kABPersonLastNameProperty);
+//        NSLog(@"last name: %@",lastName);
+//        
+//        ABMultiValueRef phones = ABRecordCopyValue(person, kABPersonPhoneProperty);
+//        if(phones) {
+//            for (int k = 0; k < ABMultiValueGetCount(phones); k++) {
+//                NSString *phoneMobile = (NSString *)ABMultiValueCopyValueAtIndex(phones, 0);
+//                NSLog(@"mobile: %@",phoneMobile);
+//                
+//                NSString *label = (NSString*)ABAddressBookCopyLocalizedLabel(ABMultiValueCopyLabelAtIndex(phones, k));
+//                if(label)
+//                    NSLog(@"label: %@",label);
+//            }
+//        }
+//        
+//        ABMultiValueRef emails = ABRecordCopyValue(person, kABPersonEmailProperty);
+//        if(emails) {
+//            for (int i = 0; i < ABMultiValueGetCount(emails); i++) {
+//                NSString *workEmail = (NSString *)ABMultiValueCopyValueAtIndex(emails, 0);
+//                NSLog(@"email: %@",workEmail);
+//            }
+//        }
+//    }
+//}
+
+@end

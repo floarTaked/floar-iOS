@@ -1,0 +1,149 @@
+//
+//  ScanningViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/14/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "ScanningViewController.h"
+#import "Common.h"
+@interface ScanningViewController ()
+
+@end
+
+@implementation ScanningViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        self.tabBarItem.image = [UIImage imageNamed:@"tab"];
+        self.tabBarItem.selectedImage = [UIImage imageNamed:@"tabSelected"];
+        self.tabBarItem.title = @"";
+        NSMutableDictionary *textAttributes = [NSMutableDictionary dictionary];
+        [textAttributes setObject:[UIColor whiteColor] forKey:UITextAttributeTextColor];
+        [self.tabBarItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:colorWithHex(NAVBARCOLOR),
+                                                 UITextAttributeTextColor, nil] forState:UIControlStateSelected];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    recognizer = [[ISWebRecognizer alloc]init];
+    recognizer.language = BCRLanguageChinese_Simplified;
+    recognizer.userName = @"shu.wu@leku.com";
+    recognizer.password = @"HA7KE4L5TMLAGRAN";
+    
+    
+    imagePicker = [[UIImagePickerController alloc]init];
+    imagePicker.delegate = self;
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypeCamera];
+    [imagePicker setCameraDevice:UIImagePickerControllerCameraDeviceRear];
+    imagePicker.wantsFullScreenLayout = NO;
+    imagePicker.allowsEditing = NO;
+    // 不使用系统的控制界面
+    imagePicker.showsCameraControls = NO;
+    imagePicker.cameraOverlayView = overlayView;
+    scanImageView.hidden = YES;
+
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    if(imagePicker != nil)
+    {
+//        [self presentViewController:imagePicker animated:YES completion:nil];
+    }
+}
+-(IBAction)takePhoto:(id)sender
+{
+    [imagePicker takePicture];
+}
+-(IBAction)cancelAction:(id)sender
+{
+    [self imagePickerControllerDidCancel:imagePicker];
+}
+-(IBAction)contactAction:(id)sender
+{
+    
+}
+-(IBAction)cardAction:(id)sender
+{
+    
+}
+-(IBAction)QRAction:(id)sender
+{
+    
+}
+#pragma mark - UIImagePickerController回调
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    UIImage *image =  [info objectForKey:UIImagePickerControllerOriginalImage];
+    //NSURL *assetURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+    scanImageView.image = image;
+    scanImageView.hidden = NO;
+    [recognizer recognizeImage:image completionHandler:^(NSString *vCardRepresentation, NSError *error)
+     {
+        //BEGIN:VCARD
+        //VERSION:2.1
+        //REV:20140514T174500Z
+        //X-GENERATOR:IntSig
+        //X-IS-ANGLE:0
+        //N;CHARSET=utf-8:许;文
+        //X-IS-INFO:591,696,721,693,721,755,592,757;1,2,13
+        //FN;CHARSET=utf-8:许文
+        //X-IS-INFO:591,696,721,693,721,755,592,757;0,9,10,13
+        //NICKNAME;CHARSET=utf-8:Vincent
+        //X-IS-INFO:600,657,719,655,719,681,600,684;17,0,13
+        //TEL;CELL;VOICE:+8613922336969
+        //X-IS-INFO:442,440,712,435,712,463,442,467;6,13
+        //X-MS-IMADDRESS;CHARSET=utf-8:QQ:94423456
+        //X-IS-INFO:516,332,709,329,709,353,516,356;14,7,13
+        //EMAIL;PREF;INTERNET:wen.xu@leku.com
+        //X-IS-INFO:373,406,711,400,711,428,373,434;7,14,13
+        //TITLE;CHARSET=utf-8:市场推广经理
+        //X-IS-INFO:535,616,718,613,718,644,536,647;9,16,11,10,0,13
+        //ORG;CHARSET=utf-8:;珍爱集团一珍爱实验室
+        //X-IS-INFO:327,545,716,538,716,576,328,583;16,9,11,10,0,13
+        //ADR;WORK;PREF;CHARSET=utf-8:;;南山区科技园北区朗山路1 1 号同方信息港 A 座3楼;深圳;;;中国
+        //X-IS-INFO:23,505,714,499,714,532,23,538;11,13
+        //LABEL;WORK;PREF;CHARSET=utf-8:深圳南山区科技园北区朗山路1 1 号同方信息港 A 座3楼
+        //X-IS-INFO:23,505,714,499,714,532,23,538;11,13
+        //NOTE;CHARSET=utf-8:唯邻
+        //X-IS-INFO:445,223,548,222,549,257,446,259;13,10,11,9,0
+        //NOTE;CHARSET=utf-8:WE, LINK
+        //X-IS-INFO:554,227,703,225,703,247,554,250;13,10,11,9,0
+        //END:VCARD
+         if(!error)
+         {
+             runOnMainQueueWithoutDeadlocking(^{
+                 UIAlertView* alert = [[UIAlertView alloc]initWithTitle:nil message:vCardRepresentation delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+                 [alert show];
+             });
+         }
+         else
+         {
+             runOnMainQueueWithoutDeadlocking(^{
+                 UIAlertView* alert = [[UIAlertView alloc]initWithTitle:nil message:[NSString stringWithFormat:@"%@",error] delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+                 [alert show];
+             });
+         }
+         [picker dismissViewControllerAnimated:YES completion:nil];
+     }];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

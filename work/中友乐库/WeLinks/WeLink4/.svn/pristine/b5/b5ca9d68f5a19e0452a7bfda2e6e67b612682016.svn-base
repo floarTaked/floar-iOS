@@ -1,0 +1,13 @@
+//
+//  VcardParser.h
+//  WeLinked4
+//
+//  Created by jonas on 5/22/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface VcardParser : NSObject
++(void)parse:(NSString*)vcardString;
+@end

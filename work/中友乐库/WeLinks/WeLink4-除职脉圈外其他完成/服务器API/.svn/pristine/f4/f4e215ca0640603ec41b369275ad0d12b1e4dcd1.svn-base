@@ -1,0 +1,27 @@
+检查版本更新
+
+请求URL: /comm/check-version
+
+请求方式: GET
+
+请求参数：
+默认
+
+
+返回结果：
+
+
+返回示例：
+{
+ "data":{
+  "version":"1.1",
+  "versionDesc":"修复已知bug",
+  "url":"http://imageapp.leku.com/staticprj/mobilenew/down/welink.apk",
+  "must":0,
+  "platform":"android",
+  "createTime":1390801613000,
+  "versionId":2
+ },
+ "msg":"",
+ "retcode":"0"
+}

@@ -1,0 +1,38 @@
+//
+//  Comment.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-13.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "Comment.h"
+#import "UserInfo.h"
+
+@implementation Comment
+@synthesize DBUid,content,createTime,commentId,otherUserId,targetId,userAvatar,userCompany,userId,userJob,userName;
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        self.DBUid = [UserInfo myselfInstance].userId;
+    }
+    return self;
+}
+
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    if ([key isEqualToString:@"id"])
+    {
+        self.commentId = value;
+    }
+}
+
++(NSString *)primaryKey
+{
+    return @"commentId";
+}
+
+@end

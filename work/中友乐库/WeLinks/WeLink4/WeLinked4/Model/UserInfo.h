@@ -1,0 +1,48 @@
+//
+//  UserInfo.h
+//  UnNamed
+//
+//  Created by jonas on 8/1/13.
+//  Copyright (c) 2013 jonas. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "NSObjectExtention.h"
+@interface UserInfo : NSObjectExtention
+@property(nonatomic,assign)int DBUid;
+@property(nonatomic,assign)int userId;
+@property(nonatomic,strong)NSString* avatar;
+@property(nonatomic,assign)NSTimeInterval birthday;
+@property(nonatomic,strong)NSString* cardImage;
+@property(nonatomic,assign)int       education;//1=大专及以下 2=本科 3=硕士 4=博士及以上
+@property(nonatomic,strong)NSString* company;
+@property(nonatomic,strong)NSString* city;
+@property(nonatomic,strong)NSString* email;
+@property(nonatomic,strong)NSString* industryId;
+@property(nonatomic,assign)int       infoStep;// 1:绑定完手机 2:已完善资料
+@property(nonatomic,strong)NSString* jobCode;
+@property(nonatomic,strong)NSString* job;
+@property(nonatomic,strong)NSString* jobTags;
+@property(nonatomic,assign)int       jobLevel;//1 实习 2 初级 3 高级 4 资深 5 主管/经理 6 总监/部门负责人 7 总裁/副总裁
+@property(nonatomic,assign)int       jobSalary;//1 4000以下 2 4000-6000 3 6000-8000 4 8000-10000 5 10000-15000 6 15000-25000 7 25000-50000 8 50000以上
+@property(nonatomic,assign)int       jobYear;//1:1年以内 2:1-3年 3:3-5年 4:5-10年 5:10年以上
+@property(nonatomic,strong)NSString* linkedInName;
+@property(nonatomic,strong)NSString* linkedInToken;
+
+
+@property(nonatomic,strong)NSString* name;
+@property(nonatomic,strong)NSString* phone;
+@property(nonatomic,strong)NSString* tags;
+@property(nonatomic,strong)NSString* blog;
+@property(nonatomic,strong)NSString* descriptions;
+@property(nonatomic,assign)int sex;
+@property(nonatomic,assign)int friendType;//1 一度好友  2 二度好友
+@property(nonatomic,assign)int salaryStatus;//0=隐藏 1=好友可见
+@property(nonatomic,assign)int phoneStatus;//0=好友可见 1=隐藏
+@property(nonatomic,assign)NSTimeInterval createTime;
+@property(nonatomic,assign)NSTimeInterval lastVisitDate;
+@property(nonatomic,strong)NSString* token;
+@property(nonatomic,strong)NSString* weiboName;
+@property(nonatomic,strong)NSString* weiboId;
++(UserInfo*)myselfInstance;
+@end

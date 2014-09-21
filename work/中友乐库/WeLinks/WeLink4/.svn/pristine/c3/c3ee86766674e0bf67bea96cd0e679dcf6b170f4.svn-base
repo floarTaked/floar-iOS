@@ -1,0 +1,25 @@
+//
+//  ProfileInfo.h
+//  WeLinked3
+//
+//  Created by jonas on 2/25/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "NSObjectExtention.h"
+#import "UserInfo.h"
+@interface ProfileInfo : NSObjectExtention
+{
+    NSString* educationString;//教育经历
+    NSString* workString;//工作经历
+//    NSString* sameFriendSting;//共同好友
+}
+@property(nonatomic,assign)int DBUid;//区分数据库归属
+@property(nonatomic,assign)int userId;//用户ID
+@property(nonatomic,strong)NSString* is2Du;
+@property(nonatomic,strong)UserInfo* userInfo;
+
+@property(nonatomic,strong)NSMutableArray* educationArray;
+@property(nonatomic,strong)NSMutableArray* workArray;
+//@property(nonatomic,strong)NSMutableArray* sameFriendArray;
+@end

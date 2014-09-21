@@ -1,0 +1,176 @@
+//
+//  CardDetailViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/26/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "CardDetailViewController.h"
+#import "OtherProfileViewController.h"
+#import "LogicManager.h"
+@interface CardDetailViewController ()
+
+@end
+
+@implementation CardDetailViewController
+@synthesize cardInfo;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"]
+                                imageSelected:[UIImage imageNamed:@"backSelected"]
+                                        title:nil
+                                        inset:UIEdgeInsetsMake(0, -20, 0, 0)
+                                       target:self
+                                     selector:@selector(back:)];
+    [self.navigationItem setRightBarButtonItem:[UIImage imageNamed:@"more"]
+                                 imageSelected:[UIImage imageNamed:@"more"]
+                                         title:@"保存"
+                                         inset:UIEdgeInsetsMake(0, -30, 0, 0)
+                                        target:self
+                                      selector:@selector(more:)];
+    [self.navigationItem setTitleString:@"编辑资料"];
+    
+    UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(gotoProfile:)];
+    tap.numberOfTapsRequired = 1;
+    [headImageView addGestureRecognizer:tap];
+    headImageView.layer.masksToBounds = YES;
+    headImageView.layer.cornerRadius = 45;
+    headImageView.layer.borderWidth = 2;
+    headImageView.layer.borderColor = [colorWithHex(0x99D5EC) CGColor];
+    
+    
+    detailView.center = CGPointMake(backImageView.frame.size.width/2,
+                                    backImageView.frame.size.height/2+detailView.frame.size.height/2-10);
+    
+    cardView.center = CGPointMake(backImageView.frame.size.width/2,
+                                    backImageView.frame.size.height/2+cardView.frame.size.height/2-10);
+    
+    markView.center = CGPointMake(backImageView.frame.size.width/2,
+                                    backImageView.frame.size.height/2+markView.frame.size.height/2-10);
+    
+    [backImageView addSubview:detailView];
+    [backImageView addSubview:cardView];
+    [backImageView addSubview:markView];
+
+    [self fillData];
+    
+}
+-(void)fillData
+{
+    
+    NSMutableString* str = [[NSMutableString alloc]init];
+    
+    [str appendFormat:@"<p align=center ><font color='#FFFFFF' face='FZLTZHK--GBK1-0' size=25>%@</font></p>",@"你妹的"];
+    [str appendFormat:@"\n<p align=center  lineSpacing=3><font color='#FFFFFF' size=13>%@</font></p>",@"公关经理"];
+    [str appendFormat:@"\n<p align=center ><font color='#FFFFFF' size=12>%@</font></p>",@"广东电信公司深圳分公司"];
+    [detailInfo setText:str];
+    
+    
+    
+    detailImageView.highlighted = YES;
+    [headImageView setImageURL:[NSURL URLWithString:cardInfo.avatar]];
+    [cardImage setImageURL:[NSURL URLWithString:cardInfo.avatar]];
+    
+    
+    
+    [phoneLabel setText:[NSString stringWithFormat:@"<p><font color='#5B9FEB' size=14>%@\n%@</font></p>\nMobile Phone",
+                         @"187190689136",@"187190689136"]];
+    [mailLabel setText:[NSString stringWithFormat:@"\n<p><font color='#5B9FEB' size=14>%@</font></p>\nEmail Address",
+                        @"441207214@163.com"]];
+    [imLabel setText:[NSString stringWithFormat:@"\n<p><font color='#5B9FEB' size=14>%@</font></p>\nWeiXin/QQ Number",
+                      @"441207214"]];
+    
+    
+    recentLabel.textColor = colorWithHex(0x5B9FEB);
+    recentLabel.font = [UIFont systemFontOfSize:12];
+    [recentLabel setText:[NSString stringWithFormat:@"最近见到%@是在",@"XXX"]];
+    
+    lacationView.layer.borderWidth = 0.6;
+    lacationView.layer.borderColor = [colorWithHex(0xCCCCCC) CGColor];
+    descView.layer.borderWidth = 0.6;
+    descView.layer.borderColor = [colorWithHex(0xCCCCCC) CGColor];
+    
+    [locationLabel setText:@"广东深深圳市南山区犀利路XXXX号"];
+    [timeLabel setText:@"2014年5月25号 下午18:00"];
+    
+}
+-(void)gotoProfile:(id)sender
+{
+    OtherProfileViewController* profile = [[OtherProfileViewController alloc]initWithNibName:@"OtherProfileViewController" bundle:nil];
+    self.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:profile animated:YES];
+}
+-(void)more:(id)sender
+{
+    
+}
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+-(IBAction)gotoMap:(UIGestureRecognizer*)gues
+{
+    [UIView animateWithDuration:0.2 animations:^{
+        lacationView.backgroundColor = colorWithHex(0xEEEEEE);
+    } completion:^(BOOL finished) {
+        lacationView.backgroundColor = [UIColor clearColor];
+    }];
+}
+-(IBAction)switchTab:(UIGestureRecognizer*)gues
+{
+    if(gues.view == detailImageView)
+    {
+        detailImageView.highlighted = YES;
+        cardImageView.highlighted = NO;
+        markImageView.highlighted = NO;
+        
+        
+        detailView.hidden = NO;
+        cardView.hidden = YES;
+        markView.hidden = YES;
+    }
+    else if (gues.view == cardImageView)
+    {
+        detailImageView.highlighted = NO;
+        cardImageView.highlighted = YES;
+        markImageView.highlighted = NO;
+        
+        
+        detailView.hidden = YES;
+        cardView.hidden = NO;
+        markView.hidden = YES;
+    }
+    else if (gues.view == markImageView)
+    {
+        detailImageView.highlighted = NO;
+        cardImageView.highlighted = NO;
+        markImageView.highlighted = YES;
+        
+        
+        
+        detailView.hidden = YES;
+        cardView.hidden = YES;
+        markView.hidden = NO;
+    }
+}
+-(IBAction)clickButton:(id)sender
+{
+    
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

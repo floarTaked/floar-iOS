@@ -1,0 +1,42 @@
+获取我的发布
+
+请求URL: /user/getPulishByUserId
+
+请求方式: GET
+
+请求参数:
+page: 翻页页码(从1开始)
+limit: 每页显示记录数
+
+
+返回结果
+{
+  "msg": "",
+  "retcode": "0",
+  "data": [
+    {
+      "id": null,
+      "userId": null,
+      "feedUser": null,
+      "userName": null,
+      "userAvatar": null,
+      "userJob": null,
+      "userCompany": null,
+      "userContent": null,
+      "content": null,
+      "contentType": 0,
+      "targetContent": null,
+      "targetId": null,
+      "feedType": null,
+      "createTime": null,
+      "comments": null,
+      "zanUser": null,
+      "zanUserNum": null,
+      "commentUser": null,
+      "commentUserNum": null,
+      "hasZan": null,
+      "isMyselfType": null,
+      "image": null
+    }
+  ]
+}

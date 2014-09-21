@@ -1,0 +1,248 @@
+//
+//  NewFriendsViewController.m
+//  WeLinked3
+//
+//  Created by jonas on 2/27/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "NewFriendsViewController.h"
+#import "CustomCellView.h"
+#import "PublicObject.h"
+#import "LogicManager.h"
+@interface NewFriendsViewController ()
+
+@end
+
+@implementation NewFriendsViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setTitleViewWithText:@"新的联系人"];
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack
+                                                                 title:nil
+                                                                target:self
+                                                              selector:@selector(back:)];
+    [self.navigationItem setRightBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleDelete
+                                                                  title:@"清空"
+                                                                 target:self
+                                                               selector:@selector(clear:)];
+    dataSource= [[NSMutableArray alloc]init];
+    [self.navigationController.navigationBar showLoadingIndicator];
+    [[NetworkEngine sharedInstance] getFriendRequestList:^(int event, id object)
+    {
+        [self.navigationController.navigationBar hideLoadingIndicator];
+        if(event == 0)
+        {
+            
+        }
+        else if (event == 1)
+        {
+            [[HeartBeatManager sharedInstane] setDataWithKey:@"newfriend" value:[NSNumber numberWithInt:0]];
+            [self loadFromDataBase];
+        }
+    }];
+}
+-(void)loadFromDataBase
+{
+    [dataSource removeAllObjects];
+    NSArray* arr = [[UserDataBaseManager sharedInstance] queryWithClass:[UserInfo class]
+                                                              tableName:NewFriendTable
+                                                              condition:[NSString stringWithFormat:@" where DBUid='%@'",[UserInfo myselfInstance].userId]];
+    if(arr != nil && [arr count]>0)
+    {
+        [dataSource addObjectsFromArray:arr];
+    }
+    [table reloadData];
+}
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark UITableViewDataSource
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [dataSource count];
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 60;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString* CellIdentifier = @"Cell";
+    CustomCellView *cell = (CustomCellView*)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell == nil)
+    {
+        cell = [[CustomCellView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        [cell setSelectedPosition:CustomCellBackgroundViewPositionMiddle];
+    }
+    UserInfo* info = [dataSource objectAtIndex:indexPath.row];
+    [self customCell:cell info:info];
+    [self customLine:cell height:60];
+    return cell;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+-(void)customLine:(UITableViewCell*)cell height:(float)height
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        return;
+    }
+    UIView* line = [cell.contentView viewWithTag:1];
+    if(line == nil)
+    {
+        line = [[UIView alloc]initWithFrame:CGRectMake(0, height-0.5, cell.frame.size.width, 0.5)];
+        line.backgroundColor = colorWithHex(0xCCCCCC);
+        line.tag = 1;
+        [cell.contentView addSubview:line];
+    }
+}
+-(void)customCell:(UITableViewCell*)cell info:(UserInfo*)info
+{
+    EGOImageView* image = (EGOImageView*)[cell.contentView viewWithTag:2];
+    if(image == nil)
+    {
+        image = [[EGOImageView alloc]initWithFrame:CGRectMake(10, 10, 40, 40)];
+        image.tag = 2;
+        image.placeholderImage = [UIImage imageNamed:@"defaultHead"];
+        [cell.contentView addSubview:image];
+    }
+
+    UILabel* name = (UILabel*)[cell.contentView viewWithTag:3];
+    if(name == nil)
+    {
+        name = [[UILabel alloc]initWithFrame:CGRectMake(60, 12, cell.contentView.frame.size.width-100, 21)];
+        name.backgroundColor = [UIColor clearColor];
+        [name setFont:[UIFont systemFontOfSize:14]];
+        name.tag = 3;
+        [cell.contentView addSubview:name];
+    }
+
+    RCLabel* lbl = (RCLabel*)[cell.contentView viewWithTag:4];
+    if(lbl == nil)
+    {
+        lbl = [[RCLabel alloc]initWithFrame:CGRectMake(60, 33, cell.contentView.frame.size.width-100, 20)];
+        [cell.contentView addSubview:lbl];
+        lbl.tag = 4;
+    }
+    if(info != nil)
+    {
+        [name setText:info.name];
+        [image setImageURL:[NSURL URLWithString:info.avatar]];
+        
+        NSString* str = [NSString stringWithFormat:@"%@  %@",info.company,info.job];
+        if(str != nil)
+        {
+            if([str length]>20)
+            {
+                str = [str substringToIndex:20];
+                str = [NSString stringWithFormat:@"%@...",str];
+            }
+        }
+        [lbl setText:[NSString stringWithFormat:@"<font size=12 color='#999999'>%@</font>",str]];
+    }
+    ExtraButton* button = (ExtraButton*)[cell.contentView viewWithTag:5];
+    if(button == nil)
+    {
+        button = [[ExtraButton alloc]initWithFrame:CGRectMake(240,17, 65, 25)];
+        button.tag = 5;
+        button.backgroundColor = [UIColor lightGrayColor];
+        button.adjustsImageWhenHighlighted = YES;
+        
+        RelationState state = [[LogicManager sharedInstance] getRelationState:info.userId];
+        if(state == Friends)
+        {
+            button.enabled = NO;
+            button.backgroundColor = [UIColor clearColor];
+            [button setTitle:@"已接受" forState:UIControlStateNormal];
+            [button.titleLabel setFont:[UIFont systemFontOfSize:14]];
+            [button.titleLabel setTextColor:colorWithHex(0xCCCCCC)];
+        }
+        else if(state == RequestSended)
+        {
+            [button setBackgroundImage:nil forState:UIControlStateNormal];
+            [button setTitle:@"建立联系" forState:UIControlStateNormal];
+            [button.titleLabel setFont:[UIFont systemFontOfSize:13]];
+            button.backgroundColor = colorWithHex(0xCCCCCC);
+            button.enabled = NO;
+        }
+        else if (state == Stranger)
+        {
+            [button setBackgroundImage:[UIImage imageNamed:@"connectFriend"] forState:UIControlStateNormal];
+            [button setTitle:@"建立联系" forState:UIControlStateNormal];
+            [button.titleLabel setFont:[UIFont systemFontOfSize:13]];
+            [button addTarget:self action:@selector(connect:) forControlEvents:UIControlEventTouchUpInside];
+            button.enabled = YES;
+        }
+        
+        [cell.contentView addSubview:button];
+        cell.contentView.userInteractionEnabled = YES;
+        button.extraData = info;
+    }
+}
+-(void)connect:(id)sender
+{
+    ExtraButton* button = (ExtraButton*)sender;
+    UserInfo* info = (UserInfo*)(button.extraData);
+    [self.navigationController.navigationBar showLoadingIndicator];
+    [[NetworkEngine sharedInstance] addFriend:info.userId block:^(int event, id object)
+    {
+        [self.navigationController.navigationBar hideLoadingIndicator];
+        if(event == 0)
+        {
+            [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"操作失败,请检查网络" actionText:@"确定"];
+        }
+        else if (event == 1)
+        {
+            [[LogicManager sharedInstance] setRelationSatte:info.userId state:RequestSended];
+            [button setBackgroundImage:nil forState:UIControlStateNormal];
+            button.backgroundColor = colorWithHex(0xCCCCCC);
+            button.enabled = NO;
+        }
+    }];
+}
+-(void)clear:(id)sender
+{
+    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提醒"
+                                                   message:@"确定要清空吗?"
+                                                  delegate:self
+                                         cancelButtonTitle:@"取消"
+                                         otherButtonTitles:@"确定", nil];
+    [alert show];
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if(buttonIndex == 1)
+    {
+        [UserInfo deleteWith:NewFriendTable condition:[NSString stringWithFormat:@" where DBUid='%@' ",[UserInfo myselfInstance].userId]];
+    }
+    [self loadFromDataBase];
+}
+@end

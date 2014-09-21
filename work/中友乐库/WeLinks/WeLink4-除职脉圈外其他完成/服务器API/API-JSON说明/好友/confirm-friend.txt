@@ -1,0 +1,44 @@
+确认加为好友
+
+请求URL: /friend/confirm-friend
+
+请求方式: POST
+
+请求参数：
+	friendId：好友的userId
+
+返回结果：
+ user对象
+
+返回示例：
+{
+	"data":
+		{
+			"avatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-6f189e9d_92dd_4170_862b_13866ca2741c.jpg",
+			"city":"01210",
+			"company":"测试1222-company",
+			"descriptions":"互联网,大数据,descriptions",
+			"education":2,
+			"email":"1222@test.com",
+			"industryId":"10",
+			"infoStep":2,
+			"job":"测试1222-job",
+			"jobCode":"测试1222job",
+			"jobLevel":0,
+			"jobSalary":1,
+			"jobTags":"jobTags互联网,大数据",
+			"jobYear":10,
+			"linkedInName":"LinkedInName",
+			"linkedInToken":"LinkedInToken",
+			"name":"测试1222&",
+			"phone":"13314961551",
+			"phoneStatus":0,
+			"salaryStatus":1,
+			"sex":0,
+			"tags":"tags互联网,大数据",
+			"userId":72298
+		}
+	,
+	"msg":"",
+	"retcode":"0"
+}

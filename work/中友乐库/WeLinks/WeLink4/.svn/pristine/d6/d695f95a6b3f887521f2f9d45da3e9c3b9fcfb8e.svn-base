@@ -1,0 +1,50 @@
+//
+//  WhoSeeMeViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-16.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "WhoSeeMeViewController.h"
+
+@interface WhoSeeMeViewController ()
+
+@property (weak, nonatomic) IBOutlet UITableView *careTableView;
+
+
+@end
+
+@implementation WhoSeeMeViewController
+
+@synthesize careTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setTitleString:@"谁看过我"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -40, 0, 0) target:self selector:@selector(goToBack)];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - 
+-(void)goToBack
+{
+    
+}
+
+@end

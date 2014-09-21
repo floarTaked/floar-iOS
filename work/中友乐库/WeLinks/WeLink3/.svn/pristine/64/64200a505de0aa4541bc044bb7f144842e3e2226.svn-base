@@ -1,0 +1,89 @@
+//
+//  FeedsCommentCell.m
+//  WeLinked3
+//
+//  Created by 牟 文斌 on 2/25/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "FeedsCommentCell.h"
+#import <EGOImageView.h>
+#import "RCLabel.h"
+#import "UserInfo.h"
+
+@interface FeedsCommentCell()
+@property (nonatomic, strong) EGOImageView *userHead;
+@property (nonatomic, strong) RCLabel *contentLabel;
+@property (nonatomic, strong) UILabel *timeLabel;
+@end
+
+@implementation FeedsCommentCell
+
++(float)cellHeightWithComment:(Comment *)comment
+{
+    float cellHeight = 35;
+    return cellHeight;
+//    RCLabel *label = [[RCLabel alloc] initWithFrame:CGRectMake(0, 0, 300 - 95, 30)];
+//    [label setText:[NSString stringWithFormat:@"<p><font size = 12 color='#000000' face=FZLTZHK--GBK1-0>%@:</font></p>\n<p lineSpacing=0><font size=12 color='#333333'>%@</font></p>",comment.userName,comment.content]];
+//    CGSize size = [label optimumSize];
+//    return size.height > cellHeight ? size.height : cellHeight;
+}
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        // Initialization code
+        [self initlize];
+    }
+    return self;
+}
+
+- (void)initlize
+{
+    self.userHead = [[EGOImageView alloc] initWithFrame:CGRectMake(10, 10, 25, 25)];
+    [self.contentView addSubview:self.userHead];
+    
+    self.contentLabel = [[RCLabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(self.userHead.frame) + 10, 10, self.width - self.userHead.width - 20, 25)];
+    self.contentLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleLeftMargin;
+    [self.contentView addSubview:self.contentLabel];
+    
+    self.timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.width - 10 - 50, 10, 0, 10)];
+    self.timeLabel.textColor = colorWithHex(0x999999);
+    self.timeLabel.textAlignment = NSTextAlignmentRight;
+    self.timeLabel.font = getFontWith(NO, 8);
+    [self.contentView addSubview:self.timeLabel];
+}
+
+- (void)dealloc
+{
+    self.comment = nil;
+    self.contentLabel = nil;
+    self.userHead = nil;
+    self.timeLabel = nil;
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+
+-(void)setComment:(Comment *)comment
+{
+    _comment = comment;
+    
+    self.userHead.imageURL = [NSURL URLWithString:_comment.userAvatar];
+    [self.contentLabel setText:[NSString stringWithFormat:@"<p><font size = 12 color='#000000' face=FZLTZHK--GBK1-0>%@:</font></p><p lineSpacing=0><font size=12 color='#333333'>%@</font></p>",_comment.userName,_comment.content]];
+//    CGSize size = [self.contentLabel optimumSize];
+//    self.contentLabel.height = size.height;
+    self.timeLabel.text = [Common timeIntervalStringFromTime:_comment.createTime];
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+}
+@end

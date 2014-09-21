@@ -1,0 +1,178 @@
+//
+//  Card.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-15.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "Card.h"
+#import "UserInfo.h"
+#import "LogicManager.h"
+
+@implementation Card
+
+@synthesize DBUid,cardId,name,avatar,company,job,phone,email,companyAddress,account,cardPosition,descriptions,cardImageUrl;
+@synthesize phoneArray=_phoneArray,emailArray=_emailArray;
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        self.DBUid = [UserInfo myselfInstance].userId;
+        _phoneArray = [[NSMutableArray alloc]init];
+        _emailArray = [[NSMutableArray alloc]init];
+    }
+    return self;
+}
+
++(NSString *)primaryKey
+{
+    return @"cardId";
+}
+
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    if ([key isEqualToString:@"id"] && value != nil)
+    {
+        self.cardId = [value intValue];
+    }
+}
+-(NSMutableArray *)emailArray
+{
+    if(_emailArray != nil  && [_emailArray count]>0)
+    {
+        return _emailArray;
+    }
+    if (email != nil && [email length] > 0)
+    {
+        NSArray* arr = [email componentsSeparatedByString:@","];
+        for(NSString* p in arr)
+        {
+            if(p != nil && [p length]>0)
+            {
+                [_emailArray addObject:p];
+            }
+        }
+    }
+    return _emailArray;
+}
+-(NSMutableArray *)phoneArray
+{
+    if(_phoneArray != nil  && [_phoneArray count]>0)
+    {
+        return _phoneArray;
+    }
+    if (phone != nil && [phone length] > 0)
+    {
+        NSArray* arr = [phone componentsSeparatedByString:@","];
+        for(NSString* p in arr)
+        {
+            if(p != nil && [p length]>0)
+            {
+                [_phoneArray addObject:p];
+            }
+        }
+    }
+    return _phoneArray;
+}
+-(void)fillWithVcardDic:(NSDictionary *)dic
+{
+    if(dic == nil)
+    {
+        return;
+    }
+    for(NSString* key in dic.allKeys)
+    {
+        NSArray* arr = [dic objectForKey:key];
+        if([key isEqualToString:@"FN"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@" "];
+            }
+            self.name = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"ORG"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@"\n"];
+            }
+            self.company = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"TITLE"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@"\n"];
+            }
+            self.job = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"TEL"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@","];
+            }
+            self.phone = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"EMAIL"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@","];
+            }
+            self.email = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"LABEL"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@"\n"];
+            }
+            self.companyAddress = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"X-MS-IMADDRESS"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@"\n"];
+            }
+            self.account = [self cleanString:s];
+        }
+        else if([key isEqualToString:@"ADR"])
+        {
+            NSMutableString* s = [[NSMutableString alloc]init];
+            for(NSString* c in arr)
+            {
+                [s appendString:c];
+                [s appendString:@"\n"];
+            }
+            self.cardPosition = [self cleanString:s];
+        }
+
+    }
+}
+-(NSMutableString*)cleanString:(NSMutableString*)str
+{
+    [str replaceOccurrencesOfString:@";;;" withString:@" " options:NSCaseInsensitiveSearch range:NSMakeRange(0, [str length])];
+    [str replaceOccurrencesOfString:@";;" withString:@" " options:NSCaseInsensitiveSearch range:NSMakeRange(0, [str length])];
+    [str replaceOccurrencesOfString:@";" withString:@" " options:NSCaseInsensitiveSearch range:NSMakeRange(0, [str length])];
+    return str;
+}
+@end

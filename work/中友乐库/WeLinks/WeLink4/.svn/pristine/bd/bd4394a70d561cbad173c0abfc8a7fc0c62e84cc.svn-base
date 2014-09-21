@@ -1,0 +1,80 @@
+//
+//  VisualRangeViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-26.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "VisualRangeViewController.h"
+
+@interface VisualRangeViewController ()<UITableViewDataSource,UITableViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UITableView *visualRangeTableView;
+
+@end
+
+@implementation VisualRangeViewController
+
+@synthesize visualRangeTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self.navigationItem setTitleString:@"选择可见范围"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -50, 0, 0) target:self selector:@selector(gotoBack)];
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 3;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+    }
+    cell.accessoryType = UITableViewCellAccessoryCheckmark;
+    cell.textLabel.text = [NSString stringWithFormat:@"%d度好友可见",indexPath.row+1];
+    return cell;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 10;
+}
+
+#pragma mark - UINavigationBarBtnAction
+-(void)gotoBack
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+@end

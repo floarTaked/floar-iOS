@@ -1,0 +1,82 @@
+//
+//  InviteFriendsViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-16.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "InviteFriendsViewController.h"
+#import "addFriendViewController.h"
+
+@interface InviteFriendsViewController ()<UITableViewDataSource,UITableViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UITableView *inviteTableView;
+
+@end
+
+@implementation InviteFriendsViewController
+
+@synthesize inviteTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setTitleString:@"邀请"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -40, 0, 0) target:self selector:@selector(gotoBack)];
+    [self.navigationItem setRightBarButtonItem:nil imageSelected:nil title:@"职脉号添加" inset:UIEdgeInsetsZero target:self selector:@selector(addFriendByWeLinkNum)];
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 10;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 20;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+    }
+    return cell;
+}
+
+#pragma mark - UINavigationItemAction
+-(void)gotoBack
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)addFriendByWeLinkNum
+{
+    addFriendViewController *addFriend = [[addFriendViewController alloc] init];
+    self.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:addFriend animated:YES];
+}
+
+@end

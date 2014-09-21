@@ -1,0 +1,122 @@
+//
+//  SupportListViewController.m
+//  WeLinked3
+//
+//  Created by Caesar on 14-3-21.
+//  Copyright (c) 2014年 WeLinked. All rights reserved.
+//
+
+#import "SupportListViewController.h"
+#import "SupportCell.h"
+#import "LogicManager.h"
+
+@interface SupportListViewController ()<UITableViewDataSource,UITableViewDelegate>
+{
+    
+    __weak IBOutlet UITableView *supportListTableView;
+}
+
+@end
+
+@implementation SupportListViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        [self.navigationItem setTitleViewWithText:@"共同好友"];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    if (self.supportArray == nil)
+    {
+        self.supportArray = [NSMutableArray array];
+    }
+    
+    [self.navigationItem setLeftBarButtonItemWithWMNavigationItemStyle:WMNavigationItemStyleBack title:nil target:self selector:@selector(back)];
+    
+    supportListTableView.delegate = self;
+    supportListTableView.dataSource = self;
+    supportListTableView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin |UIViewAutoresizingFlexibleHeight;
+    supportListTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    supportListTableView.contentInset = UIEdgeInsetsMake(10, 0, 0, 0);
+}
+
+-(void)back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)customLine:(UITableViewCell*)cell
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        return;
+    }
+    UIView* line = [cell.contentView viewWithTag:2];
+    if(line == nil)
+    {
+        line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, cell.frame.size.width, 0.5)];
+        line.backgroundColor = colorWithHex(0xCCCCCC);
+        line.tag = 2;
+        [cell.contentView addSubview:line];
+    }
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [supportListTableView deselectRowAtIndexPath:[supportListTableView indexPathForSelectedRow] animated:YES];
+
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (self.supportArray.count)
+    {
+        return self.supportArray.count;
+    }
+    return 0;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    SupportCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[SupportCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:cellId];
+    }
+    [self customLine:cell];
+    cell.support = [self.supportArray objectAtIndex:indexPath.row];
+    return cell;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 80;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    Support *support = [self.supportArray objectAtIndex:indexPath.row];
+    [[LogicManager sharedInstance] gotoProfile:self userId:support.userId showBackButton:YES];
+}
+
+
+
+@end

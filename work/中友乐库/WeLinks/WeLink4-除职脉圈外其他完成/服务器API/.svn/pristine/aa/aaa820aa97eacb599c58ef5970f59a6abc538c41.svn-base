@@ -1,0 +1,45 @@
+获取谁看过我
+
+请求URL: /user/vistor-info
+
+请求方式: GET
+
+请求参数
+page: 翻页页码(从1开始)
+limit: 每页显示记录数
+
+
+返回结果 (字段同/user/user-info)
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : [ {
+    "userId" : null,
+    "name" : null,
+    "avatar" : null,
+    "phone" : null,
+    "phoneStatus" : 0,
+    "company" : null,
+    "job" : null,
+    "jobCode" : null,
+    "jobYear" : 0,
+    "jobSalary" : 0,
+    "salaryStatus" : 0,
+    "jobLevel" : 0,
+    "industryId" : null,
+    "education" : 0,
+    "infoStep" : 0,
+    "sex" : 0,
+    "token" : null,
+    "city" : null,
+    "email" : null,
+    "descriptions" : null,
+    "tags" : null,
+    "jobTags" : null,
+    "linkedInName" : null,
+    "linkedInToken" : null,
+    "friendType" : 0,
+    "createTime" : null,
+    "lastVisitDate" : 访问时间
+  }]
+}

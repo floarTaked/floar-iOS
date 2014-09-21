@@ -1,0 +1,44 @@
+更新名片信息
+
+请求URL: /card/update-card-info
+
+请求方式: POST
+
+请求参数：
+json={
+	id:名片id
+	image:用户头像(文件流)/headerUrl:头像url 
+	name：姓名 
+	company：公司 
+	job：职位 
+	phone ：多个电话，格式:移动电话,工作电话，其他号码
+	email：电子邮件
+	companyAddress：公司地址
+	account：即时通信账号
+	cardPosition：名片的位置
+	descriptions:备注
+	cardImage:名片文件
+	}
+
+返回结果：
+名片对象
+
+返回示例：
+{
+	"data":{
+		"account":"123456",
+		"avatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-d11b9af8_5e91_4074_8efb_935fa87c2c43.jpg",
+		"cardPosition":"深圳同方3楼",
+		"company":"乐酷",
+		"companyAddress":"深圳南山同方",
+		"email":"1234569@163.com",
+		"id":19,
+		"job":"深圳生活",
+		"name":"小李",
+		"phone":"18719068937",
+		"userId":265958,
+		"cardImageUrl":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-d11b9af8_5e91_4074_8efb_935fa87c2c43.jpg",
+	},
+	"msg":"",
+	"retcode":"0"
+}

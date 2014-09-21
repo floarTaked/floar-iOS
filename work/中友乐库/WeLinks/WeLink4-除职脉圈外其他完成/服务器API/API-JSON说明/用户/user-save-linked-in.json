@@ -1,0 +1,16 @@
+Linked in 资料 保存
+
+请求URL: /user/save-linked-in
+
+请求方式: POST
+
+请求参数
+name: linkedIn名称
+stoken: linkedIn访问令牌
+
+返回结果
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : null
+}

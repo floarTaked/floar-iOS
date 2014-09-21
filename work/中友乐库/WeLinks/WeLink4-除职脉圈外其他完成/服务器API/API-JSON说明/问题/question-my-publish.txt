@@ -1,0 +1,235 @@
+读取我发布的问题
+
+请求URL: /question/my-publish
+
+请求方式: GET
+
+请求参数: 
+page=分页页码&limit=每页显示记录数
+limit默认为10.
+
+返回结果
+
+{
+  "msg": "",
+  "retcode": "0",
+  "data": [
+    {
+      "id": 9,
+      "userId": 658455,
+      "content": "this is question's content",
+      "allowedFriend": 3,
+      "createDate": 1400490298000,
+      "lastUpdate": null,
+      "deleted": 0,
+      "hidden": 0,
+      "tagIds": "497130182,-1240244679,-703046977",
+      "tags": [
+        {
+          "id": -1240244679,
+          "title": "Google"
+        },
+        {
+          "id": 497130182,
+          "title": "Facebook"
+        },
+        {
+          "id": -703046977,
+          "title": "zhenai"
+        }
+      ],
+      "user": {
+        "userId": 658455,
+        "name": "\u6d4b\u8bd51222&",
+        "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+        "phone": "13314961552",
+        "phoneStatus": 0,
+        "company": "\u6d4b\u8bd51222-company",
+        "job": "\u6d4b\u8bd51222-job",
+        "jobCode": "\u6d4b\u8bd51222job",
+        "jobYear": 10,
+        "jobSalary": 1,
+        "salaryStatus": 1,
+        "jobLevel": 0,
+        "industryId": "10",
+        "education": 2,
+        "infoStep": 2,
+        "sex": 0,
+        "token": null,
+        "city": "01210",
+        "email": "1222@test.com",
+        "descriptions": "\u4e92\u8054\u7f51,\u5927\u6570\u636e,descriptions",
+        "tags": "tags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "jobTags": "jobTags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "linkedInName": "LinkedInName",
+        "linkedInToken": "LinkedInToken",
+        "createTime": 1399360419000
+      },
+      "pollOptions": null
+    },
+    {
+      "id": 8,
+      "userId": 658455,
+      "content": "this is question's content",
+      "allowedFriend": 3,
+      "createDate": 1400490294000,
+      "lastUpdate": null,
+      "deleted": 0,
+      "hidden": 0,
+      "tagIds": "497130182,-1240244679,-703046977",
+      "tags": [
+        {
+          "id": -1240244679,
+          "title": "Google"
+        },
+        {
+          "id": 497130182,
+          "title": "Facebook"
+        },
+        {
+          "id": -703046977,
+          "title": "zhenai"
+        }
+      ],
+      "user": {
+        "userId": 658455,
+        "name": "\u6d4b\u8bd51222&",
+        "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+        "phone": "13314961552",
+        "phoneStatus": 0,
+        "company": "\u6d4b\u8bd51222-company",
+        "job": "\u6d4b\u8bd51222-job",
+        "jobCode": "\u6d4b\u8bd51222job",
+        "jobYear": 10,
+        "jobSalary": 1,
+        "salaryStatus": 1,
+        "jobLevel": 0,
+        "industryId": "10",
+        "education": 2,
+        "infoStep": 2,
+        "sex": 0,
+        "token": null,
+        "city": "01210",
+        "email": "1222@test.com",
+        "descriptions": "\u4e92\u8054\u7f51,\u5927\u6570\u636e,descriptions",
+        "tags": "tags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "jobTags": "jobTags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "linkedInName": "LinkedInName",
+        "linkedInToken": "LinkedInToken",
+        "createTime": 1399360419000
+      },
+      "pollOptions": null
+    },
+    {
+      "id": 7,
+      "userId": 658455,
+      "content": "this is question's content",
+      "allowedFriend": 1,
+      "createDate": 1400490282000,
+      "lastUpdate": 1400490305000,
+      "deleted": 0,
+      "hidden": 0,
+      "tagIds": "497130182,-1240244679,-703046977",
+      "tags": [
+        {
+          "id": -1240244679,
+          "title": "Google"
+        },
+        {
+          "id": 497130182,
+          "title": "Facebook"
+        },
+        {
+          "id": -703046977,
+          "title": "zhenai"
+        }
+      ],
+      "user": {
+        "userId": 658455,
+        "name": "\u6d4b\u8bd51222&",
+        "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+        "phone": "13314961552",
+        "phoneStatus": 0,
+        "company": "\u6d4b\u8bd51222-company",
+        "job": "\u6d4b\u8bd51222-job",
+        "jobCode": "\u6d4b\u8bd51222job",
+        "jobYear": 10,
+        "jobSalary": 1,
+        "salaryStatus": 1,
+        "jobLevel": 0,
+        "industryId": "10",
+        "education": 2,
+        "infoStep": 2,
+        "sex": 0,
+        "token": null,
+        "city": "01210",
+        "email": "1222@test.com",
+        "descriptions": "\u4e92\u8054\u7f51,\u5927\u6570\u636e,descriptions",
+        "tags": "tags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "jobTags": "jobTags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "linkedInName": "LinkedInName",
+        "linkedInToken": "LinkedInToken",
+        "createTime": 1399360419000
+      },
+      "pollOptions": null
+    },
+    {
+      "id": 6,
+      "userId": 658455,
+      "content": "this is question's content",
+      "allowedFriend": 2,
+      "createDate": 1400489339000,
+      "lastUpdate": 1400489703000,
+      "deleted": 0,
+      "hidden": 0,
+      "tagIds": "497130182,-1240244679,-703046977",
+      "tags": [
+        {
+          "id": -1240244679,
+          "title": "Google"
+        },
+        {
+          "id": 497130182,
+          "title": "Facebook"
+        },
+        {
+          "id": -703046977,
+          "title": "zhenai"
+        }
+      ],
+      "user": {
+        "userId": 658455,
+        "name": "\u6d4b\u8bd51222&",
+        "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+        "phone": "13314961552",
+        "phoneStatus": 0,
+        "company": "\u6d4b\u8bd51222-company",
+        "job": "\u6d4b\u8bd51222-job",
+        "jobCode": "\u6d4b\u8bd51222job",
+        "jobYear": 10,
+        "jobSalary": 1,
+        "salaryStatus": 1,
+        "jobLevel": 0,
+        "industryId": "10",
+        "education": 2,
+        "infoStep": 2,
+        "sex": 0,
+        "token": null,
+        "city": "01210",
+        "email": "1222@test.com",
+        "descriptions": "\u4e92\u8054\u7f51,\u5927\u6570\u636e,descriptions",
+        "tags": "tags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "jobTags": "jobTags\u4e92\u8054\u7f51,\u5927\u6570\u636e",
+        "linkedInName": "LinkedInName",
+        "linkedInToken": "LinkedInToken",
+        "createTime": 1399360419000
+      },
+      "pollOptions": {
+        "3": " Option33 ",
+        "2": " Option22 ",
+        "1": " Option11 ",
+        "4": " Option44 "
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+//
+//  Card.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-15.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "Card.h"
+#import "UserInfo.h"
+#import "LogicManager.h"
+
+@implementation Card
+
+@synthesize DBUid,cardId,name,avatar,company,job,phoneArray,email,companyAddress,account,cardPosition,descriptions;
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        self.DBUid = [UserInfo myselfInstance].userId;
+    }
+    return self;
+}
+
++(NSString *)primaryKey
+{
+    return @"cardId";
+}
+
+-(void)setValue:(id)value forUndefinedKey:(NSString *)key
+{
+    if ([key isEqualToString:@"id"])
+    {
+        self.cardId = value;
+    }
+    else if ([key isEqualToString:@"phone"])
+    {
+        NSArray *array = (NSArray *)value;
+        phoneString = [[LogicManager sharedInstance] objectToJsonString:array];
+    }
+}
+
+-(NSMutableArray *)phoneArray
+{
+    if (phoneArray == nil && phoneString != nil && phoneString.length > 0)
+    {
+//        id jsonStringData = [[LogicManager sharedInstance] jsonStringTOObject:phoneString];
+    }
+    return phoneArray;
+}
+
+@end

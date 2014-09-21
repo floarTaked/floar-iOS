@@ -1,0 +1,458 @@
+//
+//  EditInformationViewController.m
+//  WeLinked4
+//
+//  Created by jonas on 5/22/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "EditInformationViewController.h"
+#import "UserInfo.h"
+@interface EditInformationViewController ()
+
+@end
+
+@implementation EditInformationViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"]
+                                imageSelected:[UIImage imageNamed:@"backSelected"]
+                                        title:nil
+                                        inset:UIEdgeInsetsMake(0, -10, 0, 0)
+                                       target:self
+                                     selector:@selector(back:)];
+    [self.navigationItem setTitleString:@"编辑个人资料"];
+    
+//    UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(endEdit:)];
+//    tap.numberOfTapsRequired = 1;
+//    tap.delegate = self;
+//    [table addGestureRecognizer:tap];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillBeHidden:) name:UIKeyboardWillHideNotification object:nil];
+}
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+}
+-(void)endEdit:(UITapGestureRecognizer*)gues
+{
+    [self.view endEditing:YES];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma --mark TableView
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 3;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(section == 0)
+    {
+        return 7;
+    }
+    else if (section == 1)
+    {
+        return 4;
+    }
+    else if (section == 2)
+    {
+        return 6;
+    }
+    return 0;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(indexPath.row == 0)
+    {
+        return 30;
+    }
+    else if (indexPath.section == 0 && (indexPath.row == 1 || indexPath.row == 6))
+    {
+        return 70;
+    }
+    return 40;
+}
+- (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(indexPath.row == 0)
+    {
+        return [self customImageCell:table indexPath:indexPath];
+    }
+    else if (indexPath.section == 0 && indexPath.row == 1)
+    {
+        return [self customCell3:tableView indexPath:indexPath];
+    }
+    else if (indexPath.section == 0 && indexPath.row == 6)
+    {
+        return [self customCell4:tableView indexPath:indexPath];
+    }
+    else
+    {
+        if((indexPath.section == 1 && indexPath.row>0) ||
+           (indexPath.section == 2 && indexPath.row>3))
+        {
+            return [self customCell1:tableView indexPath:indexPath];
+        }
+        else
+        {
+            return [self customCell2:tableView indexPath:indexPath];
+        }
+    }
+}
+-(UITableViewCell*)customImageCell:(UITableView*)tableView indexPath:(NSIndexPath*)indexPath
+{
+    static NSString* headCell = @"headCell";
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:headCell];
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:headCell];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        
+        UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+        cellBackgroundView.backgroundColor = colorWithHex(0xF1F1F1);
+        cell.backgroundView = cellBackgroundView;
+        cell.backgroundColor = [UIColor clearColor];
+    }
+    if(isSystemVersionIOS7())
+    {
+        cell.separatorInset = UIEdgeInsetsMake(0, 0, 0, 0);
+    }
+    if(indexPath.section == 0)
+    {
+        cell.imageView.image = [UIImage imageNamed:@"basicInfo"];
+    }
+    else if (indexPath.section == 1)
+    {
+        cell.imageView.image = [UIImage imageNamed:@"skillInfo"];
+    }
+    else if (indexPath.section == 2)
+    {
+        cell.imageView.image = [UIImage imageNamed:@"detailInfo"];
+    }
+    return cell;
+}
+-(UITableViewCell*)customCell1:(UITableView*)tableView indexPath:(NSIndexPath*)indexPath
+{
+    static NSString* LabelCell = @"LabelCell";
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:LabelCell];
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:LabelCell];
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.accessoryView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"arrow1"]];
+        UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+        cellBackgroundView.backgroundColor = [UIColor whiteColor];
+        cell.backgroundView = cellBackgroundView;
+        
+        cell.backgroundColor = [UIColor whiteColor];
+        cell.textLabel.textAlignment = NSTextAlignmentLeft;
+        cell.textLabel.font =  getFontWith(NO, 13);
+        cell.textLabel.textColor = [UIColor blackColor];
+    }
+    if(isSystemVersionIOS7())
+    {
+        cell.separatorInset = UIEdgeInsetsMake(0, 15, 0, 0);
+    }
+    UILabel*lbl = (UILabel*)[cell.contentView viewWithTag:100];
+    if(lbl == nil)
+    {
+        lbl = [[UILabel alloc]initWithFrame:CGRectMake(80, 0, 200, 40)];
+        lbl.textAlignment = NSTextAlignmentLeft;
+        lbl.font = getFontWith(NO, 13);
+        lbl.textColor = [UIColor lightGrayColor];
+        lbl.backgroundColor = [UIColor clearColor];
+        lbl.tag = 100;
+        [cell.contentView addSubview:lbl];
+    }
+    if(indexPath.section == 0)
+    {
+        cell.textLabel.text = @"简介";
+        [lbl setText:@"你所从事的领域..."];
+    }
+    else if(indexPath.section == 1)
+    {
+        if(indexPath.row == 1)
+        {
+            cell.textLabel.text = @"所在行业";
+            [lbl setText:@"选择所在行业"];
+        }
+        else if (indexPath.row == 2)
+        {
+            cell.textLabel.text = @"职业标签";
+            [lbl setText:@"选择职业标签"];
+        }
+        else if (indexPath.row == 3)
+        {
+            cell.textLabel.text = @"业务标签";
+            [lbl setText:@"选择业务标签"];
+            if(isSystemVersionIOS7())
+            {
+                cell.separatorInset = UIEdgeInsetsMake(0, 0, 0, 0);
+            }
+        }
+    }
+    else if (indexPath.section == 2)
+    {
+        if (indexPath.row == 4)
+        {
+            cell.textLabel.text = @"工作经历";
+            [lbl setText:@"选填"];
+        }
+        else if (indexPath.row == 5)
+        {
+            cell.textLabel.text = @"学历经历";
+            [lbl setText:@"选填"];
+            if(isSystemVersionIOS7())
+            {
+                cell.separatorInset = UIEdgeInsetsMake(0, 0, 0, 0);
+            }
+        }
+    }
+    return cell;
+
+}
+-(UITableViewCell*)customCell2:(UITableView*)tableView indexPath:(NSIndexPath*)indexPath
+{
+    static NSString* Cell = @"Cell";
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:Cell];
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:Cell];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        
+        UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+        cellBackgroundView.backgroundColor = [UIColor whiteColor];
+        cell.backgroundView = cellBackgroundView;
+        
+        cell.backgroundColor = [UIColor whiteColor];
+        cell.textLabel.textAlignment = NSTextAlignmentLeft;
+        cell.textLabel.font =  getFontWith(NO, 13);
+        cell.textLabel.textColor = [UIColor blackColor];
+        cell.detailTextLabel.textAlignment = NSTextAlignmentLeft;
+        cell.detailTextLabel.font = getFontWith(NO, 12);
+        cell.detailTextLabel.textColor = [UIColor lightGrayColor];
+        cell.detailTextLabel.backgroundColor = [UIColor redColor];
+    }
+    if(isSystemVersionIOS7())
+    {
+        cell.separatorInset = UIEdgeInsetsMake(0, 15, 0, 0);
+    }
+    cell.textLabel.text = @"";
+    cell.imageView.image = nil;
+    cell.detailTextLabel.text = @"";
+    if(indexPath.section == 0)
+    {
+        if(indexPath.row == 2)
+        {
+            cell.textLabel.text = @"姓名";
+            nameFiled = [self customTextFiled:cell placeholder:@"必填"];
+            [nameFiled setText:[UserInfo myselfInstance].name];
+        }
+        else if (indexPath.row == 3)
+        {
+            cell.textLabel.text = @"手机";
+            phoneFiled = [self customTextFiled:cell placeholder:@"必填"];
+            [phoneFiled setText:[UserInfo myselfInstance].phone];
+        }
+        else if (indexPath.row == 4)
+        {
+            cell.textLabel.text = @"公司";
+            companyFiled = [self customTextFiled:cell placeholder:@"必填"];
+            [companyFiled setText:[UserInfo myselfInstance].company];
+        }
+        else if (indexPath.row == 5)
+        {
+            cell.textLabel.text = @"职位";
+            postFiled = [self customTextFiled:cell placeholder:@"必填"];
+            [postFiled setText:[UserInfo myselfInstance].jobCode];
+        }
+        else if (indexPath.row == 6)
+        {
+            cell.textLabel.text = @"简介";
+            descFiled = [self customTextFiled:cell placeholder:@"你所从事的领域..."];
+            if(isSystemVersionIOS7())
+            {
+                cell.separatorInset = UIEdgeInsetsMake(0, 0, 0, 0);
+            }
+        }
+    }
+    else if(indexPath.section == 2)
+    {
+        if(indexPath.row == 1)
+        {
+            cell.textLabel.text = @"生日";
+            birthFiled = [self customTextFiled:cell placeholder:@"选填"];
+            [birthFiled setText:[UserInfo myselfInstance].birthday];
+        }
+        else if (indexPath.row == 2)
+        {
+            cell.textLabel.text = @"邮箱";
+            mailFiled = [self customTextFiled:cell placeholder:@"选填"];
+        }
+        else if (indexPath.row == 3)
+        {
+            cell.textLabel.text = @"所在地";
+            addressFiled = [self customTextFiled:cell placeholder:@"选填"];
+        }
+    }
+    return cell;
+}
+-(UITableViewCell*)customCell3:(UITableView*)tableView indexPath:(NSIndexPath*)indexPath
+{
+    static NSString* HeadCell = @"HeadCell";
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:HeadCell];
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:HeadCell];
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.accessoryView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"arrow1"]];
+        UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+        cellBackgroundView.backgroundColor = [UIColor whiteColor];
+        cell.backgroundView = cellBackgroundView;
+        
+        cell.backgroundColor = [UIColor whiteColor];
+        cell.textLabel.textAlignment = NSTextAlignmentLeft;
+        cell.textLabel.font =  getFontWith(NO, 13);
+        cell.textLabel.textColor = [UIColor blackColor];
+    }
+    cell.textLabel.text = @"形象照";
+    headImageView = (EGOImageView*)[cell.contentView viewWithTag:10];
+    if(headImageView == nil)
+    {
+        headImageView = [[EGOImageView alloc]initWithFrame:CGRectMake(80, 10, 50, 50)];
+        headImageView.layer.cornerRadius = 25;
+        headImageView.layer.masksToBounds = YES;
+        headImageView.layer.borderWidth = 0.5;
+        headImageView.layer.borderColor = [[UIColor lightGrayColor] CGColor];
+        headImageView.placeholderImage = [UIImage imageNamed:@"defaultHead"];
+        headImageView.image = [UIImage imageNamed:@"defaultHead"];
+        headImageView.tag = 10;
+        [cell.contentView addSubview:headImageView];
+    }
+    [headImageView setImageURL:[NSURL URLWithString:[UserInfo myselfInstance].avatar]];
+    return cell;
+}
+-(UITableViewCell*)customCell4:(UITableView*)tableView indexPath:(NSIndexPath*)indexPath
+{
+    static NSString* DescCell = @"DescCell";
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:DescCell];
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:DescCell];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        UIView* cellBackgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+        cellBackgroundView.backgroundColor = [UIColor whiteColor];
+        cell.backgroundView = cellBackgroundView;
+        
+        cell.backgroundColor = [UIColor whiteColor];
+        cell.textLabel.textAlignment = NSTextAlignmentLeft;
+        cell.textLabel.font =  getFontWith(NO, 13);
+        cell.textLabel.textColor = [UIColor blackColor];
+    }
+    cell.textLabel.text = @"简介";
+    descView = (UIPlaceHolderTextView*)[cell.contentView viewWithTag:10];
+    if(descView == nil)
+    {
+        descView = [[UIPlaceHolderTextView alloc]initWithFrame:CGRectMake(75, 5, cell.frame.size.width-100, 60)];
+        descView.backgroundColor = [UIColor clearColor];
+        [descView setPlaceholder:@"你所从事的领域..."];
+        [descView setFont:getFontWith(NO, 13)];
+        [descView setPlaceholderColor:colorWithHex(0xCCCCCC)];
+        descView.textColor = colorWithHex(0x3287E6);
+        descView.tag = 10;
+        [cell.contentView addSubview:descView];
+    }
+    [descView setText:[UserInfo myselfInstance].descriptions];
+    return cell;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    [self.view endEditing:YES];
+}
+-(UITextField*)customTextFiled:(UITableViewCell*)cell placeholder:(NSString*)placeholder
+{
+    if(cell == nil || cell.contentView == nil)
+    {
+        nil;
+    }
+    UITextField* textField = (UITextField*)[cell.contentView viewWithTag:200];
+    if(textField == nil)
+    {
+        textField = [[UITextField alloc]initWithFrame:CGRectMake(80, 0, cell.frame.size.width-100, 40)];
+        textField.delegate = self;
+        textField.tag = 200;
+        [cell.contentView addSubview:textField];
+        textField.backgroundColor = [UIColor clearColor];
+        textField.textAlignment = NSTextAlignmentLeft;
+        textField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+        textField.font = getFontWith(NO, 13);
+        textField.textColor = colorWithHex(0x3287E6);
+        if ([textField respondsToSelector:@selector(setAttributedPlaceholder:)])
+        {
+            textField.attributedPlaceholder = [[NSAttributedString alloc]
+                                               initWithString:placeholder
+                                               attributes:@{NSForegroundColorAttributeName:[UIColor lightGrayColor]}];
+        }
+    }
+    return textField;
+}
+#pragma mark - Keyboard events
+
+- (void)keyboardWasShown:(NSNotification*)aNotification
+{
+    NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    NSNumber *duration = [info objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [info objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationCurve:[curve intValue]];
+    [UIView animateWithDuration:duration.doubleValue animations:^{
+    } completion:^(BOOL finished) {
+         table.frame = CGRectMake(0, 0, table.frame.size.width, table.frame.size.height-kbSize.height);
+    }];
+}
+
+- (void)keyboardWillBeHidden:(NSNotification*)aNotification
+{
+    NSDictionary* info = [aNotification userInfo];
+    NSNumber *duration = [info objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [info objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationCurve:[curve intValue]];
+    [UIView animateWithDuration:duration.doubleValue animations:^{
+    } completion:^(BOOL finished) {
+        table.frame = CGRectMake(0, 0, table.frame.size.width, table.frame.size.height+kbSize.height);
+    }];
+}
+@end

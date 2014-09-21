@@ -1,0 +1,426 @@
+//
+//  ContactsViewController.m
+//  WeLinked3
+//
+//  Created by jonas on 2/26/14.
+//  Copyright (c) 2014 WeLinked. All rights reserved.
+//
+
+#import "ContactsViewController.h"
+#import "ChineseToPinyin.h"
+#import "NetworkEngine.h"
+#import "LogicManager.h"
+#import "UserInfo.h"
+#import "RCLabel.h"
+
+@interface ContactsViewController ()<UITableViewDelegate,UITableViewDataSource,UISearchDisplayDelegate,UISearchBarDelegate>
+{
+    NSMutableArray *contactArray;
+    NSMutableDictionary *contactDict;
+    NSMutableArray *keyArray;
+    NSMutableArray *searchResultArray;
+}
+
+@property (weak, nonatomic) IBOutlet UITableView *contactTableView;
+
+
+@end
+
+@implementation ContactsViewController
+
+@synthesize contactTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    contactTableView.tableHeaderView = self.searchDisplayController.searchBar;
+    
+    [self.navigationItem setTitleString:@"联系人"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"]
+                                imageSelected:[UIImage imageNamed:@"backSelected"]
+                                        title:nil
+                                        inset:UIEdgeInsetsMake(0,-50, 0, 0)
+                                       target:self
+                                     selector:@selector(back:)];
+    
+    contactArray = [[NSMutableArray alloc]init];
+    contactDict = [[NSMutableDictionary alloc]init];
+    keyArray = [[NSMutableArray alloc]init];
+    searchResultArray = [[NSMutableArray alloc]init];
+    
+    if ([contactTableView respondsToSelector:@selector(sectionIndexBackgroundColor)])
+    {
+        [contactTableView setSectionIndexBackgroundColor:[UIColor clearColor]];
+    }
+    
+    [self loadFromDataBase];
+}
+
+#pragma mark - 数据处理
+-(void)loadFromNetwok
+{
+    [[NetworkEngine sharedInstance] getFriends:^(int event, id object)
+    {
+        if(event == 0)
+        {
+            [self loadFromDataBase];
+        }
+        else if (event == 1)
+        {
+             NSMutableArray* array = object;
+             if(array != nil && [array count]>0)
+             {
+                 [self setData:array];
+                 [contactTableView reloadData];
+             }
+            else
+            {
+                
+            }
+        }
+    }];
+}
+-(void)loadFromDataBase
+{
+    NSArray* array = [[UserDataBaseManager sharedInstance] queryWithClass:[UserInfo class]
+                                                              tableName:MyFriendsTable
+                                                              condition:[NSString stringWithFormat:@" where DBUid='%@'",[UserInfo myselfInstance].userId]];
+    
+    if(array != nil && [array count]>0)
+    {
+        [self setData:(NSMutableArray*)array];
+        [contactTableView reloadData];
+    }
+    else
+    {
+        
+    }
+    [self loadFromNetwok];
+}
+-(void)setData:(NSMutableArray*)array
+{
+    contactArray = array;
+    [contactDict removeAllObjects];
+    for (int i=0; i<ALPHALEN; i++)
+    {
+        char key = [ALPHA characterAtIndex:(i+1)];
+        NSMutableArray* dataArray = [[NSMutableArray alloc] init];
+        [contactDict setObject:dataArray forKey:[NSString stringWithFormat:@"%c",key]];
+    }
+    for(UserInfo* userInfo in contactArray)
+    {
+        char c = [ChineseToPinyin sortSectionTitle:userInfo.name];
+        NSString* key = [NSString stringWithFormat:@"%c", c];
+        NSMutableArray* array = [contactDict objectForKey:key];
+        [array addObject:userInfo];
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - NavigationBarAction
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark - UITableViewDelegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    if(tableView == contactTableView)
+    {
+        [keyArray removeAllObjects];
+        for (int i = 0; i < ALPHALEN; i++)
+        {
+            char key = [ALPHA characterAtIndex:(i+1)];
+            NSMutableArray* array = [contactDict objectForKey:[NSString stringWithFormat:@"%c",key]];
+            if([array count] > 0)
+            {
+                [keyArray addObject:[NSString stringWithFormat:@"%c",key]];
+            }
+        }
+        return [keyArray count];
+    }
+    else
+    {
+        return 1;
+    }
+    
+//    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(tableView == contactTableView)
+    {
+        NSString* key = [keyArray objectAtIndex:section];
+        NSArray* arr = [contactDict objectForKey:key];
+        if(arr != nil && arr.count > 0)
+        {
+            return [arr count]+1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return [searchResultArray count];
+    }
+//    return 2;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(tableView == contactTableView)
+    {
+        if (indexPath.row == 0)
+        {
+            static NSString *header = @"header";
+            UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:header];
+            if (cell == nil)
+            {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:header];
+            }
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            NSString* keyString = [keyArray objectAtIndex:indexPath.section];
+            [self customHeaderCell:cell withString:keyString];
+            return cell;
+        }
+        else
+        {
+            static NSString *normalCell = @"normal";
+            UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:normalCell];
+            if (cell == nil)
+            {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:normalCell];
+            }
+            NSString* keyChar = [keyArray objectAtIndex:indexPath.section-1];
+            NSArray* arr = [contactDict objectForKey:keyChar];
+            if(arr != nil && arr.count > 0)
+            {
+                UserInfo* userInfo = [arr objectAtIndex:indexPath.row-1];
+                [self customNormalCell:cell withUserInfo:userInfo];
+            }
+            return cell;
+        }
+        
+    }
+    else if (tableView == self.searchDisplayController.searchResultsTableView)
+    {
+        static NSString *cellId = @"cellId";
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+        if (cell == nil)
+        {
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+        }
+        UserInfo* userInfo = [searchResultArray objectAtIndex:indexPath.row];
+        [self customNormalCell:cell withUserInfo:userInfo];
+        return cell;
+    }
+    return nil;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (tableView == contactTableView)
+    {
+        if (indexPath.row ==  0)
+        {
+            return 20;
+        }
+        else
+        {
+            return 70;
+        }
+    }
+    else if (tableView == self.searchDisplayController.searchResultsTableView)
+    {
+        return 70;
+    }
+    return 0;
+}
+
+
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    NSMutableArray *indices = [NSMutableArray arrayWithObject:UITableViewIndexSearch];
+    for (int i = 1; i <= 27; i++)
+    {
+        [indices addObject:[[ALPHA substringFromIndex:i] substringToIndex:1]];
+    }
+    return indices;
+}
+-(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index
+{
+    if (title == UITableViewIndexSearch)
+	{
+		[tableView scrollRectToVisible:CGRectMake(0, 0, 320, 44) animated:YES];
+		return -1;
+	}
+    return  [ALPHA rangeOfString:title].location-2;
+}
+
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if(tableView == contactTableView)
+    {
+        
+        NSString* keyChar = [keyArray objectAtIndex:indexPath.section-1];
+        NSArray* array = [contactDict objectForKey:keyChar];
+        if(array != nil && array.count > 0)
+        {
+            UserInfo* userInfo = [array objectAtIndex:indexPath.row-1];
+            if(userInfo != nil)
+            {
+                self.hidesBottomBarWhenPushed = YES;
+                [[LogicManager sharedInstance] gotoProfile:self userId:userInfo.userId];
+            }
+        }
+    }
+    else if(tableView == self.searchDisplayController.searchResultsTableView)
+    {
+        UserInfo* info = [searchResultArray objectAtIndex:indexPath.row];
+        if(info != nil)
+        {
+            self.hidesBottomBarWhenPushed = YES;
+            [[LogicManager sharedInstance] gotoProfile:self userId:info.userId];
+        }
+    }
+    
+}
+
+-(void)customHeaderCell:(UITableViewCell *)cell withString:(NSString *)headerString
+{
+    UIView* view = [[UIView alloc] init];
+    UILabel* headerLabel = [[UILabel alloc] init];
+    
+    view.frame = CGRectMake(0, 0, cell.contentView.frame.size.width, 20);
+    view.backgroundColor = [UIColor colorWithRed:0.925 green:0.925 blue:0.925 alpha:1.0];
+    
+    headerLabel.backgroundColor = [UIColor clearColor];
+    [headerLabel setFont:[UIFont systemFontOfSize:13]];
+    headerLabel.tag = 200;
+    headerLabel.textColor = [UIColor grayColor];
+    
+    headerLabel.frame = CGRectMake(15, 2, 20, 15);
+    
+    [view addSubview:headerLabel];
+    
+    [headerLabel setText:headerString];
+    [cell.contentView addSubview:view];
+}
+
+-(void)customNormalCell:(UITableViewCell*)cell withUserInfo:(UserInfo*)userInfo
+{
+    EGOImageView* image = (EGOImageView*)[cell.contentView viewWithTag:10];
+    if(image == nil)
+    {
+        image = [[EGOImageView alloc]initWithFrame:CGRectMake(10, 10, 50, 50)];
+        image.tag = 10;
+        image.placeholderImage = [UIImage imageNamed:@"defaultHead"];
+        [cell.contentView addSubview:image];
+    }
+    
+    UILabel* name = (UILabel*)[cell.contentView viewWithTag:20];
+    if(name == nil)
+    {
+        name = [[UILabel alloc]initWithFrame:CGRectMake(CGRectGetMaxX(image.frame)+5, CGRectGetMinY(image.frame), cell.contentView.frame.size.width-40, 21)];
+        name.backgroundColor = [UIColor clearColor];
+        [name setFont:[UIFont systemFontOfSize:14]];
+        name.tag = 20;
+        [cell.contentView addSubview:name];
+    }
+    
+    UILabel *jobLabel = (UILabel *)[cell.contentView viewWithTag:30];
+    if (jobLabel == nil)
+    {
+        jobLabel = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(image.frame)+5, CGRectGetMaxY(name.frame)+2, cell.contentView.frame.size.width-40, 15)];
+        jobLabel.tag = 30;
+        jobLabel.font = getFontWith(NO, 12);
+        jobLabel.textColor =  colorWithHex(0xAAAAAA);
+        [cell.contentView addSubview:jobLabel];
+    }
+    
+    UILabel *companyLabel = (UILabel *)[cell.contentView viewWithTag:40];
+    if (companyLabel == nil)
+    {
+        companyLabel = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(image.frame)+5, CGRectGetMaxY(jobLabel.frame)+2, cell.contentView.frame.size.width-40, 15)];
+        companyLabel.tag = 40;
+        companyLabel.font = getFontWith(NO, 12);
+        companyLabel.textColor =  colorWithHex(0xAAAAAA);
+        [cell.contentView addSubview:companyLabel];
+    }
+    
+    if(userInfo != nil)
+    {
+        [name setText:userInfo.name];
+        [image setImageURL:[NSURL URLWithString:userInfo.avatar]];
+        jobLabel.text = userInfo.job;
+        companyLabel.text = userInfo.company;
+    }
+    else
+    {
+        image.backgroundColor = [UIColor redColor];
+        name.text = @"欧阳你妹";
+        jobLabel.text = @"你妹妹工作";
+        companyLabel.text = @"你妹妹.com.baidu.cn";
+    }
+}
+
+#pragma --mark UISearchDisplayDelegate
+-(void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+{
+    if(searchText != nil && [searchText length]>0)
+    {
+        [searchResultArray removeAllObjects];
+        NSString* keyPinyin = [ChineseToPinyin pinyinFromChiniseString:searchText];
+        for (UserInfo* userInfo in contactArray)
+        {
+            BOOL exist = NO;
+            NSString* pinyin = [ChineseToPinyin pinyinFromChiniseString:userInfo.name];
+            if ([pinyin rangeOfString:keyPinyin].length > 0)
+            {
+                exist = YES;
+            }
+            else
+            {
+                for(int i=0;i<[keyPinyin length];i++)
+                {
+                    NSString* key = [NSString stringWithFormat:@"%c",[keyPinyin characterAtIndex:i]];
+                    if ([pinyin rangeOfString:key].length > 0)
+                    {
+                        exist = YES;
+                        break;
+                    }
+                }
+            }
+            if(exist)
+            {
+                [searchResultArray addObject:userInfo];
+            }
+        }
+        [contactTableView reloadData];
+    }
+    else
+    {
+        [contactTableView reloadData];
+    }
+}
+@end

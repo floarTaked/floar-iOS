@@ -1,0 +1,16 @@
+保存(修改)教育背景
+
+请求URL: /resume/save-education
+
+请求方式: POST
+
+请求参数
+json:需要保存信息的json串(字段:id, `school` `department` `specialty` `education` `year` )
+新增时，id为NULL
+
+返回结果
+{
+  "msg" : "",
+  "retcode" : "0",
+  "data" : "记录ID"
+}

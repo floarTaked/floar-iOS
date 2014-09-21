@@ -1,0 +1,70 @@
+读取动态详细
+
+请求URL: /dynamic/get
+
+请求方式: GET
+
+请求参数: id=动态id
+
+返回结果, 包含动态本身，发表用户信息，
+
+如下
+{
+  "msg": "",
+  "retcode": "0",
+  "data": {
+    "id": 5,
+    "userId": 313411,
+    "content": "this is question's content",
+     "httpUrl":"http:\/\/baidu.com\",
+    "allowedFriend": 3,
+    "typeId": 22, 
+    "createDate": 1400489246000,
+    "totalComment": 0,
+    "totalVote": 0,
+    "totalOptin": 0,
+    "tagIds": "497130182,-1240244679,-703046977",
+    "tags": [
+      {
+        "id": -1240244679,
+        "title": "Google"
+      },
+      {
+        "id": 497130182,
+        "title": "Facebook"
+      },
+      {
+        "id": -703046977,
+        "title": "zhenai"
+      }
+    ],
+    "comments": [
+      {
+        "id": 17,
+        "qid": 8,
+        "userId": 72298,
+        "questUserId": 658455,
+        "createDate": 1400549323000,
+        "content": "this is a comment content",
+        "relationDepth": -1,
+        "user": {
+          "userId": 72298,
+          "sex": 0,
+          "name": "\u6d4b\u8bd51222&",
+          "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-6f189e9d_92dd_4170_862b_13866ca2741c.jpg",
+          "company": "\u6d4b\u8bd51222-company",
+          "job": "\u6d4b\u8bd51222-job"
+        }
+      }
+    ]
+    },
+   "user": {
+      "userId": 658455,
+      "name": "\u6d4b\u8bd51222&",
+      "avatar": "http:\/\/photo.leku.com\/e\/lekumobile\/8555\/160x160\/201405-84f44992_8913_48d7_8417_9dbe08caa044.jpg",
+      "company": "乐酷",
+      "job": "工程师",
+      "sex": 0
+    }
+  }
+}

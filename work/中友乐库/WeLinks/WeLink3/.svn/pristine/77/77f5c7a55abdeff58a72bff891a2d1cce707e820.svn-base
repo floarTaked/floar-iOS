@@ -1,0 +1,75 @@
+//
+//  InformarionDataManager.m
+//  WeLinked3
+//
+//  Created by Floar on 14-3-8.
+//  Copyright (c) 2014年 WeLinked. All rights reserved.
+//
+
+#import "InformarionDataManager.h"
+#import "Column.h"
+#import "NetworkEngine.h"
+#import "UserInfo.h"
+
+@implementation InformarionDataManager
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        self.informarionArray = [[NSMutableArray alloc] init];
+        [self loadInformarionDataFromDB];
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+    self.informarionArray = nil;
+}
+
+-(void)loadInformarionDataFromNetWork 
+{
+    [[NetworkEngine sharedInstance] getSubcribedCategoryList:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            [self.informarionArray removeAllObjects];
+            for (NSDictionary *dict in object)
+            {
+                Column *column = [[Column alloc] init];
+                [column setValuesForKeysWithDictionary:dict];
+                [self.informarionArray addObject:column];
+                column.isSubscribe = @"1";
+                [column synchronize:nil];
+            }
+            [self lastCell];
+            
+            if ([_delegate respondsToSelector:@selector(informarionDataMangerGetDataSuccess)])
+            {
+                [_delegate informarionDataMangerGetDataSuccess];
+            }
+        }
+        else
+        {
+            [_delegate informarionDataMangerGetDataFailed];
+        }
+    }];
+}
+
+-(void )lastCell
+{
+    Column *column = [[Column alloc] init];
+    [self.informarionArray addObject:column];
+}
+
+-(void)loadInformarionDataFromDB
+{
+    NSArray *array = [[UserDataBaseManager sharedInstance] queryWithClass:[Column class] tableName:nil condition:@"where isSubscribe = '1'"];
+    [self.informarionArray addObjectsFromArray:array];
+    //数据模型不添加lastcell，少显示一个cell
+    [self lastCell];
+}
+
+@end

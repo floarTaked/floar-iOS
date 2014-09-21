@@ -1,0 +1,235 @@
+//
+//  DetailViewCell.m
+//  闺秘
+//
+//  Created by floar on 14-7-14.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "DetailViewCell.h"
+#import "NetWorkEngine.h"
+#import "Package.h"
+#import "ShareBlurView.h"
+#import <UIImage+Screenshot.h>
+
+@implementation DetailViewCell
+{
+    
+    __weak IBOutlet UIImageView *avatorImageView;
+    
+    __weak IBOutlet UILabel *detailContentLabel;
+    
+    __weak IBOutlet UILabel *floorLabel;
+    
+    
+    __weak IBOutlet UIButton *detailLikeBtn;
+    
+    
+    __weak IBOutlet UIImageView *commentSepImg;
+    
+    BOOL isShow;
+    
+}
+
+- (void)awakeFromNib
+{
+    isShow = YES;
+    if (_comment.floorNum == 1)
+    {
+        detailContentLabel.textColor = colorWithHex(0xD0246C);
+    }
+    else
+    {
+        detailContentLabel.textColor = colorWithHex(0x666666);
+    }
+    
+    if (_comment.isOwnZanComment == 0)
+    {
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_comment_like"] forState:UIControlStateNormal];
+    }
+    else if (_comment.isOwnZanComment == 1)
+    {
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_support_yes"] forState:UIControlStateNormal];
+    }
+    
+    detailContentLabel.font = getFontWith(NO, 14);
+    floorLabel.font = getFontWith(NO, 10);
+    floorLabel.textColor = colorWithHex(0xCCCCCC);
+}
+
+-(void)setComment:(Comment *)comment
+{
+    _comment = comment;
+    avatorImageView.image = [UIImage imageNamed:[NSString stringWithFormat:@"%d",comment.avatarId]];
+    NSString *timeStr = [Common timeIntervalStringFromTime:comment.createTime];
+    NSString *floorStr = nil;
+    if (comment.avatarId == 0)
+    {
+        floorStr = [NSString stringWithFormat:@"%d楼  ·  %@  ·  %@",comment.floorNum,timeStr,@"楼主"];
+//        int i = [[LogicManager sharedInstance] getPersistenceIntegerWithKey:@"masterFloor"];
+//        if (0 == i && isShow)
+//        {
+//            ShareBlurView *master = [[ShareBlurView alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)];
+//            [master shareBlurWithImage:[UIImage imageFromUIView:self] withBlurType:BlurTipsType];
+//            master.tipsHeight = 195;
+//            master.tip.contentStr = @"[大粉钻]这个头像是作者专属的";
+//            master.tip.standImgStr = @"img_tipsStand_up";
+//            [master.tip customTipsViewWithPoint:CGPointMake(10, -15) tipType:TipsAvatorType withSubTitle:nil withSubImageStr:@"0" subImageSize:CGSizeMake(32, 32)];
+//            __weak ShareBlurView *weakMaster = master;
+//            [master.tip setHandleTipsOKBtnActionBlock:^{
+//                [[LogicManager sharedInstance] setPersistenceData:[NSNumber numberWithInt:0] withKey:@"masterFloor"];
+//                [weakMaster removeFromSuperview];
+//            }];
+//            isShow = NO;
+//            [self addSubview:master];
+        
+//        }
+    }
+    else
+    {
+        floorStr = [NSString stringWithFormat:@"%d楼  ·  %@",comment.floorNum,timeStr];
+//        int i = [[LogicManager sharedInstance] getPersistenceIntegerWithKey:@"follow"];
+//        if (0 == i)
+//        {
+//            ShareBlurView *follow = [[ShareBlurView alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width,[UIScreen mainScreen].bounds.size.height)];
+//            [follow shareBlurWithImage:[UIImage screenshot] withBlurType:BlurTipsType];
+//            follow.tip.contentStr = @"用户头像是随机出现的，每个秘密里相同的头像表示一个人";
+//            follow.tip.standImgStr = @"img_tipsStand_down";
+//            [follow.tip customTipsViewWithPoint:CGPointMake(10, 65) tipType:TipsAvatorType withSubTitle:nil withSubImageStr:[NSString stringWithFormat:@"%d",comment.avatarId] subImageSize:CGSizeMake(32, 32)];
+//            __weak ShareBlurView *weakFollow = follow;
+//            [follow.tip setHandleTipsOKBtnActionBlock:^{
+//                [[LogicManager sharedInstance] setPersistenceData:[NSNumber numberWithInt:2] withKey:@"follow"];
+//                [weakFollow removeFromSuperview];
+//            }];
+//            [self addSubview:follow];
+//
+//        }
+    }
+    
+    detailContentLabel.text = comment.comment;
+    
+    if (comment.isOwnZanComment == 0)
+    {
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_comment_like"] forState:UIControlStateNormal];
+    }
+    else if (comment.isOwnZanComment == 1)
+    {
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_support_yes"] forState:UIControlStateNormal];
+    }
+    else if (comment.isOwnZanComment == 0xFFFFFFFF)
+    {
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_comment_like"] forState:UIControlStateNormal];
+    }
+    floorLabel.text = floorStr;
+}
+
+-(void)setContentSize:(CGSize)contentSize
+{
+    _contentSize = contentSize;
+    if (contentSize.width <= 200)
+    {
+        CGSize newSize = CGSizeMake(200, contentSize.height);
+        contentSize = newSize;
+    }
+    detailContentLabel.frame = CGRectMake(CGRectGetMinX(detailContentLabel.frame), CGRectGetMinY(detailContentLabel.frame), contentSize.width, contentSize.height);
+    
+    floorLabel.frame = CGRectMake(CGRectGetMinX(detailContentLabel.frame), CGRectGetMaxY(detailContentLabel.frame), CGRectGetWidth(floorLabel.frame), CGRectGetHeight(floorLabel.frame));
+    
+    commentSepImg.frame = CGRectMake(30, CGRectGetMaxY(floorLabel.frame)+10, 290, 1);
+}
+
+- (IBAction)detailLikeBtnAction:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    if (_comment.isOwnZanComment == 0)
+    {
+        [MobClick event:some_praise];
+        _comment.isOwnZanComment = 1;
+        [UIView animateWithDuration:0.3 animations:^{
+            btn.transform = CGAffineTransformScale(CGAffineTransformIdentity, 2.0, 2.0);
+        } completion:^(BOOL finished)
+         {
+             [UIView animateWithDuration:0.3 animations:^{
+                 btn.transform = CGAffineTransformIdentity;
+             }];
+         }];
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_support_yes"] forState:UIControlStateNormal];
+        [self supportComment];
+    }
+    else if (_comment.isOwnZanComment == 1)
+    {
+        [MobClick event:cancel_praise];
+        _comment.isOwnZanComment = 0;
+        [detailLikeBtn setImage:[UIImage imageNamed:@"btn_comment_like"] forState:UIControlStateNormal];
+        [self cancleSupportComment];
+    }
+    else if (_comment.isOwnZanComment == 0xFFFFFFFF)
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"不能赞自己..." actionText:@"确定"];
+    }
+
+}
+
+#pragma mark - 网络请求
+-(void)supportComment
+{
+    [[NetWorkEngine shareInstance] supportOrCommentWith:_comment.feedId commentId:_comment.commentId operation:0x06 comment:@"" block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            Package *pack = (Package *)object;
+            if ([object isKindOfClass:[Package class]])
+            {
+                [pack reset];
+                uint32_t result = [pack readInt32];
+                if (0 == result)
+                {
+                    uint64_t feedId = [pack readInt64];
+                    uint64_t commentId = [pack readInt64];
+                    DLog(@"评论feed成功，feedId%llu:commentId%llu",feedId,commentId);
+                }
+                else if (-3 == result)
+                {
+                    [[LogicManager sharedInstance] makeUserReLoginAuto];
+                }
+            }
+        }
+    }];
+}
+
+-(void)cancleSupportComment
+{
+    [[NetWorkEngine shareInstance] supportOrCommentWith:_comment.feedId commentId:_comment.commentId operation:0x07 comment:@"" block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            Package *pack = (Package *)object;
+            if ([pack isKindOfClass:[Package class]])
+            {
+                [pack reset];
+                uint32_t result = [pack readInt32];
+                if (0 == result)
+                {
+                    uint64_t feedId = [pack readInt64];
+                    uint64_t commentId = [pack readInt64];
+                    DLog(@"评论feed成功，feedId%llu:commentId%llu",feedId,commentId);
+                    DLog(@"取消赞评论OK");
+                }
+                else if (-3 == result)
+                {
+                    [[LogicManager sharedInstance] makeUserReLoginAuto];
+                }
+            }
+            
+        }
+    }];
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

@@ -1,0 +1,33 @@
+检查数据更新
+
+请求URL: /comm/is-update
+
+请求方式: GET
+
+请求参数：
+默认
+
+返回结果：
+json格式：
+{
+	"data"
+		{
+			newfriend:新的联系人数量
+			msg:消息数量
+			feeds:职脉圈数量
+		},
+	"msg":"",
+	"retcode":"0"
+}
+
+返回示例：
+{
+	"data"
+		{
+			"newfriend":1
+			"msg":3
+			"feeds":4
+		},
+	"msg":"",
+	"retcode":"0"
+}

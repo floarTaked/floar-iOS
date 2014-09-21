@@ -1,0 +1,33 @@
+动态中评论
+
+请求URL: /article/comment-feed
+
+请求方式: POST
+
+请求参数：
+	otherUserId：该动态的原始发布人
+	comment:评论内容 
+	feedId:该feed的id
+	targetId:feed中target的id(没有可以不传或传空) 
+
+
+返回结果：
+
+
+返回示例：
+{
+	"data":{
+		"content":"你的动态说的真好",
+		"createTime":1399539189738,
+		"id":2,
+		"otherUserId":658455,
+		"targetId":"4",
+		"userAvatar":"http://photo.leku.com/e/lekumobile/8555/160x160/201405-23b96d6f_d2fe_4438_b2f4_7fc9dbffe53c.jpg",
+		"userCompany":"珍爱",
+		"userId":265958,
+		"userName":"小明"
+		"userJob":"开发"
+	},
+	"msg":"",
+	"retcode":"0"
+}

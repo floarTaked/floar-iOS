@@ -1,0 +1,126 @@
+//
+//  ContactsViewController.m
+//  WeLinked4
+//
+//  Created by floar on 14-5-16.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "ContactsViewController.h"
+
+@interface ContactsViewController ()<UITableViewDataSource,UITableViewDelegate,UISearchBarDelegate,UISearchDisplayDelegate>
+{
+    NSMutableArray *contactsArray;
+    NSMutableDictionary *contactsDict;
+    
+    NSMutableArray *keyArray;
+    NSMutableArray *searchResultArray;
+}
+
+@property (weak, nonatomic) IBOutlet UITableView *contactTableView;
+
+@end
+
+@implementation ContactsViewController
+
+@synthesize contactTableView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    contactTableView.tableHeaderView = self.searchDisplayController.searchBar;
+    
+    [self.navigationItem setTitleString:@"联系人"];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"back"] imageSelected:[UIImage imageNamed:@"backSelected"] title:nil inset:UIEdgeInsetsMake(0, -40, 0, 0) target:self selector:@selector(goToback)];
+    
+    contactsArray = [[NSMutableArray alloc] init];
+    contactsDict = [[NSMutableDictionary alloc] init];
+    keyArray = [[NSMutableArray alloc] init];
+    searchResultArray = [[NSMutableArray alloc] init];
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    if (tableView == contactTableView)
+    {
+        return 10;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (tableView == contactTableView)
+    {
+        return contactsDict.count;
+    }
+    else
+    {
+        return searchResultArray.count;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellId = @"cellId";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
+    if (cell == nil)
+    {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
+    }
+    return cell;
+}
+
+-(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    return keyArray;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index
+{
+    return 10;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+}
+
+#pragma mark - UISearchDisplayDelegate
+
+-(void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+{
+    
+}
+
+#pragma mark - UINavigationItemAction
+-(void)goToback
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+
+@end
