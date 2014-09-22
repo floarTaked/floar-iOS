@@ -1,1 +1,0 @@
-../../IQKeyboardManager/KeyboardTextFieldDemo/IQKeyBoardManager/IQSegmentedNextPrevious.h
