@@ -1,0 +1,19 @@
+//
+//  MainViewController.h
+//  Guimi
+//
+//  Created by jonas on 9/11/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <MessageUI/MessageUI.h>
+#import "LoadingTableView.h"
+@interface MainViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,LoadingTableViewDelegate>
+{
+    NSMutableArray* dataSource;
+    NSMutableArray* viewSource;
+}
++(MainViewController*)sharedInstance;
+@property(nonatomic,strong)IBOutlet LoadingTableView* mainTableView;
+@end

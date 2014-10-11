@@ -1,0 +1,120 @@
+//
+//  RefreshView.m
+//  Guimi
+//
+//  Created by jonas on 9/12/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "RefreshView.h"
+@interface RefreshView()
+{
+    
+}
+@property(nonatomic,strong)UIScrollView* scrollView;
+@end
+
+@implementation RefreshView
+@synthesize scrollView = _scrollView;
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        [self initlize];
+    }
+    return self;
+}
+-(void)initlize
+{
+    _refleshView = [[UIImageView alloc] initWithFrame:CGRectMake(150, -10, 20, 20)];
+    _refleshView.image = [UIImage imageNamed:@"refresh"];
+    [_refleshView.layer removeAllAnimations];
+    CABasicAnimation *theAnimation;
+    theAnimation=[CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    theAnimation.duration = 0.5;
+    theAnimation.fillMode = kCAFillModeForwards;
+    theAnimation.removedOnCompletion = NO;
+    theAnimation.repeatCount = HUGE_VALF;
+    theAnimation.fromValue = [NSNumber numberWithFloat:0];
+    theAnimation.toValue = [NSNumber numberWithFloat:M_PI];
+    [_refleshView.layer addAnimation:theAnimation forKey:@"animateTransform"];
+    [self addSubview:_refleshView];
+    [_refleshView pauseLayer];
+}
+- (void)didMoveToSuperview
+{
+    [super didMoveToSuperview];
+    if ([self.superview isKindOfClass:[UIScrollView class]])
+    {
+        self.scrollView = (id)[self superview];
+        CGRect rect = self.frame;
+        rect.origin.y = rect.size.height?-rect.size.height:-32;
+        rect.size.width = _scrollView.frame.size.width;
+        self.frame = rect;
+        
+        UIEdgeInsets inset = self.scrollView.contentInset;
+        inset.top = _upInset;
+        self.scrollView.contentInset = inset;
+    }
+    else if (!self.superview)
+    {
+        self.scrollView = nil;
+    }
+}
+- (void)scrollViewDidScroll
+{
+    if(self.scrollView.contentOffset.y < -64.0)
+    {
+        self.loading = YES;
+    }
+}
+- (void)scrollViewDidEndDraging
+{
+    if (self.loading)
+    {
+        if(_refleshView.layer.speed <= 0)
+        {
+            [UIView transitionWithView:_scrollView
+                              duration:0.2
+                               options:UIViewAnimationOptionCurveEaseOut
+                            animations:^
+             {
+                 UIEdgeInsets inset = _scrollView.contentInset;
+                 inset.top = _upInset + 32.0f;
+                 _scrollView.contentInset = inset;
+                 
+             }completion:^(BOOL finished){
+                 [_refleshView resumeLayer];
+                 if(self.delegate != nil && [self.delegate respondsToSelector:@selector(refreshStart:)])
+                 {
+                     [self.delegate refreshStart:self];
+                 }
+             }];
+            [UIView beginAnimations:nil context:NULL];
+            [UIView setAnimationDuration:0.2f];
+            [UIView commitAnimations];
+        }
+    }
+}
+- (void)endRefresh
+{
+    if (self.loading)
+    {
+        self.loading = NO;
+        [UIView transitionWithView:_scrollView
+                          duration:0.2
+                           options:UIViewAnimationOptionCurveEaseOut
+                        animations:^
+         {
+             _scrollView.contentInset = UIEdgeInsetsZero;
+             
+         }completion:^(BOOL finished){
+             [_refleshView pauseLayer];
+         }];
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:0.2f];
+        [UIView commitAnimations];
+    }
+}
+@end

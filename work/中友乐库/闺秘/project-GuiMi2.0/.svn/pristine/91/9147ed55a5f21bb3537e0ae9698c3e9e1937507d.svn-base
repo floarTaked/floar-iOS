@@ -1,0 +1,261 @@
+//
+//  AppDelegate.m
+//  闺秘
+//
+//  Created by jonas on 6/23/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "AppDelegate.h"
+#import "LogicManager.h"
+#import "NetWorkEngine.h"
+#import "LoginViewController.h"
+#import "SplashViewController.h"
+#import "MainViewController.h"
+#import "UserInfo.h"
+#include "MobClick.h"
+#import "APNsMessage.h"
+#import "Notice.h"
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+    [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert |
+                                                    UIRemoteNotificationTypeBadge |
+                                                    UIRemoteNotificationTypeSound];
+    
+    if (launchOptions)
+    {
+        NSDictionary *noteDict = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+        [self processNotification:noteDict];
+    }
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(connectingServer) name:ConnectingServer object:nil];
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(serverSuccess) name:connectServerSuccess object:nil];
+    
+    [[UITextField appearance] setTintColor:colorWithHex(0xEA5BA3)];
+    
+    [[NetWorkEngine shareInstance] connectToServer];
+    [self login];
+    
+    [self initApplication];
+    [WXApi registerApp:@"wxa01fe5b6c263680a"];
+    [WeiboSDK registerApp:@"3547924220"];
+    
+    DLog(@"%@",NSHomeDirectory());
+    
+    [self.window makeKeyAndVisible];
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent animated:NO];
+    return YES;
+}
+
+-(void)login
+{
+    NSString* uid = [[LogicManager sharedInstance] getPersistenceStringWithKey:USERID];
+    if(uid == nil || [uid length]<=0)
+    {
+        
+        SplashViewController* splash = [SplashViewController sharedInstance];
+        [[LogicManager sharedInstance] setRootViewContrller:splash];
+    }
+    else
+    {
+        //进入主界面
+        [[LogicManager sharedInstance] setRootViewContrllerWithNavigationBar:[MainViewController sharedInstance]];
+    }
+}
+//
+//-(void)serverSuccess
+//{
+//    [self login];
+//}
+
+-(void)connectingServer
+{
+    
+}
+
+-(void)initApplication
+{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [WeiboSDK enableDebugMode:YES];
+        [WeiboSDK registerApp:kAppKey];
+        
+        [MobClick setLogEnabled:NO];
+        [MobClick setAppVersion:XcodeAppVersion];
+        [MobClick startWithAppkey:UMENG_APPKEY reportPolicy:(ReportPolicy) REALTIME channelId:nil];
+        [MobClick updateOnlineConfig];
+        [MobClick setCrashReportEnabled:YES];
+    });
+}					
+
+#pragma mark - APNs
+- (void)application:(UIApplication *)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+    NSString *pushToken = [[[[deviceToken description]
+                             stringByReplacingOccurrencesOfString:@"<" withString:@""]
+                            stringByReplacingOccurrencesOfString:@">" withString:@""]
+                           stringByReplacingOccurrencesOfString:@" " withString:@""] ;
+    if(pushToken != nil && [pushToken length]>0)
+    {
+        //token跟用户有关必须保存到服务器
+        DLog(@"---apnsToken:%@",pushToken);
+        uint64_t userId = [UserInfo myselfInstance].userId;
+        NSString *userKey = [UserInfo myselfInstance].userKey;
+        if (userId != 0 && userKey!= nil && userKey.length > 0)
+        {
+            UserInfo *user = [UserInfo myselfInstance];
+            user.userAPNsToken = pushToken;
+            [user synchronize:nil];
+            [[NetWorkEngine shareInstance] registDeviceToken:pushToken block:^(int event, id object)
+             {
+                 if (1 == event)
+                 {
+                     Package *returnPack = (Package *)object;
+                     if (0x01 == [returnPack getProtocalId])
+                     {
+                         [returnPack reset];
+                         uint32_t result = [returnPack readInt32];
+                         if (0 == result)
+                         {
+                             DLog(@"上传APNs Token成功");
+                             [[LogicManager sharedInstance] setPersistenceData:pushToken withKey:APNSTOKEN];
+                             [[LogicManager sharedInstance] setPersistenceData:[NSNumber numberWithInt:2] withKey:@"updateAPNsToken"];
+                         }
+                     }
+                 }
+                 else
+                 {
+                     DLog(@"上传APNsToken失败");
+                 }
+             }];
+        }
+    }
+}
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
+{
+    int badge = [UIApplication sharedApplication].applicationIconBadgeNumber;
+    badge++;
+    [UIApplication sharedApplication].applicationIconBadgeNumber = badge;
+    [self processNotification:userInfo];
+}
+- (void)application:(UIApplication *)app didFailToRegisterForRemoteNotificationsWithError:(NSError *)err
+{
+    NSString *str = [NSString stringWithFormat: @"%@", err];
+    DLog(@"Failed to get token,err %@",str);
+}
+
+#pragma --mark
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+    // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
+    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 3;
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+-(BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    NSString *path = [url absoluteString];
+    if([[path substringToIndex:2] isEqualToString:@"wb"])
+    {
+        return [WeiboSDK handleOpenURL:url delegate:[LogicManager sharedInstance]];
+    }
+    else
+    {
+        return [WXApi handleOpenURL:url delegate:self];
+    }
+}
+
+-(BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
+{
+    NSString *path = [url absoluteString];
+    if([[path substringToIndex:2] isEqualToString:@"wb"])
+    {
+        return [WeiboSDK handleOpenURL:url delegate:[LogicManager sharedInstance]];
+    }
+    else
+    {
+        return [WXApi handleOpenURL:url delegate:self];
+    }
+}
+
+-(void)onResp:(BaseResp *)resp
+{
+    if ([resp isKindOfClass:[SendMessageToWXResp class]])
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"WXHandleResult" object:resp];
+    }
+}
+
+//-(void)onReq:(BaseReq *)req
+//{
+//    if([req isKindOfClass:[GetMessageFromWXReq class]])
+//    {
+//        // 微信请求App提供内容， 需要app提供内容后使用sendRsp返回
+//        NSString *strTitle = [NSString stringWithFormat:@"微信请求App提供内容"];
+//        NSLog(@"%@",strTitle);
+//    }
+//
+//}
+-(void)processNotification:(NSDictionary *)userInfo
+{
+    if(userInfo != nil)
+    {
+        NSString* json = [userInfo objectForKey:@"data"];
+        NSDictionary* dic = [[LogicManager sharedInstance] jsonStringToObject:json];
+        if(dic != nil)
+        {
+            //    各种通知
+            //    {"type":0，"data":"message"}
+            //    收藏夹的内容收到新评论（非自己的不用提示）
+            //    自己发的内容收到新评论(提示：你发表的秘密有新的评论了)
+            //    {"data":"{\"srcFeed\":1,\"userId\":1}","type":1}
+            //    自己发的内容收到新的赞(提示：有人给你的秘密点赞了)
+            //    自己发的评论收到新的赞(不用提示)
+            //    {"data":"{\"srcFeed\":1,\"userId\":1}","type":2}
+            //    有新的通讯录朋友加入(
+            //    如果少于3人，提示：你现在有2个朋友了，还需1人就可以解锁朋友们的秘密
+            //    如果已经解锁，则提示：她也来啦，现在有N个朋友在玩闺秘了)
+            //    {"data":"10","type":3} //data为当前朋友数量
+            Notice* notice = [[Notice alloc]init];
+            notice.type = [[dic objectForKey:@"type"] intValue];
+            if (notice.type == 1 || notice.type == 2)
+            {
+                json =  [dic objectForKey:@"data"];
+                NSDictionary* data = [[LogicManager sharedInstance] jsonStringToObject:json];
+                if(data != nil)
+                {
+                    notice.feedId = [[data objectForKey:@"srcFeed"] longLongValue];
+                    notice.userId = [[data objectForKey:@"userId"] longLongValue];
+                    [notice synchronize:nil];
+                }
+            }
+        }
+    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"NoticeNotification" object:nil userInfo:nil];
+}
+@end

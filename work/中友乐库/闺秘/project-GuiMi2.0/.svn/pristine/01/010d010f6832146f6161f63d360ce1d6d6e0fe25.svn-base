@@ -1,0 +1,76 @@
+//
+//  ActionAlertView.m
+//  Guimi
+//
+//  Created by jonas on 9/13/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "ActionAlertView.h"
+
+@implementation LogoutActionView
+-(void)awakeFromNib
+{
+    [super awakeFromNib];
+    leftButton.layer.cornerRadius = 3.0;
+    rightButton.layer.cornerRadius = 3.0;
+}
+-(IBAction)click:(id)sender
+{
+    if([(UIButton*)sender tag] == 1)
+    {
+        if(block)
+        {
+            block(1,nil);
+        }
+    }
+    else if([(UIButton*)sender tag] == 2)
+    {
+        if(block)
+        {
+            block(2,nil);
+        }
+    }
+}
+-(void)setEventBlock:(EventCallBack)callback
+{
+    block = callback;
+}
+@end
+
+@implementation ActionAlertView
+@synthesize viewArray;
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        viewArray = nil;
+    }
+    return self;
+}
+#pragma --mark 单例
++(ActionAlertView*)sharedInstance
+{
+    static ActionAlertView* m_instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        m_instance = [[[self class] alloc]init];
+    });
+    return m_instance;
+}
+
+-(UIView*)loadLogoutActionView:(EventCallBack)block
+{
+    if(viewArray == nil)
+    {
+        viewArray = [[NSBundle mainBundle] loadNibNamed:@"ActionAlertView" owner:self options:nil];
+    }
+    LogoutActionView* logoutView = (LogoutActionView*)[viewArray objectAtIndex:0];
+    if(logoutView != nil)
+    {
+        [logoutView setEventBlock:block];
+    }
+    return (UIView*)logoutView;
+}
+@end

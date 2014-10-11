@@ -1,0 +1,102 @@
+//
+//  Feed.m
+//  闺秘
+//
+//  Created by floar on 14-6-24.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "Feed.h"
+#import "UserInfo.h"
+#import "LogicManager.h"
+
+@implementation Feed
+@synthesize DBUid,feedId,contentJson,likeNum,commentNum,contentStr,imageStr,addressStr,isOwnZanFeed,canComment,createTime,canDeleteComment,feedType,feedKind;
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        uint64_t changeUserId = [[LogicManager sharedInstance] getPersistenceIntegerWithKey:USERID];
+        if (0 == changeUserId)
+        {
+            self.DBUid = 0;
+        }
+        else
+        {
+           self.DBUid = [UserInfo myselfInstance].userId;
+        }
+//        commentArray = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+
++(NSString*)primaryKey
+{
+    return @"feedId";
+}
+
+-(void)analyzeMainPagePackageForFeed:(Package *)pack;
+{
+    feedId = [pack readInt64];
+    contentJson = [pack readString];
+    [self handleContentJsonStr:contentJson];
+    likeNum = [pack readInt32];
+    isOwnZanFeed = [pack readInt32];
+    commentNum = [pack readInt32];
+    addressStr = [pack readString];
+    feedType = [pack readInt32];
+    feedKind = [pack readInt32];
+}
+
+-(void)analyzeDetailPagePackageForFeed:(Package *)pack
+{
+    likeNum = [pack readInt32];
+    isOwnZanFeed = [pack readInt32];
+    canComment = [pack readInt32];
+    canDeleteComment = [pack readInt32];
+    commentNum = [pack readInt32];
+}
+
+-(void)analyzePagePackageForQuestionFeed:(Package *)pack
+{
+    feedId = [pack readInt64];
+    contentJson = [pack readString];
+    [self handleContentJsonStr:contentJson];
+}
+
+-(void)handleContentJsonStr:(NSString *)jsonStr
+{
+    if (jsonStr != nil && jsonStr.length > 0 && ![jsonStr isEqualToString:@""])
+    {
+        NSDictionary *dict = [[LogicManager sharedInstance] jsonStringToObject:jsonStr];
+        contentStr = [dict objectForKey:@"content"];
+        NSString *netImageStr = [dict objectForKey:@"img"];
+        
+        NSRange range = [netImageStr rangeOfString:@"http"];
+        if (range.location == NSNotFound)
+        {
+            NSArray *arr = [netImageStr componentsSeparatedByString:@":"];
+            int imgNum = [[arr lastObject] intValue];
+            if (imgNum >= 12)
+            {
+                imgNum = arc4random() % 12;
+            }
+            imageStr = [NSString stringWithFormat:@"img_secretCell_background_%d",imgNum];
+        }
+        else
+        {
+            imageStr = netImageStr;
+        }
+    }
+}
+//-(NSMutableArray *)commentArray
+//{
+//    NSMutableArray *array = [[NSMutableArray alloc] init];
+//
+//
+//
+//    return array;
+//}
+
+@end

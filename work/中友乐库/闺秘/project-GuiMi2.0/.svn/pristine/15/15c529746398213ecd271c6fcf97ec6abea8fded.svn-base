@@ -1,0 +1,260 @@
+//
+//  MainViewController.m
+//  Guimi
+//
+//  Created by jonas on 9/11/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "MainViewController.h"
+#import "LogicManager.h"
+#import "AppDelegate.h"
+#include "Feed.h"
+#import "MainTableViewCellView.h"
+#import "MessageViewController.h"
+#import "BlurView.h"
+#import "ActionAlertView.h"
+#import "PublishSecretViewController.h"
+@interface MainViewController ()
+
+@end
+
+@implementation MainViewController
+@synthesize mainTableView;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.view.backgroundColor = colorWithHex(BackgroundColor3);
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notice:) name:@"NoticeNotification" object:nil];
+    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(mainServerSuccess) name:connectServerSuccess object:nil];
+    
+    [self.navigationItem setTitleString:@"闺秘"];
+    
+    if (0 == [[LogicManager sharedInstance] getPersistenceIntegerWithKey:USERID])
+    {
+        [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"btn_close_n"]
+                                    imageSelected:[UIImage imageNamed:@"btn_close_h"]
+                                            title:nil inset:UIEdgeInsetsMake(0, -15, 0, 15)
+                                           target:self
+                                         selector:@selector(justExperienctBack)];
+    }
+    else
+    {
+        [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"btn_navCollection_n"]
+                                    imageSelected:[UIImage imageNamed:@"btn_navCollection_h"]
+                                            title:nil
+                                            inset:UIEdgeInsetsMake(0, -15, 0, 15)
+                                           target:self
+                                         selector:@selector(leftBarBtnAction)];
+        
+        [self.navigationItem setRightBarButtonItem:[UIImage imageNamed:@"btn_navWriteSecret_n"]
+                                     imageSelected:[UIImage imageNamed:@"btn_navWriteSecret_h"]
+                                             title:nil inset:UIEdgeInsetsMake(0, 15, 0, -15)
+                                            target:self
+                                          selector:@selector(rightBarBtnAction)];
+    }
+    mainTableView.backgroundView = nil;
+    mainTableView.backgroundColor = [UIColor clearColor];
+    mainTableView.pullingDelegate = self;
+    dataSource = [[NSMutableArray alloc]init];
+    viewSource = [[NSMutableArray alloc]init];
+    [self loadDataFromNetwork:^(int event, id object)
+    {
+        if(event == 0)
+        {
+            
+        }
+    }];
+    [self loadDataFromDataBase:^(int event, id object)
+    {
+        
+    }];
+}
+-(UIView*)getCustomCellView:(Class)customClass
+{
+    NSArray* arr = [[NSBundle mainBundle] loadNibNamed:@"MainTableViewCell" owner:self options:nil];
+    for(id obj in arr)
+    {
+        if(obj != nil && [obj isKindOfClass:customClass])
+        {
+            return obj;
+        }
+    }
+    return nil;
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+#pragma --mark Custom Function
+-(void)loadDataFromNetwork:(EventCallBack)block
+{
+    if(block)
+    {
+        block(0,nil);
+    }
+}
+-(void)loadDataFromDataBase:(EventCallBack)block
+{
+    for (int i = 0;i<5;i++)
+    {
+        Feed* feed = [[Feed alloc]init];
+        feed.contentStr = @"应塔吉克斯坦共和国总统拉赫蒙、马尔代夫共和国总统亚明、斯里兰卡民主社会主义共和国总统拉贾帕克萨、印度共和国总统慕克吉邀请，习近平今起对四国进行首次国事访问并出席在塔吉克斯坦首都杜尚别举行的上海合作组织成员国元首理事会第十四次会议。应塔吉克斯坦共和国总统拉赫蒙、马尔代夫共和国总统亚明、斯里兰卡民主社会主义共和国总统拉贾帕克萨、印度共和国总统慕克吉邀请，习近平今起对四国进行首次国事访问并出席在塔吉克斯坦首都杜尚别举行的上海合作组织成员国元首理事会第十四次会议。";
+        [dataSource addObject:feed];
+        
+        MainTableViewCellView* cellView = (MainTableViewCellView*)[[[NSBundle mainBundle] loadNibNamed:@"MainTableViewCellView" owner:self options:nil] objectAtIndex:0];
+        feed.feedId = i;
+        cellView.feed = feed;
+        [viewSource addObject:cellView];
+    }
+    [mainTableView reloadData];
+}
+-(void)leftBarBtnAction
+{
+    [MobClick event:menu_click];
+    MessageViewController *message = [[MessageViewController alloc] initWithNibName:@"MessageViewController" bundle:nil];
+    [self.navigationController pushViewController:message animated:YES];
+}
+
+-(void)rightBarBtnAction
+{
+    BlurView* blur = [[BlurView alloc]init];
+    UIView* view = [[ActionAlertView sharedInstance] loadPublishActionView:^(int event, id object)
+    {
+        PublishSecretViewController* pub = [[PublishSecretViewController alloc]initWithNibName:@"PublishSecretViewController" bundle:nil];
+        if(event == 1)
+        {
+            pub.feedType = NormalFeedType;
+        }
+        else if (event == 2)
+        {
+            pub.feedType = VoteFeedType;
+        }
+        [self.navigationController pushViewController:pub animated:YES];
+        [blur hide];
+    }];
+    [blur setActionView:view];
+    [blur show];
+}
+
+-(void)justExperienctBack
+{
+    [(AppDelegate *)[UIApplication sharedApplication].delegate login];
+}
+-(void)notice:(NSNotification*)noti
+{
+//    NSString* sql = [NSString stringWithFormat:@" where DBUid = %llu",[UserInfo myselfInstance].userId];
+//    NSArray* array = [[UserDataBaseManager sharedInstance] queryWithClass:[Notice class] tableName:nil condition:sql];
+//    if(array != nil)
+//    {
+//        [tipCountView setTipCount:[array count]];
+//    }
+//    else
+//    {
+//        [tipCountView setTipCount:0];
+//    }
+}
+#pragma mark - UITableViewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(viewSource != nil)
+    {
+        return [viewSource count];
+    }
+    return 0;
+}
+-(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
+    if(cell == nil)
+    {
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"cell"];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        UIView* v = (UIView*)[viewSource objectAtIndex:indexPath.row];
+        v.tag = 100;
+        [cell.contentView addSubview:v];
+        cell.backgroundView = nil;
+        cell.contentView.backgroundColor = [UIColor clearColor];
+        cell.backgroundColor = [UIColor clearColor];
+        cell.contentView.userInteractionEnabled = YES;
+        cell.userInteractionEnabled = YES;
+    }
+    else
+    {
+        UIView* view = (UIView*)[cell.contentView viewWithTag:100];
+        if(view != nil)
+        {
+            [view removeFromSuperview];
+        }
+        UIView* v = (UIView*)[viewSource objectAtIndex:indexPath.row];
+        v.tag = 100;
+        [cell.contentView addSubview:v];
+    }
+    return cell;
+}
+-(float)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UIView* v = (UIView*)[viewSource objectAtIndex:indexPath.row];
+    if(v != nil)
+    {
+        return v.frame.size.height+10;
+    }
+    return 0;
+}
+
+
+#pragma mark - LoadingTableViewDelegate
+- (void)didStartRefreshing:(LoadingTableView *)tableView
+{
+    [self loadDataFromNetwork:^(int event, id object)
+    {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [mainTableView tableViewDidFinishedLoading];
+        });
+    }];
+}
+
+- (void)didStartLoading:(LoadingTableView *)tableView
+{
+    [self loadDataFromDataBase:^(int event, id object)
+    {
+        
+    }];
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    [self.mainTableView tableViewDidScroll:scrollView];
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+{
+    [self.mainTableView tableViewDidEndDragging:scrollView];
+}
+
+#pragma mark -singleton
++(MainViewController*)sharedInstance
+{
+    static MainViewController* m_instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        m_instance = [[MainViewController alloc]init];
+    });
+    return m_instance;
+}
+@end

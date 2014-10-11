@@ -1,0 +1,29 @@
+//
+//  DetailSecretViewController.h
+//  Guimi
+//
+//  Created by jonas on 9/15/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MainTableViewCellView.h"
+#import "Feed.h"
+#import "EmojiView.h"
+@interface DetailSecretViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,UITextViewDelegate>
+{
+    IBOutlet UIButton* switchButton;
+    IBOutlet UIView* topView;
+    IBOutlet UITableView* table;
+    IBOutlet UIView* inputBackView;
+    IBOutlet UIButton* faceButton;
+    IBOutlet UIButton* sendButton;
+    IBOutlet UITextView* inputView;
+    EmojiView* emojiView;
+    
+    NSMutableArray* viewSource;
+    MainTableViewCustomCellView* headerCellView;
+    BOOL keybordShow;
+}
+@property(nonatomic,strong)Feed* feed;
+@end

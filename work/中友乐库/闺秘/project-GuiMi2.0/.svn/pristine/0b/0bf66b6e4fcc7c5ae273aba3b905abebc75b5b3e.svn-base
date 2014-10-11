@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none">
+    <dependencies>
+        <deployment defaultVersion="1536" identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="EmojiView">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="216"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="emoji_keybord_bg.png" id="t15-5i-Gw3">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="216"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                </imageView>
+                <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="Uka-23-xmW">
+                    <rect key="frame" x="0.0" y="162" width="40" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_switch_icon.png" backgroundImage="emoji_keybord_switch_icon.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_switch_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="fgW-Ty-s7n"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="2" contentMode="scaleToFill" selected="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="i0a-g3-ezV">
+                    <rect key="frame" x="40" y="162" width="48" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_face_icon.png" backgroundImage="emoji_keybord_icon_bg.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_face_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="aqJ-Dw-jv1"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="adG-Ki-mTD">
+                    <rect key="frame" x="88" y="162" width="48" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_bell_icon.png" backgroundImage="emoji_keybord_icon_bg.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_bell_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="hAU-Z4-Idh"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="4" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="y1h-oT-m8E">
+                    <rect key="frame" x="136" y="162" width="48" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_flower_icon.png" backgroundImage="emoji_keybord_icon_bg.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_flower_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="9cV-dC-rci"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="bSe-TM-tal">
+                    <rect key="frame" x="184" y="162" width="48" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_car_icon.png" backgroundImage="emoji_keybord_icon_bg.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_car_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="ASV-oT-zYV"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="6" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="jWf-We-gZJ">
+                    <rect key="frame" x="232" y="162" width="48" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_characters_icon.png" backgroundImage="emoji_keybord_icon_bg.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_characters_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="mXB-QD-NoM"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="7" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="yE6-Ci-cqe">
+                    <rect key="frame" x="280" y="162" width="40" height="54"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" image="emoji_keybord_delete_icon.png" backgroundImage="emoji_keybord_icon_bg.png">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <state key="selected" image="emoji_keybord_delete_sicon.png" backgroundImage="emoji_keybord_icon_sbg.png"/>
+                    <connections>
+                        <action selector="click:" destination="iN0-l3-epB" eventType="touchUpInside" id="xG3-bY-j2h"/>
+                    </connections>
+                </button>
+                <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" id="qVx-7a-6pm">
+                    <rect key="frame" x="0.0" y="128" width="320" height="37"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <color key="pageIndicatorTintColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                </pageControl>
+                <collectionView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" pagingEnabled="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" delaysContentTouches="NO" canCancelContentTouches="NO" minimumZoomScale="0.0" maximumZoomScale="0.0" bouncesZoom="NO" dataMode="none" id="drI-8H-TD0">
+                    <rect key="frame" x="0.0" y="10" width="320" height="120"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" minimumLineSpacing="15" minimumInteritemSpacing="10" id="Uhb-2t-rd2">
+                        <size key="itemSize" width="30" height="30"/>
+                        <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                        <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                        <inset key="sectionInset" minX="10" minY="0.0" maxX="10" maxY="0.0"/>
+                    </collectionViewFlowLayout>
+                    <cells/>
+                    <connections>
+                        <outlet property="dataSource" destination="iN0-l3-epB" id="sNR-Fj-Gq4"/>
+                        <outlet property="delegate" destination="iN0-l3-epB" id="Flh-Tx-eP8"/>
+                    </connections>
+                </collectionView>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <connections>
+                <outlet property="collection" destination="drI-8H-TD0" id="grF-Dy-f2t"/>
+                <outlet property="pageControl" destination="qVx-7a-6pm" id="JpX-xi-Nl8"/>
+            </connections>
+        </view>
+    </objects>
+    <resources>
+        <image name="emoji_keybord_bell_icon.png" width="22" height="23"/>
+        <image name="emoji_keybord_bell_sicon.png" width="22" height="23"/>
+        <image name="emoji_keybord_bg.png" width="320" height="162"/>
+        <image name="emoji_keybord_car_icon.png" width="22" height="23"/>
+        <image name="emoji_keybord_car_sicon.png" width="22" height="23"/>
+        <image name="emoji_keybord_characters_icon.png" width="22" height="23"/>
+        <image name="emoji_keybord_characters_sicon.png" width="22" height="23"/>
+        <image name="emoji_keybord_delete_icon.png" width="40" height="54"/>
+        <image name="emoji_keybord_delete_sicon.png" width="40" height="54"/>
+        <image name="emoji_keybord_face_icon.png" width="22" height="23"/>
+        <image name="emoji_keybord_face_sicon.png" width="22" height="23"/>
+        <image name="emoji_keybord_flower_icon.png" width="22" height="23"/>
+        <image name="emoji_keybord_flower_sicon.png" width="22" height="23"/>
+        <image name="emoji_keybord_icon_bg.png" width="48" height="54"/>
+        <image name="emoji_keybord_icon_sbg.png" width="48" height="54"/>
+        <image name="emoji_keybord_switch_icon.png" width="40" height="54"/>
+        <image name="emoji_keybord_switch_sicon.png" width="40" height="54"/>
+    </resources>
+</document>

@@ -1,0 +1,21 @@
+//
+//  BlurView.h
+//  Guimi
+//
+//  Created by jonas on 9/13/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface BlurView : UIView
+{
+    UIImageView* backImageView;
+    UIView* actionView;
+}
+-(void)setBlurView:(UIView*)view;
+-(void)setActionView:(UIView*)view;
+-(void)showInView:(UIView*)view;
+-(void)show;
+-(void)hide;
+@end

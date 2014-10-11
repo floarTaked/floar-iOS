@@ -1,0 +1,266 @@
+//
+//  PublishSecretViewController.m
+//  Guimi
+//
+//  Created by jonas on 9/13/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "PublishSecretViewController.h"
+#import "LogicManager+ImagePiker.h"
+#import <UIImage+Screenshot.h>
+#import "ShareBlurView.h"
+#import "DetailSecretViewController.h"
+#import "NetWorkEngine.h"
+#import "NetWorkEngine.h"
+#import "Package.h"
+#import "UserInfo.h"
+
+#import <CoreLocation/CoreLocation.h>
+#import <MapKit/MapKit.h>
+#import "GIFImageView.h"
+@interface PublishSecretViewController ()<CLLocationManagerDelegate,UITextViewDelegate,UITextFieldDelegate,MBProgressHUDDelegate>
+{
+    MBProgressHUD *hud;
+    BOOL ownImage;
+}
+
+@end
+@implementation PublishSecretViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.view.backgroundColor = colorWithHex(BackgroundColor3);
+    self.view.bounds = [UIScreen mainScreen].bounds;
+    [self.navigationItem setTitleString:@""];
+    [self.navigationItem setLeftBarButtonItem:[UIImage imageNamed:@"btn_close_n"]
+                                imageSelected:[UIImage imageNamed:@"btn_close_h"]
+                                        title:nil
+                                        inset:UIEdgeInsetsMake(0, -15, 0, 15)
+                                       target:self selector:@selector(back)];
+    
+    [self.navigationItem setRightBarButtonItem:nil
+                                 imageSelected:nil
+                                         title:@"发布"
+                                         inset:UIEdgeInsetsMake(0, 15, 0, -15)
+                                        target:self
+                                      selector:@selector(publishSecret)];
+    
+    tipButton.layer.borderWidth = 1.0;
+    tipButton.layer.borderColor = colorWithHex(0x444444).CGColor;
+    tipButton.layer.cornerRadius = tipButton.frame.size.height/2;
+    if(self.feedType == NormalFeedType)
+    {
+        [tipButton setTitle:@"谁会看到这个秘密?" forState:UIControlStateNormal];
+    }
+    else if (self.feedType == VoteFeedType)
+    {
+        [tipButton setTitle:@"谁会看到这个投票?" forState:UIControlStateNormal];
+    }
+    
+    hud = [[MBProgressHUD alloc] initWithView:self.view];
+    hud.delegate = self;
+    [self.navigationController.view addSubview:hud];
+    
+    backImage.image = getRandomImage(@"img_secretCell_background_", 11);
+    
+    
+    UISwipeGestureRecognizer *leftSwipe = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(leftAndRightGesture:)];
+    leftSwipe.delaysTouchesBegan = YES;
+    leftSwipe.direction = UISwipeGestureRecognizerDirectionLeft;
+    [self.view addGestureRecognizer:leftSwipe];
+    
+    UISwipeGestureRecognizer *rightSwipe = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(leftAndRightGesture:)];
+    rightSwipe.direction = UISwipeGestureRecognizerDirectionRight;
+    rightSwipe.delaysTouchesBegan = YES;
+    [self.view addGestureRecognizer:rightSwipe];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [[UIApplication sharedApplication] setStatusBarHidden:YES];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"img_navBar2"] forBarMetrics:UIBarMetricsDefault];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardHidden:) name:UIKeyboardWillHideNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardShow:) name:UIKeyboardWillShowNotification object:nil];
+    if ([self respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)])
+    {
+        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+        [self setNeedsStatusBarAppearanceUpdate];
+    }
+    [self.navigationItem setEnable:1 enable:NO];
+}
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"img_navBar"] forBarMetrics:UIBarMetricsDefault];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+}
+
+#pragma mark - KeyboardShowOrHidden
+-(void)keyBoardHidden:(NSNotification *)note
+{
+    //[publishTableView setContentOffset:CGPointMake(0, 0) animated:YES];
+    [UIView animateWithDuration:1.0 animations:^{
+        //placeHolderLabel.alpha = 1;
+        //placeHolderLabel.text = @"匿名发布秘密";
+    }];
+    
+    [UIView animateWithDuration:0.25 animations:^{
+        //bottonView.frame = CGRectMake(0, 320-50, 320, 50);
+    }];
+    
+}
+
+-(void)keyBoardShow:(NSNotification *)note
+{
+    //int keyBoardY = [[[note userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size.height;
+    //int bottonViewY = [UIScreen mainScreen].bounds.size.height-keyBoardY-50-64;
+    
+    
+    //[publishTableView setContentOffset:CGPointMake(0, 30) animated:YES];
+    [UIView animateWithDuration:0.5 animations:^{
+        //bottonView.frame = CGRectMake(0, bottonViewY, 320, 50);
+    }];
+}
+
+#pragma mark - Actions
+-(void)back
+{
+    [MobClick event:publish_close];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)publishSecret
+{
+    
+}
+-(IBAction)click:(id)sender
+{
+    switch ([(UIButton*)sender tag])
+    {
+        case 1:
+        {
+            [self photoAction];
+        }
+            break;
+        case 2:
+        {
+            
+        }
+            break;
+        case 3:
+        {
+            
+        }
+            break;
+        case 4:
+        {
+            
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+-(void)photoAction
+{
+    [[LogicManager sharedInstance] getImage:self block:^(int event, id object)
+     {
+         if(event == -1)
+         {
+             //开始处理Gif
+             runOnMainQueueWithoutDeadlocking(^{
+                 hud.labelText = @"处理中...";
+                 [hud show:YES];
+             });
+         }
+         else if (event == -2)
+         {
+             //正在处理Gif
+             runOnMainQueueWithoutDeadlocking(^{
+                 NSNumber* number = (NSNumber*)object;
+                 NSString* degreeString = [NSString stringWithFormat:@"%.1f%%",[number floatValue]*100.0];
+                 hud.labelText = @"处理中...";
+                 hud.detailsLabelText = degreeString;
+             });
+         }
+         else if (event == -3)
+         {
+             //处理完成
+             runOnMainQueueWithoutDeadlocking(^{
+                 [hud hide:YES];
+                 hud.detailsLabelText = @"";
+                 ownImage = YES;
+                 backImage.image = nil;
+                 backImage = [backImage initWithFile:[(NSURL*)object path]];
+                 [backImage play];
+                 //[pubTextView becomeFirstResponder];
+                 [UIView animateWithDuration:1.0 animations:^{
+                     //placeHolderLabel.alpha = 0;
+                 }];
+             });
+         }
+         else if (event == -4)
+         {
+             //出错
+             [hud hide:YES];
+         }
+         else
+         {
+             if (object != nil)
+             {
+                 if (backImage != nil)
+                 {
+                     ownImage = YES;
+                     backImage.image = object;
+                     [UIView animateWithDuration:1.0 animations:^{
+                         //placeHolderLabel.alpha = 0;
+                     }];
+                     //[pubTextView becomeFirstResponder];
+                 }
+             }
+         }
+     }];
+}
+//-(void)showSwipBGTip
+//{
+//    int i = [[LogicManager sharedInstance] getPersistenceIntegerWithKey:@"publishChangeBG"];
+//    if (0 == i)
+//    {
+//        [UIView animateWithDuration:1.5 animations:^{
+//            swipImg.alpha = 1.0;
+//        }];
+//        
+//        [UIView animateWithDuration:2.0 delay:1.5 options:UIViewAnimationOptionTransitionNone animations:^{
+//            swipImg.alpha = 0.0;
+//        } completion:^(BOOL finished) {
+//            [[LogicManager sharedInstance] setPersistenceData:@2 withKey:@"publishChangeBG"];
+//            [swipImg removeFromSuperview];
+//        }];
+//    }
+//}
+
+-(void)leftAndRightGesture:(UISwipeGestureRecognizer *)swipe
+{
+    backImage.image = getRandomImage(@"img_secretCell_background_",11);
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+
+@end

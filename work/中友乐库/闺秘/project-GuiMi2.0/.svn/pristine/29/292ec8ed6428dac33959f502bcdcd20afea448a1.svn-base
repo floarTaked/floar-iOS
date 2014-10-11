@@ -1,0 +1,909 @@
+//
+//  DetailSecretViewController.m
+//  闺秘
+//
+//  Created by floar on 14-6-24.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "DetailSecretViewController.h"
+#import <XHPathCover.h>
+#import <UIImage+Screenshot.h>
+#import <UIImage-Helpers.h>
+#import "Comment.h"
+#import "NetWorkEngine.h"
+#import "LogicManager.h"
+#import "UserInfo.h"
+#import "DataBaseManager.h"
+#import "ShareBlurView.h"
+#import "DetailViewCell.h"
+#import <objc/runtime.h>
+#import "Notice.h"
+static NSString *const identifyStr = @"detailCell";
+
+@interface DetailSecretViewController ()<UITableViewDataSource,UITableViewDelegate,UINavigationControllerDelegate,UITextFieldDelegate>
+{
+    CGPoint pointOffset;
+    UIImageView *imgView;
+    UIButton *sendBtn;
+
+    NSMutableArray *dataArray;
+    
+    UITextField *commentTextField;
+    UIView *inputView;
+    UIButton *backBtn;
+    NSString *rightCommentStr;
+    UIActivityIndicatorView *indicator;
+    UILabel *noCommentLable;
+    
+    BOOL isSendCommentSuccess;
+    
+    NSMutableDictionary *contentSizeDict;
+}
+
+@property (strong, nonatomic) IBOutlet UITableView *detailTableView;
+@property (nonatomic, strong) XHPathCover *pathCover;
+
+@end
+
+@implementation DetailSecretViewController
+@synthesize detailTableView,pathCover,shotImgRect;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    self.navigationController.delegate = self;
+    self.navigationController.navigationBarHidden = YES;
+    
+    HUD = [[MBProgressHUD alloc]initWithView:self.navigationController.view];
+    [self.navigationController.view addSubview:HUD];
+    
+    showGif = NO;
+    isSendCommentSuccess = NO;
+    
+    [self pathCoverHeaderView];
+    [self makeTopView];
+    dataArray = [[NSMutableArray alloc] init];
+    contentSizeDict = [[NSMutableDictionary alloc] init];
+    
+    inputView = [[UIView alloc] initWithFrame:CGRectMake(0, [UIScreen mainScreen].bounds.size.height-50, 320, 50)];
+    inputView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:inputView];
+    
+    UIView *sepLineView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 0.5)];
+    sepLineView.backgroundColor = colorWithHex(0xCCCCCC);
+    [inputView addSubview:sepLineView];
+    
+    detailTableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
+    
+    if ([UIScreen mainScreen].bounds.size.height > 480)
+    {
+        detailTableView.contentInset = UIEdgeInsetsMake(0, 0, 44, 0);
+    }
+    else
+    {
+        detailTableView.contentInset = UIEdgeInsetsMake(0, 0, 135, 0);
+        
+    }
+    
+    detailTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    detailTableView.editing = NO;
+    detailTableView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin;
+    
+    commentTextField = [[UITextField alloc] initWithFrame:CGRectMake(10, 1, 240, 49)];
+    commentTextField.font = getFontWith(NO, 17);
+    commentTextField.delegate = self;
+    commentTextField.textAlignment = NSTextAlignmentLeft;
+    commentTextField.borderStyle = UITextBorderStyleNone;
+    commentTextField.returnKeyType = UIReturnKeySend;
+    [inputView addSubview:commentTextField];
+    
+    sendBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    sendBtn.frame = CGRectMake(CGRectGetMaxX(commentTextField.frame)+20, 5, 49, 49);
+    [sendBtn setTitleColor:colorWithHex(DeepRedColor) forState:UIControlStateNormal];
+    [sendBtn addTarget:self action:@selector(sendBtnAction:) forControlEvents:UIControlEventTouchUpInside];
+    [inputView addSubview:sendBtn];
+    
+    [self feedDetailDataFromDB];
+    
+    [detailTableView registerNib:[UINib nibWithNibName:NSStringFromClass([DetailViewCell class]) bundle:nil] forCellReuseIdentifier:identifyStr];
+    
+    NSString* sql = [NSString stringWithFormat:@" where DBUid = %llu and feedId = %llu",[UserInfo myselfInstance].userId,self.signalFeed.feedId];
+    [Notice deleteWith:nil condition:sql];
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [[UIApplication sharedApplication] setStatusBarHidden:YES];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBOardHidden:) name:UIKeyboardWillHideNotification object:nil];
+
+    [self feedDetailDataFromNetWork];
+    [super viewWillAppear:animated];
+}
+
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    
+    //plist、appdelegate
+    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    //必须设置为nil，才不会出现从mianView到其他页面必定崩溃的问题
+    self.navigationController.delegate = nil;
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    DLog(@"memoryWarning:%@",NSStringFromClass([self class]));
+}
+
+#pragma mark - 数据处理函数
+-(void)feedDetailDataFromNetWork
+{
+    [[NetWorkEngine shareInstance] feedDetailInfoWithFeedId:self.signalFeed.feedId block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            //pathCover优先与这部分的网络数据，所以可以直接将pathCover放在这来执行;这个部分很容易出错，之前是讲xpCommentNum、xpLikeNum、isSupportLike写在pathCover本部死活没有数据
+            //而对对于本部的数据，因为是直接从上一个页面传递过来，一初始化就有，所有有数据
+            Package *returnPack = (Package *)object;
+            if (0x0204 == [returnPack getProtocalId])
+            {
+                [returnPack reset];
+                uint32_t result = [returnPack readInt32];
+                if (0 == result)
+                {
+                    self.signalFeed.likeNum = [returnPack readInt32];
+                    self.signalFeed.isOwnZanFeed = [returnPack readInt32];
+                    self.signalFeed.canComment = [returnPack readInt32];
+                    [self customSendBtn:self.signalFeed.canComment];
+                    self.signalFeed.canDeleteComment = [returnPack readInt32];
+                    self.signalFeed.commentNum = [returnPack readInt32];
+                    [self.signalFeed synchronize:nil];
+                    
+                    uint32_t num = self.signalFeed.commentNum;
+                    if (num == 0)
+                    {
+                        [self isShowCommentLabel:YES];
+                    }
+                    else
+                    {
+                        [self isShowCommentLabel:NO];
+                        for (int i = 0; i < num; i++)
+                        {
+                            Comment *comment = [[Comment alloc] init];
+                            [comment analyzePackageForComment:returnPack];
+//                            comment.feedId = [returnPack readInt64];
+//                            comment.commentId = [returnPack readInt64];
+//                            comment.comment = [returnPack readString];
+//                            comment.floorNum = [returnPack readInt32];
+//                            comment.avatarId = [returnPack readInt32];
+//                            comment.likeNum = [returnPack readInt32];
+//                            comment.isOwnZanComment = [returnPack readInt32];
+//                            comment.createTime = [returnPack readInt32];
+                            [comment synchronize:nil];
+                        }
+                    }
+                }
+                else if (-3 == result)
+                {
+                    [[LogicManager sharedInstance] makeUserReLoginAuto];
+                }
+                [self feedDetailDataFromDB];
+                
+            }
+//            pathCover.xpCommentNum = feed.commentNum;
+//            ownCommentNum = feed.commentNum;
+//            pathCover.xpLikeNum = feed.likeNum;
+//            pathCover.isSupportLike = feed.isOwnZanFeed;
+        }
+
+    }];
+}
+
+-(void)feedDetailDataFromDB
+{
+    [dataArray removeAllObjects];
+    
+    NSString *conditionStr = [NSString stringWithFormat:@" where feedId = '%llu'",self.signalFeed.feedId];
+    NSArray *array = [[UserDataBaseManager sharedInstance] queryWithClass:[Comment class] tableName:nil condition:conditionStr];
+    if (array.count > 0 && array != nil)
+    {
+        [dataArray addObjectsFromArray:array];
+    }
+    else if (dataArray.count == 0)
+    {
+        [self isShowCommentLabel:YES];
+    }
+    
+    [detailTableView reloadData];
+}
+
+#pragma mark - UITableViewHeaderView函数
+-(void)hide:(UITapGestureRecognizer*)gues
+{
+    if(showGif)
+    {
+        showGif = NO;
+        UIView* backView = [self.view viewWithTag:100];
+        if(backView != nil)
+        {
+            [backView removeFromSuperview];
+        }
+    }
+}
+
+-(void)show:(UITapGestureRecognizer*)gues
+{
+    NSMutableString* path = [[NSMutableString alloc]initWithString:self.signalFeed.imageStr];
+    NSString* ext = [path substringFromIndex:[path length]-3];
+    if(![ext isEqualToString:@"gif"])
+    {
+        return;
+    }
+    if(!showGif)
+    {
+        showGif = YES;
+        UIView* backView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 0, 0)];
+        backView.center = self.view.center;
+        backView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+        backView.clipsToBounds = YES;
+        backView.userInteractionEnabled = YES;
+        backView.tag = 100;
+        backView.backgroundColor = [UIColor clearColor];
+        UIView* darkView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+        darkView.backgroundColor = [UIColor blackColor];
+        darkView.alpha = 0.9;
+        darkView.center = self.view.center;
+        darkView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+        darkView.clipsToBounds = YES;
+        
+        [backView addSubview:darkView];
+        [self.view addSubview:backView];
+        
+        __block GIFImageView* gifImageView = [[GIFImageView alloc]initWithImage:detailIMG.image];
+        gifImageView.userInteractionEnabled = YES;
+        gifImageView.center = CGPointMake(self.view.frame.size.width/2, self.view.frame.size.height/2);
+        
+        gifImageView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+        
+        [backView addSubview:gifImageView];
+        
+        UITapGestureRecognizer* gues = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(hide:)];
+        [darkView addGestureRecognizer:gues];
+        
+        NSString* key = [NSString stringWithFormat:@"EGOImageLoader-%u", (unsigned)[[self.signalFeed.imageStr description] hash]];
+        NSData* data = [[EGOCache globalCache] dataForKey:key];
+        if(data == nil)
+        {
+            HUD.labelText = @"加载中...";
+            [HUD show:YES];
+            runOnAsynQueue(^{
+                NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:self.signalFeed.imageStr]];
+                runOnMainQueueWithoutDeadlocking(^{
+                    [HUD hide:YES];
+                    if(data != nil)
+                    {
+                        [[EGOCache globalCache] setData:data forKey:key];
+                        gifImageView = [gifImageView initWithData:data];
+                        gifImageView.center = CGPointMake(self.view.frame.size.width/2, self.view.frame.size.height/2);
+                        [gifImageView play];
+                    }
+                });
+            });
+        }
+        else
+        {
+            gifImageView = [gifImageView initWithData:data];
+            gifImageView.center = CGPointMake(self.view.frame.size.width/2, self.view.frame.size.height/2);
+            [gifImageView play];
+        }
+        
+        
+        
+        [UIView animateWithDuration:0.2
+                              delay:0
+                            options:UIViewAnimationOptionCurveEaseInOut
+                         animations:^{
+                             
+            backView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+                             
+        }completion:^(BOOL finished){
+            
+        }];
+    }
+}
+//底部大图片
+-(void)pathCoverHeaderView
+{
+    pathCover = [[XHPathCover alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.bounds), 320)];
+    
+    detailIMG = [[EGOImageView alloc] initWithFrame:CGRectMake(0, 0, 320, 320)];
+    NSRange range = [self.signalFeed.imageStr rangeOfString:@"http"];
+    if (range.location != NSNotFound)
+    {
+        [pathCover.bannerImageView setImageURL:[NSURL URLWithString:self.signalFeed.imageStr]];
+        [detailIMG setImageURL:[NSURL URLWithString:self.signalFeed.imageStr]];
+    }
+    else
+    {
+        [pathCover.bannerImageView setImage:[UIImage imageNamed:self.signalFeed.imageStr]];
+        [detailIMG setImage:[UIImage imageNamed:self.signalFeed.imageStr]];
+    }
+    
+    UITapGestureRecognizer* gues = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(show:)];
+    [pathCover addGestureRecognizer:gues];
+    
+    pathCover.isZoomingEffect = YES;
+    pathCover.contentStr = self.signalFeed.contentStr;
+//    pathCover.commitStr = self.signalFeed.addressStr;
+    detailTableView.tableHeaderView = self.pathCover;
+    
+    shotImgRect = [self imageFromView:detailIMG atFrame:CGRectMake(0, 0, 320, 400)];
+
+    /*不需要处理的事件
+     __weak DetailSecretViewController *weakSelf = self;
+     [pathCover setHandleRefreshEvent:^{
+     [weakSelf refreshing];
+     }];
+     
+     [pathCover setHandleCommitBtnBlock:^{
+     DLog(@"commit");
+     }];
+     
+     [pathCover setHandleTapBackgroundImageEvent:^{
+     [weakSelf.pathCover setBackgroundImage:[UIImage imageNamed:@"1"]];
+     }];
+     
+     [pathCover setHandleCommentBtnBlock:^{
+     [weakSelf sendComment];
+     }];
+     
+     
+     [pathCover setHandleOtherBtnBlock:^{
+     DLog(@"other");
+     }];
+     
+     [pathCover setHandleLikeBtnBlock:^{
+     DLog(@"like");
+     }];
+     
+     [pathCover setHandleShareBtnBlock:^{
+     DLog(@"share");
+     }];
+     */
+}
+
+#pragma mark - layoutView
+//不会消失的topView
+-(void)makeTopView
+{
+    UIView *topView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.frame), 50)];
+    topView.backgroundColor = [UIColor clearColor];
+    topView.userInteractionEnabled = YES;
+    [self.view addSubview:topView];
+    
+    //最上面小横条图片
+    imgView = [[UIImageView alloc] initWithFrame:topView.bounds];
+    imgView.userInteractionEnabled = YES;
+    [topView addSubview:imgView];
+    
+    //顶部白色返回button
+    backBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    backBtn.frame = CGRectMake(10, 5, 40, 40);
+    [backBtn setImage:[UIImage imageNamed:@"btn_close_n"] forState:UIControlStateNormal];
+    [backBtn setImage:[UIImage imageNamed:@"btn_close_h"] forState:UIControlStateHighlighted];
+    [backBtn addTarget:self action:@selector(back:) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:backBtn];
+    
+}
+
+#if 0
+- (void)refreshing {
+    // refresh your data sources
+    
+    __weak DetailSecretViewController *weakSelf = self;
+    double delayInSeconds = 4.0;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [weakSelf.pathCover stopRefresh];
+    });
+}
+#endif
+
+#pragma mark - UITableViewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (dataArray != nil && dataArray.count > 0)
+    {
+        return dataArray.count;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    Comment *comment = [dataArray objectAtIndex:indexPath.row];
+    
+    DetailViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifyStr];
+    if (cell == nil)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:NSStringFromClass([DetailViewCell class]) owner:self options:nil] firstObject];
+    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+//#if 0
+//    int i = [[LogicManager sharedInstance] getPersistenceIntegerWithKey:@"masterFloor"];
+//    if (comment.avatarId == 0 && 0 == i)
+//    {
+//        int index = indexPath.row;
+//        ShareBlurView *master = [[ShareBlurView alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)];
+//        [master shareBlurWithImage:[UIImage imageFromUIView:detailTableView] withBlurType:BlurTipsType];
+//        master.tipsHeight = index*70;
+//        master.tip.contentStr = @"[大粉钻]这个头像是作者专属的";
+//        master.tip.standImgStr = @"img_tipsStand_up";
+//        [master.tip customTipsViewWithPoint:CGPointMake(10, -15) tipType:TipsAvatorType withSubTitle:nil withSubImageStr:@"0" subImageSize:CGSizeMake(32, 32)];
+//        [[LogicManager sharedInstance] setPersistenceData:[NSNumber numberWithInt:0] withKey:@"masterFloor"];
+//        [self.view addSubview:master];
+//        
+//        
+//    }
+//#endif
+    
+    
+//    CGSize contentSize = [[contentSizeDict objectForKey:comment.comment] CGSizeValue];
+    NSString *contentSizeStr = [contentSizeDict objectForKey:comment.comment];
+    CGSize contentSize = CGSizeFromString(contentSizeStr);
+    cell.contentSize = contentSize;
+    cell.comment = comment;
+    return cell;
+}
+
+//-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+//{
+//    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+//    view.backgroundColor = [UIColor orangeColor];
+//    return view;
+//}
+//
+//-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+//{
+//    return 60;
+//}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    Comment *comment = [dataArray objectAtIndex:indexPath.row];
+    
+    NSString *contentSizeStr = [contentSizeDict objectForKey:comment.comment];
+    
+    CGSize contentSize = CGSizeFromString(contentSizeStr);
+    if (CGSizeEqualToSize(contentSize, CGSizeZero))
+    {
+        contentSize = [self calculateCGSizeWith:comment.comment height:200 width:200 font:[UIFont systemFontOfSize:14]];
+        [contentSizeDict setObject:NSStringFromCGSize(contentSize) forKey:comment.comment];
+    }
+    
+    return 50 + contentSize.height;
+}
+
+-(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (editingStyle == UITableViewCellEditingStyleDelete)
+    {
+        //删除本地数据缓存
+        Comment *comment = [dataArray objectAtIndex:indexPath.row];
+        [dataArray removeObjectAtIndex:indexPath.row];
+        [detailTableView reloadData];
+        //删除本地数据库
+        NSString* sql = [NSString stringWithFormat:@" where DBUid = %llu and commentId = %llu",[UserInfo myselfInstance].userId,comment.commentId];
+        [Comment deleteWith:nil condition:sql];
+        //删除服务器数据
+        [[NetWorkEngine shareInstance] supportOrCommentWithFeedId:self.signalFeed.feedId
+                                                        commentId:comment.commentId
+                                                        operation:0x05
+                                                          comment:@""
+                                                            block:^(int event, id object)
+        {
+            if (1 == event)
+            {
+                Package *pack = (Package *)object;
+                if (0x02 == [pack getProtocalId])
+                {
+                    [pack reset];
+                    uint32_t result = [pack readInt32];
+                    if (0 == result)
+                    {
+                        DLog(@"删除成功");
+                    }
+                    else if (-3 == result)
+                    {
+                        [[LogicManager sharedInstance] makeUserReLoginAuto];
+                    }
+                }
+            }
+            
+        }];
+    }
+}
+
+
+#pragma mark - UINavigationControllerDelegate
+-(void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+    if (viewController == self)
+    {
+        [navigationController setNavigationBarHidden:YES animated:YES];
+        
+    }
+    else
+    {
+        [navigationController setNavigationBarHidden:NO animated:YES];
+    }
+}
+
+#pragma mark- scrollViewDelegate
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    [pathCover scrollViewDidScroll:scrollView];
+    pointOffset = scrollView.contentOffset;
+    if (pointOffset.y >= 260)
+    {
+        imgView.image = shotImgRect;
+    }
+    else
+    {
+        imgView.image = nil;
+    }
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    [pathCover scrollViewDidEndDecelerating:scrollView];
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+{
+    [pathCover scrollViewDidEndDragging:scrollView willDecelerate:decelerate];
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    [pathCover scrollViewWillBeginDragging:scrollView];
+}
+
+#pragma mark - Action
+-(void)sendBtnAction:(UIButton *)btn
+{
+    if (1 == self.signalFeed.canComment)
+    {
+        [self sendComment];
+    }
+}
+
+//向服务器报告并本地收藏
+-(void)updateCollectionFeedWithFeedId:(uint64_t)feedId
+{
+    [[NetWorkEngine shareInstance] collectFeedWithFeedId:feedId block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            Package *returnPack = (Package *)object;
+            [returnPack reset];
+            uint32_t result = [returnPack readInt32];
+            if (0 == result)
+            {
+                DLog(@"发送收藏成功");
+            }
+            else if (-3 == result)
+            {
+                [[LogicManager sharedInstance] makeUserReLoginAuto];
+            }
+        }
+    }];
+}
+
+-(void)sendComment
+{
+    if (commentTextField.text != nil && [commentTextField.text length] > 0 && ![commentTextField.text isEqualToString:@" "])
+    {
+        [MobClick event:comment_send];
+        
+        sendBtn.alpha = 0;
+        [commentTextField resignFirstResponder];
+        indicator = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(CGRectGetMidX(commentTextField.frame)+150, CGRectGetMidY(commentTextField.frame)-10, 20, 20)];
+        indicator.hidesWhenStopped = YES;
+        indicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhite;
+        indicator.color = colorWithHex(DeepRedColor);
+        [indicator startAnimating];
+        [inputView addSubview:indicator];
+        rightCommentStr = commentTextField.text;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (!isSendCommentSuccess)
+            {
+                [HUD show:YES];
+                HUD.labelText = @"评论失败，请稍后再试";
+                [HUD hide:YES afterDelay:1.0];
+                [indicator stopAnimating];
+                sendBtn.alpha = 1;
+            }
+        });
+        
+        uint64_t userId = [UserInfo myselfInstance].userId;
+        NSString *userKey = [UserInfo myselfInstance].userKey;
+        
+        //该协议为闺秘2.0后评论专用协议，之前协议也可以用，但是缺少必要的返回值，兼容老版本
+        [[NetWorkEngine shareInstance] commmentFeedWithUserId:userId
+                                                      userKey:userKey
+                                                       feedId:self.signalFeed.feedId
+                                            commentContentStr:rightCommentStr
+                                                      block:^(int event, id object)
+        {
+            if (1 == event)
+            {
+                [indicator stopAnimating];
+                sendBtn.alpha = 1;
+                Package *pack = (Package *)object;
+                if (0x0202 == [pack getProtocalId])
+                {
+                    [pack reset];
+                    uint32_t result = [pack readInt32];
+                    if (0 == result)
+                    {
+                        isSendCommentSuccess = YES;
+                        uint64_t feedId = [pack readInt64];
+                        uint64_t commentId = [pack readInt64];
+                        uint32_t floorNum = [pack readInt32];
+                        uint32_t avatorId = [pack readInt32];
+                        DLog(@"评论feed成功，feedId%llu:commentId%llu",feedId,commentId);
+                        [self isShowCommentLabel:NO];
+                        [self updateCollectionFeedWithFeedId:self.signalFeed.feedId];
+                        /*
+                         3,优化的时候服务器返回完整comment数据
+                         */
+                        [self feedDetailDataFromNetWork];
+                        
+                        Feed *feed = self.signalFeed;
+                        feed.commentNum++;
+                        [feed synchronize:nil];
+
+                      //本地构造一个
+                        Comment* comment = [[Comment alloc]init];
+                        comment.DBUid = [UserInfo myselfInstance].userId;
+                        comment.commentId = commentId;
+                        comment.feedId = feedId;
+                        comment.comment = rightCommentStr;
+                        comment.createTime = [[NSDate date] timeIntervalSince1970];
+                        comment.avatarId = avatorId;
+                        comment.floorNum = floorNum;
+                        comment.isOwnZanComment = 0;
+                        [comment synchronize:nil];
+                        [dataArray addObject:comment];
+                        [detailTableView reloadData];
+                        
+                        commentTextField.text = @"";
+                    
+                    }
+                    else if (-1 == result)
+                    {
+                        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"对不起，该贴已被删除" actionText:@"确定"];
+                    }
+                    else if (-1020101 == result)
+                    {
+                        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"您已被禁言" actionText:@"确定"];
+                    }
+                    else if (-3 == result)
+                    {
+                        [[LogicManager sharedInstance] makeUserReLoginAuto];
+                        isSendCommentSuccess = NO;
+                    }
+                    else
+                    {
+                        isSendCommentSuccess = NO;
+                    }
+                }
+            }
+            
+        }];
+
+    }
+    else
+    {
+        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"评论内容不能为空" actionText:@"确定"];
+    }
+}
+
+//截图屏幕指定位置图片
+- (UIImage *)imageFromView:(UIView *)theView atFrame:(CGRect)frame
+{
+    UIGraphicsBeginImageContext(theView.frame.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSaveGState(context);
+    UIRectClip(frame);
+    [theView.layer renderInContext:context];
+    UIImage *theImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return  theImage;
+}
+
+-(void)mainBackBtnAction
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)customSendBtn:(uint32_t)customNum
+{
+    if (1 == customNum)
+    {
+        [sendBtn setTitle:@"发送" forState:UIControlStateNormal];
+        sendBtn.enabled = YES;
+        commentTextField.placeholder = @"匿名发表评论";
+    }
+    else if (2 == customNum)
+    {
+        sendBtn.frame = CGRectMake(CGRectGetMaxX(commentTextField.frame)+35,15, 16, 18);
+        sendBtn.enabled = NO;
+        [sendBtn setImage:[UIImage imageNamed:@"btn_comment_lock"] forState:UIControlStateNormal];
+        commentTextField.placeholder = @"仅朋友才能评论";
+    }
+}
+
+-(void)isShowCommentLabel:(BOOL)isShow;
+{
+    if (noCommentLable == nil)
+    {
+        noCommentLable = [[UILabel alloc] initWithFrame:CGRectMake(90, [UIScreen mainScreen].bounds.size.height-150, 140, 50)];
+        noCommentLable.text = @"没有评论,抢个沙发吧";
+        noCommentLable.textAlignment = NSTextAlignmentCenter;
+        noCommentLable.textColor = colorWithHex(DeepRedColor);
+        noCommentLable.font = getFontWith(NO, 14);
+        [detailTableView addSubview:noCommentLable];
+    }
+    if (isShow)
+    {
+        [UIView animateWithDuration:1.5 animations:^{
+            noCommentLable.alpha = 1.0;
+        }];
+    }
+    else
+    {
+        noCommentLable.alpha = 0;
+    }
+
+}
+
+-(CGSize)calculateCGSizeWith:(NSString *)text
+                      height:(float)height
+                       width:(float)width
+                        font:(UIFont *)font
+{
+    CGSize size = CGSizeZero;
+    
+    if (isSystemVersionIOS7())
+    {
+        size = [text boundingRectWithSize:CGSizeMake(width, height) options:NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:[NSDictionary dictionaryWithObjectsAndKeys:font,NSFontAttributeName, nil] context:nil].size;
+    }
+    else
+    {
+        size = [text sizeWithFont:font constrainedToSize:CGSizeMake(width, height)];
+    }
+    return size;
+}
+
+-(void)back:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+
+#pragma mark - 键盘通知事件
+-(void)keyBoardShow:(NSNotification *)note
+{
+    NSDictionary* info = [note userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    NSNumber *duration = [info objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [info objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    
+    [UIView animateWithDuration:duration.doubleValue animations:^{
+        [UIView setAnimationBeginsFromCurrentState:YES];
+        [UIView setAnimationCurve:[curve intValue]];
+        if (dataArray.count > 0)
+        {
+            NSIndexPath *lastRow = [NSIndexPath indexPathForRow:dataArray.count-1 inSection:0];
+            [detailTableView scrollToRowAtIndexPath:lastRow atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+        }
+        inputView.frame = CGRectMake(0, [UIScreen mainScreen].bounds.size.height-kbSize.height-50, 320, 50);
+        
+    } completion:^(BOOL finished) {
+    }];
+}
+
+-(void)keyBOardHidden:(NSNotification *)note
+{
+    NSDictionary* info = [note userInfo];
+    NSNumber *duration = [info objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSNumber *curve = [info objectForKey:UIKeyboardAnimationCurveUserInfoKey];
+    [UIView animateWithDuration:duration.doubleValue animations:^{
+        [UIView setAnimationBeginsFromCurrentState:YES];
+        [UIView setAnimationCurve:[curve intValue]];
+        inputView.frame = CGRectMake(0, [UIScreen mainScreen].bounds.size.height-50, 320, 50);
+    } completion:^(BOOL finished) {
+    }];
+}
+
+#pragma mark - textFiledDelegate
+-(BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    if (1 == self.signalFeed.canComment)
+    {
+        [self sendBtnAction:nil];
+        return YES;
+    }
+    else
+    {
+        return NO;
+    }
+}
+
+-(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+    if (1 == self.signalFeed.canComment)
+    {
+        if (range.location > 100)
+        {
+            return NO;
+        }
+        return YES;
+    }
+    else
+    {
+        return NO;
+    }
+}
+
+-(BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    if (1 == self.signalFeed.canComment)
+    {
+        return YES;
+    }
+    else
+    {
+        return NO;
+    }
+}
+
+
+@end

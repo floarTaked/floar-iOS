@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>36263A24-5110-4BE2-9788-0B1D57C85189</string>
+	<key>IDESourceControlProjectName</key>
+	<string>闺秘</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>13C79320-4F26-458D-A216-54293CFC75F7</key>
+		<string>http://10.10.151.237/svn/app/%E9%A1%B9%E7%9B%AE%E6%96%87%E6%A1%A3/UI/%E9%97%BA%E7%A7%981.0</string>
+		<key>6F9FDEF9-3695-4061-B862-8190DDAECF6B</key>
+		<string>http://10.10.151.237/svn/app/iOS/guimi/Trunk</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>iOS/guimi/Trunk/闺秘.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>13C79320-4F26-458D-A216-54293CFC75F7</key>
+		<string>../../闺秘1.0</string>
+		<key>6F9FDEF9-3695-4061-B862-8190DDAECF6B</key>
+		<string>..</string>
+	</dict>
+	<key>IDESourceControlProjectRepositoryRootDictionary</key>
+	<dict>
+		<key>13C79320-4F26-458D-A216-54293CFC75F7</key>
+		<string>http://10.10.151.237/svn/app</string>
+		<key>6F9FDEF9-3695-4061-B862-8190DDAECF6B</key>
+		<string>http://10.10.151.237/svn/app</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>http://10.10.151.237/svn/app/iOS/guimi/Trunk/%E9%97%BA%E7%A7%98.xcworkspace</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>6F9FDEF9-3695-4061-B862-8190DDAECF6B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryBranchesRelativeLocationKey</key>
+			<string>iOS/guimi/Branches</string>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlRepositoryTagsRelativeLocationKey</key>
+			<string>iOS/guimi/Tags</string>
+			<key>IDESourceControlRepositoryTrunkRelativeLocationKey</key>
+			<string>iOS/guimi/Trunk</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>6F9FDEF9-3695-4061-B862-8190DDAECF6B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>GuiMi</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>13C79320-4F26-458D-A216-54293CFC75F7</string>
+			<key>IDESourceControlWCCName</key>
+			<string>闺秘1.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

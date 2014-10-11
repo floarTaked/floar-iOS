@@ -1,0 +1,144 @@
+//
+//  BlurView.m
+//  Guimi
+//
+//  Created by jonas on 9/13/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "BlurView.h"
+#import "Common.h"
+#import "AppDelegate.h"
+@implementation BlurView
+-(id)init
+{
+    self = [super init];
+    if(self)
+    {
+        self.frame = CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height);
+        [self initlize];
+    }
+    return self;
+}
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        [self initlize];
+    }
+    return self;
+}
+
+-(void)initlize
+{
+    self.backgroundColor = [UIColor clearColor];
+    backImageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height)];
+    [self addSubview:backImageView];
+    actionView = nil;
+    UITapGestureRecognizer* gues = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(cancel:)];
+    [self addGestureRecognizer:gues];
+    self.userInteractionEnabled = YES;
+    
+    UIView *overlayView = [[UIImageView alloc] initWithFrame:self.frame];
+    overlayView.alpha = 0.7;
+    overlayView.backgroundColor = colorWithHex(0x444444);
+    [self addSubview:overlayView];
+    
+    
+//    actionView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 100, 100)];
+//    actionView.backgroundColor = [UIColor whiteColor];
+//    UIButton* left = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, 100, 50)];
+//    left.backgroundColor = [UIColor darkGrayColor];
+//    [actionView addSubview:left];
+}
+-(void)cancel:(UITapGestureRecognizer*)gues
+{
+    [self hide];
+}
+//-(void)setBlurView:(UIView*)view
+//{
+//    if(view != nil)
+//    {
+//        //UIImage* image = [UIImage imageFromUIView:view];
+//        //if (image != nil)
+//        {
+//            //float quality = 1.0f;
+//            //float blurred = 1.0f;
+//            //NSData *dataImg = UIImageJPEGRepresentation(image, quality);
+//            //UIImage *blurredImage = [[UIImage imageWithData:dataImg] blurredImage:blurred];
+//            //backImageView.image = image;
+//            UIView *overlayView = [[UIImageView alloc] initWithFrame:self.frame];
+//            overlayView.alpha = 0.7;
+//            overlayView.backgroundColor = colorWithHex(0x444444);
+//            [self addSubview:overlayView];
+//        }
+////        else
+////        {
+////            DLog(@"shotImage error");
+////        }
+//    }
+//}
+-(void)setActionView:(UIView*)view
+{
+    if(actionView != nil)
+    {
+        [actionView removeFromSuperview];
+    }
+    actionView = view;
+}
+-(void)show
+{
+    UIWindow* window = [(AppDelegate*)[UIApplication sharedApplication].delegate window];
+    [self showInView:window];
+}
+-(void)showInView:(UIView*)view
+{
+    if(view == NULL)
+    {
+        return;
+    }
+//    [self setBlurView:view];
+    
+    if(actionView != nil)
+    {
+        [self addSubview:actionView];
+        actionView.center = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+    }
+    [view addSubview:self];
+    
+    actionView.layer.transform = CATransform3DMakeScale(0.6, 0.6, 1.0);
+    [UIView animateWithDuration:0.1 delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^
+    {
+        actionView.layer.transform = CATransform3DMakeScale(1.2, 1.2, 1.0);
+    } completion:^(BOOL finished){
+        [UIView animateWithDuration:0.05 delay:0
+                            options:UIViewAnimationOptionCurveEaseInOut
+                         animations:^
+         {
+             actionView.layer.transform = CATransform3DMakeScale(1.0, 1.0, 1.0);
+         } completion:^(BOOL finished){
+             
+         }];
+    }];
+}
+-(void)hide
+{
+    
+    [UIView animateWithDuration:0.05 delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^
+     {
+         actionView.layer.transform = CATransform3DMakeScale(0.8, 0.8, 1.0);
+     } completion:^(BOOL finished){
+         if(actionView != nil)
+         {
+             [actionView removeFromSuperview];
+         }
+         [self removeFromSuperview];
+         
+     }];
+}
+@end

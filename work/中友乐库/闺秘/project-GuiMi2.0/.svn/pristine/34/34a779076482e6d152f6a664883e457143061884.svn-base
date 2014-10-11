@@ -1,0 +1,169 @@
+//
+//  MainAgainstView.m
+//  闺秘
+//
+//  Created by floar on 14-7-15.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "MainAgainstView.h"
+#import "NetWorkEngine.h"
+#import "Package.h"
+#import "Feed.h"
+
+@implementation MainAgainstView
+{
+    
+    __weak IBOutlet UIButton *collectionBtn;
+    
+    __weak IBOutlet UIButton *againstBtn;
+    
+    __weak IBOutlet UIButton *removeBtn;
+    
+}
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+
+-(void)awakeFromNib
+{
+    [collectionBtn setTitleColor:colorWithHex(0xD0246C) forState:UIControlStateNormal];
+    collectionBtn.titleLabel.font = getFontWith(NO, 14);
+    
+    [againstBtn setTitleColor:colorWithHex(0xD0246C) forState:UIControlStateNormal];
+    againstBtn.titleLabel.font = getFontWith(NO, 14);
+    
+    [removeBtn setTitleColor:colorWithHex(0xD0246C) forState:UIControlStateNormal];
+    removeBtn.titleLabel.font = getFontWith(NO, 14);
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleReasonReturnValue:) name:@"reportReason" object:nil];
+}
+
+- (IBAction)collectionBtnAction:(id)sender
+{
+    [MobClick event:collect];
+    [[NetWorkEngine shareInstance] collectFeedWithFeedId:_feedId block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            Package *pack = (Package *)object;
+            [[LogicManager sharedInstance] handlePackage:pack block:^(int event, id object) {
+                if (1 == event)
+                {
+                    NSDictionary *dict = (NSDictionary *)object;
+                    uint32_t result = [[dict objectForKey:PACKAGERESULT] longValue];
+                    if (0 == result)
+                    {
+                        [[LogicManager sharedInstance] showAlertWithTitle:nil message:@"收藏成功" actionText:@"确定"];
+                    }
+                    else if (-3 == result)
+                    {
+                        [[LogicManager sharedInstance] makeUserReLoginAuto];
+                    }
+
+                }
+            }];
+        }
+    }];
+}
+
+- (IBAction)againstBtnAction:(id)sender
+{
+    [MobClick event:report];
+    if (self.makeReportReasonViewShowBlock)
+    {
+        self.makeReportReasonViewShowBlock();
+    }
+    //网络消息收到通知后执行
+}
+
+- (IBAction)removeBtnAction:(id)sender
+{
+    [MobClick event:remove];
+    
+    //删除网络中这条数据
+    [[NetWorkEngine shareInstance] deleteFeedInMainViewWithFeedId:_feedId block:^(int event, id object)
+     {
+         if (1 == event)
+         {
+             Package *pack = (Package *)object;
+             [[LogicManager sharedInstance] handlePackage:pack block:^(int event, id object) {
+                 if (1 == event)
+                 {
+                     NSDictionary *dict = (NSDictionary *)object;
+                     uint32_t result = [[dict objectForKey:PACKAGERESULT] longValue];
+                     if (0 == result)
+                     {
+                         [[LogicManager sharedInstance]showAlertWithTitle:nil message:@"删除成功" actionText:@"确定"];
+                         NSString* sql = [NSString stringWithFormat:@" where DBUid = %llu and feedId = %llu",[UserInfo myselfInstance].userId,_feedId];
+                         [Feed deleteWith:nil condition:sql];
+                     }
+                     else if (-3 == result)
+                     {
+                         [[LogicManager sharedInstance] makeUserReLoginAuto];
+                     }
+                 }
+             }];
+         }
+    }];
+    
+    //删除本地数据库中数据
+    NSString* sql = [NSString stringWithFormat:@" where DBUid = %llu and feedId = %llu",[UserInfo myselfInstance].userId,_feedId];
+    [Feed deleteWith:nil condition:sql];
+    
+    //删除应用中数据缓存中数据
+    if (self.handleMainCellOtherRemoveBlock)
+    {
+        self.handleMainCellOtherRemoveBlock();
+    }
+}
+
+-(void)handleReasonReturnValue:(NSNotification *)note
+{
+    NSString *str = [note object];
+    [[NetWorkEngine shareInstance] reportUserMessageWithIds:_feedId uniqueCode:0 reportReason:str block:^(int event, id object)
+    {
+        if (1 == event)
+        {
+            Package *pack = (Package *)object;
+            
+            [[LogicManager sharedInstance] handlePackage:pack block:^(int event, id object) {
+                if (1 == event)
+                {
+                    NSDictionary *dict = (NSDictionary *)object;
+                    uint32_t result = [[dict objectForKey:PACKAGERESULT] longValue];
+                    if (0 == result)
+                    {
+                        [[LogicManager sharedInstance]showAlertWithTitle:nil message:@"举报成功" actionText:@"确定"];
+                    }
+                    else if (-3 == result)
+                    {
+                        [[LogicManager sharedInstance] makeUserReLoginAuto];
+                    }
+                }
+            }];
+        }
+    }];
+}
+
+-(void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

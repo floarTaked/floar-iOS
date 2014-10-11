@@ -1,0 +1,126 @@
+//
+//  PhoneIntroViewController.m
+//  闺秘
+//
+//  Created by floar on 14-7-19.
+//  Copyright (c) 2014年 jonas. All rights reserved.
+//
+
+#import "PhoneIntroViewController.h"
+#import "Package.h"
+#import "NetWorkEngine.h"
+#import "LogicManager.h"
+#import "MainViewController.h"
+
+@interface PhoneIntroViewController ()
+
+@end
+
+@implementation PhoneIntroViewController
+{
+    
+    __weak IBOutlet UIImageView *phoneBGImagView;
+    
+    __weak IBOutlet UIButton *phoneFriendsBtn;
+    
+    UIActivityIndicatorView *indicator;
+    UILabel *indicatorLabel;
+}
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (IBAction)linkFriendsBtnAcion:(id)sender
+{
+    phoneBGImagView.image = [UIImage imageNamed:@"img_phone2"];
+    
+    indicator = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(150, 280, 20, 20)];
+    indicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhite;
+    indicator.hidesWhenStopped = YES;
+    indicator.color = colorWithHex(DeepRedColor);
+    [indicator startAnimating];
+    [self.view addSubview:indicator];
+    
+    indicatorLabel = [[UILabel alloc] initWithFrame:CGRectMake(70, CGRectGetMaxY(indicator.frame), 180, 40)];
+    indicatorLabel.text = @"加载「闺秘」中...";
+    indicatorLabel.font = getFontWith(NO, 18);
+    indicatorLabel.textAlignment = NSTextAlignmentCenter;
+    indicatorLabel.textColor = colorWithHex(0xD0246C);
+    [self.view addSubview:indicatorLabel];
+    
+    [phoneFriendsBtn removeFromSuperview];
+    
+    runOnAsynQueue(^{
+        [[LogicManager sharedInstance] getContactFriends:^(int event, id object) {
+            if (1 == event)
+            {
+                NSArray *phoneArray = object[@"dic"];
+                NSString *json = [[LogicManager sharedInstance] objectToJsonString:phoneArray];
+                
+                
+                runOnMainQueueWithoutDeadlocking(^{
+                    
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        [[LogicManager sharedInstance] setRootViewContrllerWithNavigationBar:[MainViewController sharedInstance]];
+                    });
+                    
+                    [[NetWorkEngine shareInstance] updateContractList:json block:^(int event, id object)
+                     {
+                         if (1 == event)
+                         {
+                             Package *returnPack = (Package *)object;
+                             [[LogicManager sharedInstance] handlePackage:returnPack block:^(int event, id object) {
+                                 if (1 == event)
+                                 {
+                                     NSDictionary *dict = (NSDictionary *)object;
+                                     uint32_t result = [[dict objectForKey:PACKAGERESULT] longValue];
+                                     if (0 == result)
+                                     {
+                                         DLog(@"上传通讯录成功");
+                                         [indicator stopAnimating];
+                                         indicatorLabel.alpha = 0;
+                                         
+                                         [[LogicManager sharedInstance] setRootViewContrllerWithNavigationBar:[MainViewController sharedInstance]];
+                                         
+                                         [[LogicManager sharedInstance] setPersistenceData:[NSNumber numberWithInt:4] withKey:PhoneBook];
+                                     }
+                                     
+                                 }
+                             }];
+                         }
+                         else if (0 == event)
+                         {
+                             DLog(@"上传通讯录失败");
+                         }
+                         
+                     }];
+                });
+            }
+            else if (-1 == event)
+            {
+                [[LogicManager sharedInstance] setPersistenceData:[NSNumber numberWithInt:2] withKey:PhoneBook];
+                [[LogicManager sharedInstance] setRootViewContrllerWithNavigationBar:[MainViewController sharedInstance]];
+            }
+        }];
+    });
+    
+}
+
+@end

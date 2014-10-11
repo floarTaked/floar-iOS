@@ -1,0 +1,120 @@
+//
+//  LoadMoreView.m
+//  Guimi
+//
+//  Created by jonas on 9/12/14.
+//  Copyright (c) 2014 jonas. All rights reserved.
+//
+
+#import "LoadMoreView.h"
+@interface LoadMoreView()
+{
+    
+}
+@property(nonatomic,strong)UIScrollView* scrollView;
+@end
+
+@implementation LoadMoreView
+@synthesize scrollView=_scrollView,loading=_loading,upInset=_upInset;
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        [self initlize];
+    }
+    return self;
+}
+-(void)initlize
+{
+    loadingLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 100, self.frame.size.height)];
+    loadingLabel.backgroundColor = [UIColor clearColor];
+    loadingLabel.textAlignment = NSTextAlignmentCenter;
+    loadingLabel.textColor = [UIColor darkGrayColor];
+    loadingLabel.font = getFontWith(YES, 13);
+    loadingLabel.center = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+    [loadingLabel setText:@"加载中..."];
+    [self addSubview:loadingLabel];
+    
+    
+    indicatorView = [[UIActivityIndicatorView alloc]initWithFrame:CGRectMake(0, 0, 30, 30)];
+    indicatorView.center = CGPointMake(loadingLabel.frame.origin.x + loadingLabel.frame.size.width+20, self.frame.size.height/2);
+    [indicatorView startAnimating];
+    [self addSubview:indicatorView];
+    self.loading = NO;
+}
+- (void)didMoveToSuperview
+{
+    [super didMoveToSuperview];
+    if ([self.superview isKindOfClass:[UIScrollView class]])
+    {
+        self.scrollView = (id)[self superview];
+        UIEdgeInsets inset = self.scrollView.contentInset;
+        inset.top = _upInset;
+        self.scrollView.contentInset = inset;
+    }
+    else if (!self.superview)
+    {
+        self.scrollView = nil;
+    }
+}
+- (void)scrollViewDidScroll
+{
+    self.y = MAX(self.scrollView.contentSize.height, self.height);
+    if (self.scrollView.contentSize.height < self.scrollView.contentOffset.y+self.height+self.scrollView.frame.size.height)
+    {
+        self.scrollView.contentInset = UIEdgeInsetsMake(0, 0, REFRESH_REGION_HEIGHT, 0);
+        self.hidden = NO;
+        self.loading = YES;
+    }
+    else
+    {
+        self.hidden = YES;
+    }
+}
+- (void)scrollViewDidEndDraging
+{
+    if (self.loading)
+    {
+        [UIView transitionWithView:_scrollView
+                          duration:0.2
+                           options:UIViewAnimationOptionCurveEaseOut
+                        animations:^
+         {
+             UIEdgeInsets inset = _scrollView.contentInset;
+             inset.top = _upInset + REFRESH_REGION_HEIGHT;
+             _scrollView.contentInset = inset;
+             
+         }completion:^(BOOL finished){
+             self.hidden = NO;
+             if(self.delegate != nil && [self.delegate respondsToSelector:@selector(loadMoreStart:)])
+             {
+                 [self.delegate loadMoreStart:self];
+             }
+         }];
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:0.2f];
+        [UIView commitAnimations];
+    }
+}
+-(void)endLoading
+{
+    if (self.loading)
+    {
+        self.loading = NO;
+        [UIView transitionWithView:_scrollView
+                          duration:0.2
+                           options:UIViewAnimationOptionCurveEaseOut
+                        animations:^
+         {
+             _scrollView.contentInset = UIEdgeInsetsZero;
+             
+         }completion:^(BOOL finished){
+             self.hidden = YES;
+         }];
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:0.2f];
+        [UIView commitAnimations];
+    }
+}
+@end
